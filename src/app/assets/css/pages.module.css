@@ -1,0 +1,305 @@
+.dashboardWrapper {
+    height: 100%;
+}
+
+.formcol {
+    max-width: 530px;
+    width: 90%;
+}
+
+.dataform {
+    margin-top: 30px;
+}
+
+.importdatadetails {
+    font-family: var(--Roboto-family);
+}
+
+.widthinput {
+    max-width: 380px;
+}
+
+.filechoose {
+    background: var(--tertiary-200);
+    border: 1px solid var(--tertiary-500);
+    padding: 10px 15px;
+    border-radius: 8px;
+    color: var(--ternary-color);
+}
+
+.notes {
+    margin-top: 24px;
+}
+
+.notes ul {
+    list-style: disc;
+    padding-left: 20px;
+    padding-bottom: 10px;
+}
+
+.notes ul li {
+    margin-bottom: 5px;
+}
+
+.uploadBtn {
+    border: 1px solid var(--tertiary-500);
+    width: 100%;
+    display: flex;
+    padding: 10px 14px;
+    border-radius: 8px;
+    background: var(--white-color);
+    gap: 1rem;
+}
+
+.uploadBtn button {
+    border: 1px solid var(--tertiary-400);
+    background: var(--tertiary-500);
+    color: var(--primary-100);
+    padding: 6px;
+    font-weight: var(--font-weight-500);
+    font-family: var(--Roboto-family);
+    letter-spacing: 0.5px;
+}
+
+.datauploaded {
+    border-left: 1px solid var(--tertiary-500);
+    padding-left: 24px;
+    height: 100%;
+}
+
+.dataNote {
+    padding-bottom: 30px;
+    color: var(--tertiary-100);
+}
+
+.fileuploadedList {
+    border: 1px solid var(--blue-color);
+    border-radius: 12px;
+    padding: 10px 35px 10px 16px;
+    width: 100%;
+    max-width: 450px;
+    align-items: center;
+    justify-content: flex-start;
+    position: relative;
+    margin-bottom: 10px;
+}
+
+.filenameSize {
+    width: 85%;
+}
+
+.filenameSize p {
+    font-weight: var(--font-weight-500);
+    margin: 0;
+}
+
+.filenameSize ul {
+    justify-content: flex-start;
+}
+
+.filenameSize ul li {
+    color: var(--secondary-200);
+}
+
+.iconBtn {
+    padding: 0;
+    margin: 0;
+    border-radius: 0;
+    border: 0;
+    position: absolute;
+    right: 10px;
+    top: 5px;
+    font-size: 20px;
+}
+
+.fileListData li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Workspace module css */
+.workspaceCreate {
+    justify-content: flex-start;
+    margin-top: 40px;
+}
+
+.workspacebox {
+    border: 1px solid var(--tertiary-300);
+    border-radius: 8px;
+    padding: 12px 16px;
+    width: 100%;
+    max-width: calc(33.333% - 1.5rem);
+}
+
+.not-established {
+    border-color: var(--error-color);
+}
+
+.workspaceName img {
+    max-width: 32px;
+    max-height: 32px;
+    object-fit: contain;
+}
+
+.workspacebox .link {
+    justify-content: space-between;
+    color: var(--primary-100);
+}
+
+.workspaceCreate p {
+    margin: 0;
+    max-width: 160px;
+    word-break: break-all;
+}
+
+.storage {
+    border-left: 1px solid var(--tertiary-300);
+    padding-left: 20px;
+}
+
+.storageValue {
+    font-size: 11px;
+    color: var(--tertiary-600);
+    font-family: var(--Inter-family);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.3;
+}
+
+.btnBlank {
+    padding: 0;
+    margin: 0;
+    border-radius: 0;
+    border: 0;
+    font-size: var(--h5-font);
+}
+
+/* Create folder css */
+.searchlist {
+    width: 100%;
+    max-width: 65%;
+    justify-content: flex-end;
+}
+
+.noFoldersMessage {
+    margin-top: 2rem;
+    border: 1px solid var(--tertiary-300);
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.prevalidatebtn {
+    padding-bottom: 55px;
+}
+
+.validateBtn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9;
+    font-weight: var(--font-weight-600);
+}
+
+/* data prevalidation */
+.tableBody {
+    border: 1px solid var(--tertiary-400);
+    border-radius: 6px;
+    padding: 12px;
+}
+
+.tableBody.text {
+    font-weight: 500;
+}
+
+.footerRow .tableBody {
+    border: 0;
+    padding: 0;
+    display: none;
+}
+
+.btnWrapper {
+    text-align: right;
+    margin-top: 2rem;
+}
+
+.heading h1 {
+    font-size: var(--h5-font);
+}
+
+.noteText {
+    position: fixed;
+    bottom: 20px;
+}
+
+.noteText p {
+    margin: 0;
+    color: var(--error-color);
+    font-weight: 500;
+}
+
+.noteRecord {
+    margin-block: 0.5rem 2rem;
+}
+
+.noteRecord p {
+    font-weight: var(--font-weight-600);
+    color: var(--primary-200);
+    font-size: var(--font-sm);
+    margin: 0;
+}
+
+.valueSelect {
+    position: relative;
+    padding-right: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.displayValue {
+    background: var(--primary-200);
+    display: inline-block;
+    padding: 6px 10px;
+    color: var(--white-color);
+    border-radius: 8px;
+    line-height: 1;
+    font-weight: 500;
+    font-size: 12px;
+}
+
+.btnValueSelect {
+    position: absolute;
+    right: 0;
+    transform: translateY(-50%);
+    top: 50%;
+    z-index: 1;
+}
+
+.dropdownTitle {
+    color: var(--primary-100);
+    border-bottom: 1px solid var(--tertiary-600);
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+    font-size: var(--font-sm);
+    min-width: 250px;
+}
+
+.missingValueHighlight {
+    border-color: var(--error-color);
+}
+
+.primary_key {
+    background: var(--tertiary-500);
+}
+
+.infoContainer {
+    max-width: 400px;
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    font-weight: 500;
+}

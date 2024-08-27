@@ -1,0 +1,67 @@
+.dataHeader {
+    margin-bottom: 30px;
+}
+
+.breadcrumbWrapper {
+    margin-top: 10px;
+}
+
+.columnsComparison {
+    border: 1px solid var(--tertiary-300);
+    background: var(--tertiary-200);
+    padding: 30px;
+    border-radius: 8px;
+}
+
+.tableWrapper {
+    display: flex;
+    justify-content: space-between;
+}
+
+.table {
+    width: 100%;
+    border: 1px solid var(--tertiary-500);
+    background: var(--white-color);
+    max-width: 300px;
+    border-radius: 10px;
+    padding: 16px 8px;
+}
+
+.existingColumn {
+    padding: 7px 8px;
+    font-weight: 500;
+    border: 1px solid var(--tertiary-400);
+    border-radius: 4px;
+    margin-bottom: 3px;
+}
+
+.draggableItem {
+    padding: 7px 8px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid var(--tertiary-400);
+    border-radius: 4px;
+    margin-bottom: 3px;
+}
+
+.dragging {
+    opacity: 0.5;
+}
+
+.filename {
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.filename p {
+    margin: 0;
+    font-weight: 500;
+    font-size: var(--base-font);
+}
+
+.filename p span {
+    display: block;
+    font-size: 12px;
+}

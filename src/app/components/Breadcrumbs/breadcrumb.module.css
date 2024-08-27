@@ -1,0 +1,38 @@
+.Breadcrumb {
+    display: flex;
+    gap: 2px 20px;
+    align-items: center;
+    flex-wrap: wrap;
+    /* max-width: 32%; */
+}
+
+.Breadcrumb li {
+    position: relative;
+}
+
+.Breadcrumb li::after {
+    content: "/";
+    position: absolute;
+    right: -12px;
+    top: 3px;
+}
+
+.Breadcrumb li:last-child::after {
+    display: none;
+}
+
+.Breadcrumb li a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--Inter-family);
+}
+
+.Breadcrumb li.active p {
+    font-weight: var(--font-weight-600);
+}
+
+.Breadcrumb li p {
+    margin: 0;
+    font-size: var(--font-sm);
+}

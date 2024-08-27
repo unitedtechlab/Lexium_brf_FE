@@ -1,0 +1,114 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
+
+body.light {
+  --white-color: #fff;
+  --black-color: #000;
+
+  --primary-100: #341539;
+  --primary-200: #8e48e7;
+
+  --secondary-100: #111111;
+  --secondary-200: #494949;
+  --secondary-300: #1C1C1C;
+
+  --blue-color: #334756;
+
+  --text-color: var(--black-color);
+  --sidebar-color: var(--white-color);
+
+  --ternary-color: #043133;
+  --tertiary-100: #5C5E64;
+  --tertiary-200: #F6F6F6;
+  --tertiary-300: #D9D9D9;
+  --tertiary-400: #E7E7E7;
+  --tertiary-500: #D0D5DD;
+  --tertiary-600: #A9ACB4;
+
+  --error-color: #ff4d4f;
+
+}
+
+body.dark {
+  --white-color: #fff;
+  --black-color: #000;
+
+  --primary-100: #341539;
+  --primary-200: #8e48e7;
+
+  --secondary-100: #111111;
+  --secondary-200: #494949;
+  --secondary-300: #1C1C1C;
+
+  --blue-color: #334756;
+
+  --text-color: var(--black-color);
+  --sidebar-color: var(--white-color);
+
+  --ternary-color: #043133;
+  --tertiary-100: #5C5E64;
+  --tertiary-200: #F6F6F6;
+  --tertiary-300: #D9D9D9;
+  --tertiary-400: #E7E7E7;
+  --tertiary-500: #D0D5DD;
+  --tertiary-600: #A9ACB4;
+
+  --error-color: #ff4d4f;
+
+}
+
+:root {
+  --white-color: #fff;
+  --black-color: #000;
+
+  --primary-100: #341539;
+  --primary-200: #8e48e7;
+
+  --secondary-100: #111111;
+  --secondary-200: #494949;
+  --secondary-300: #1C1C1C;
+
+  --blue-color: #334756;
+
+  --text-color: var(--black-color);
+  --sidebar-color: var(--white-color);
+
+  --ternary-color: #043133;
+  --tertiary-100: #5C5E64;
+  --tertiary-200: #F6F6F6;
+  --tertiary-300: #D9D9D9;
+  --tertiary-400: #E7E7E7;
+  --tertiary-500: #D0D5DD;
+  --tertiary-600: #A9ACB4;
+
+  --error-color: #ff4d4f;
+
+  --Inter-family: "Inter", sans-serif;
+  --Poppins-family: "Poppins", sans-serif;
+  --Roboto-family: "Roboto", sans-serif;
+
+  --h1-font: clamp(48px, 3.646vw, 70px);
+  --h2-font: clamp(38px, 3.229vw, 62px);
+  --h3-font: clamp(30px, 2.5vw, 48px);
+  --h4-font: clamp(24px, 1.667vw, 32px);
+  --h5-font: clamp(18px, 1.25vw, 24px);
+  --h6-font: clamp(14px, 1.042vw, 20px);
+
+  --base-font: clamp(14px, 0.833vw, 16px);
+  --font-xs: clamp(13px, 0.729vw, 14px);
+  --font-sm: clamp(16px, 0.938vw, 18px);
+
+  --font-weight-100: 100;
+  --font-weight-200: 200;
+  --font-weight-300: 300;
+  --font-weight-400: 400;
+  --font-weight-500: 500;
+  --font-weight-600: 600;
+  --font-weight-700: 700;
+  --font-weight-bold: bold;
+
+  --display-size-small: 575px;
+  --display-size-medium: 767px;
+  --display-size-large: 991px;
+  --display-size-x-large: 1199px;
+  --display-size-xx-large: 1399px;
+}

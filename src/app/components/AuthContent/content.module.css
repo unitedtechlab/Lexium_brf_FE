@@ -1,0 +1,19 @@
+.loginSidebar {
+  margin-right: clamp(30px, 4.167vw, 80px);
+  max-width: 600px;
+  margin-left: auto;
+}
+.loginSidebar h5 {
+  font-weight: var(--font-weight-300);
+  opacity: 0.8;
+}
+.loginAnimation {
+  padding-top: clamp(35px, 3.646vw, 70px);
+  text-align: center;
+}
+
+@media screen and (max-width: 767px) {
+  .loginSidebar {
+    margin: 0 0 3rem 0;
+  }
+}

@@ -1,0 +1,35 @@
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    background: var(--white-color);
+    border-bottom: 1px solid var(--tertiary-300);
+    padding: 15px 28px;
+    line-height: initial;
+    height: 70px;
+}
+
+.bodylayout {
+    padding: 25px;
+}
+
+.siteLayout {
+    position: relative;
+}
+
+.hemBurger {
+    border: 1px solid var(--tertiary-300);
+    border-radius: 8px;
+    padding: 2px;
+    font-size: var(--h5-font);
+    line-height: 1;
+    height: 30px;
+    width: 30px;
+    position: absolute;
+    left: -16px;
+    background-color: var(--white-color);
+    z-index: 2;
+    cursor: pointer;
+    top: 60px;
+}

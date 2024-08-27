@@ -1,0 +1,16 @@
+.searchwrapper {
+    max-width: 500px;
+    border: 1px solid var(--tertiary-300);
+    border-radius: 8px;
+    color: var(--black-color);
+}
+
+.searchwrapper input {
+    line-height: 1;
+    position: relative;
+    top: -2px;
+}
+
+.searchwrapper input::placeholder {
+    color: var(--tertiary-100);
+}

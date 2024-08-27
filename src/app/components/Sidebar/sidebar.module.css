@@ -1,0 +1,44 @@
+.logo {
+    padding: 24px;
+    height: 72px;
+}
+
+.sidebarMain {
+    border-right: 1px solid var(--tertiary-300);
+}
+
+.lightDarkWrapper {
+    height: auto;
+    border-top: 1px solid var(--tertiary-300);
+}
+
+.lightDarkmode {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--tertiary-400);
+    padding: 4px;
+    border-radius: 8px;
+    margin: 24px;
+}
+
+.lightdarkBTN svg {
+    font-size: 20px;
+    min-width: 20px;
+}
+
+.lightdarkBTN {
+    border: 1px solid var(--tertiary-400);
+    background-color: transparent;
+    font-weight: var(--font-weight-500);
+    border-radius: 8px;
+    width: 100%;
+    color: var(--tertiary-100);
+}
+
+.lightdarkBTN.active,
+.lightdarkBTN:hover {
+    border: 1px solid var(--tertiary-300) !important;
+    background-color: var(--white-color);
+    color: var(--black-color) !important;
+}

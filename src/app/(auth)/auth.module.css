@@ -1,0 +1,122 @@
+.loginWrapper {
+  background: var(--primary-100);
+  color: var(--white-color);
+  padding: 45px 0;
+  min-height: 100vh;
+}
+
+.loginForm {
+  max-width: 690px;
+  width: 100%;
+  border: 1px solid var(--tertiary-100);
+  background: var(--white-color);
+  border-radius: 24px;
+  padding: 38px 48px;
+  color: var(--text-color);
+}
+
+.head {
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 24px;
+  font-weight: var(--font-weight-700);
+  font-family: var(--Poppins-family);
+  letter-spacing: 0.5px;
+  font-size: var(--font-xs);
+}
+
+.formHeading {
+  padding-bottom: 30px;
+}
+
+.formHeading h5,
+.formHeading p {
+  margin-bottom: 0;
+}
+
+.googleMicrosoft {
+  gap: 16px;
+  padding-bottom: 16px;
+}
+
+.btnGoogle,
+.googleMicrosoft>div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--tertiary-100);
+  color: var(--tertiary-100);
+  padding: 14px 24px;
+  gap: 16px;
+  border-radius: 12px;
+  transition: all 0.3s linear;
+  background: transparent;
+  cursor: pointer;
+  width: 100%;
+  height: auto !important;
+}
+
+.googleMicrosoft [role="button"] {
+  padding: 0;
+  height: auto;
+  border: 0;
+  background: transparent;
+}
+
+.btnGoogle img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.btnGoogle:hover,
+.googleMicrosoft>div:hover {
+  background: var(--secondary-100);
+  color: var(--white-color);
+}
+
+.googleMicrosoft>div:hover [role="button"] {
+  color: var(--white-color);
+}
+
+.link {
+  color: var(--primary-200);
+  font-weight: var(--font-weight-700);
+  cursor: pointer;
+}
+
+.forgotlink {
+  text-align: right;
+}
+
+.forgotlink a {
+  text-decoration: underline;
+  font-weight: var(--font-weight-500);
+}
+
+.centerform {
+  align-items: center;
+}
+
+@media screen and (min-width: 991px) {
+  .googleMicrosoft {
+    flex-wrap: nowrap !important;
+  }
+}
+
+@media screen and (max-width: 991px) {
+  .loginForm {
+    padding: 20px 25px;
+  }
+}
+
+@media screen and (max-width: 767px) {
+  .forgotlink {
+    text-align: left;
+  }
+
+  .formInpitopt {
+    font-size: var(--h5-font) !important;
+    padding: 10px 0 !important;
+  }
+}

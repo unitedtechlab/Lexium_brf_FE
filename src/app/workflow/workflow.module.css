@@ -1,0 +1,415 @@
+.workflowPage {
+    min-height: 100vh;
+}
+
+.workflowWrapper {
+    width: 100vw;
+    display: flex;
+    flex-wrap: wrap;
+    padding: 20px;
+    background: #F9F9F9;
+}
+
+.reactflowMain {
+    width: 100%;
+    max-width: calc(100% - 290px);
+    padding: 0;
+}
+
+.reactflow {
+    border: 1px solid var(--tertiary-300);
+    background: var(--tertiary-200) !important;
+}
+
+.sidebarWrapper {
+    width: 100%;
+    max-width: 290px;
+    background-color: var(--white-color);
+    border: 1px solid var(--tertiary-400);
+    border-radius: 18px;
+    min-height: calc(100vh - 120px);
+}
+
+.heading {
+    padding: 30px 16px 0;
+}
+
+.searchInput {
+    padding: 0 16px 16px;
+}
+
+.searchInput input {
+    background: var(--tertiary-200);
+}
+
+.sidebardragDrop {
+    justify-content: flex-start;
+    padding: 12px 0;
+    cursor: pointer;
+}
+
+.sidebardragDrop[draggable="false"] {
+    cursor: no-drop;
+}
+
+.sidebardragDrop h6 {
+    margin: 0;
+    color: var(--tertiary-100);
+    font-weight: var(--font-weight-500);
+}
+
+.sidebardragDrop svg {
+    width: 25px;
+    height: 25px;
+    fill: var(--tertiary-100);
+}
+
+.topbar {
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.topbarWrapper {
+    padding: 15px 50px;
+    border-bottom: 1px solid var(--tertiary-300);
+}
+
+.topbar button {
+    padding: 10px 24px;
+}
+
+.node-main {
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.node {
+    justify-content: space-between;
+    flex-wrap: nowrap;
+    align-items: center;
+    width: 100%;
+}
+
+.node-main h6 {
+    margin: 0;
+}
+
+.node-text {
+    text-align: left;
+}
+
+.filterStyle {
+    border: 1px solid var(--tertiary-300);
+    border-radius: 4px;
+    width: 100%;
+    padding: 10px 15px;
+}
+
+.filterStyle p {
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    text-align: left;
+    gap: 10px;
+}
+
+.filterStyle p:last-child {
+    margin: 0;
+}
+
+.filterStyle ul li:not(:last-child) {
+    margin-bottom: 6px;
+}
+
+.workspaceSelect {
+    padding: 0 16px 16px;
+    border-bottom: 1px solid var(--tertiary-300);
+    margin-bottom: 16px;
+}
+
+.workspaceSelect label {
+    font-weight: var(--font-weight-600);
+    margin-bottom: 5px;
+    display: block;
+}
+
+.workspaceName {
+    text-align: center;
+}
+
+.workspaceName input {
+    margin: 0;
+    font-size: var(--h5-font);
+    text-align: center;
+    padding: 0;
+    border: 0;
+    font-weight: var(--font-weight-600);
+    font-family: var(--Inter-family);
+}
+
+.topbar>* {
+    min-width: 32%;
+}
+
+.rightButtons {
+    justify-content: flex-end;
+}
+
+.filterStyle hr {
+    margin: 10px 0;
+    border-top: 0;
+    border-bottom: 1px solid var(--tertiary-300);
+}
+
+.listNodeShow {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    gap: 6px;
+    width: 100%;
+}
+
+.filterStyle p:not(:last-child) .listNodeShow {
+    border-bottom: 1px solid var(--tertiary-300);
+    padding-bottom: 10px;
+    margin-bottom: 6px;
+}
+
+.listNodeShow li {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+.filterStyle p b {
+    background: var(--tertiary-200);
+    border-radius: 2px;
+    padding: 3px 8px;
+    text-align: right;
+}
+
+.checkLabel {
+    margin-bottom: 1rem;
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.checkLabel label,
+.btnAdd {
+    background: var(--tertiary-400);
+    padding: 3px 10px;
+    border: 1px solid var(--tertiary-600);
+    border-radius: 4px;
+    display: inline-block;
+}
+
+.selectIF {
+    font-size: 24px;
+    height: 100%;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+    color: var(--tertiary-100);
+}
+
+.conditionNode,
+.outsideCondition .addDelete {
+    background: var(--tertiary-300);
+    padding: 10px;
+    border: 1px solid var(--tertiary-600);
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.conditionList {
+    width: 100%;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+    margin-bottom: 15px;
+}
+
+.addDelete {
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+    justify-content: space-between;
+}
+
+.deleteBtn {
+    background: var(--white-color) !important;
+    border: 0;
+    padding: 0;
+    font-size: 20px;
+    color: red;
+    margin-left: 10px;
+    width: 30px;
+    height: 30px;
+    border-radius: 100%;
+}
+
+.conditionBtn button {
+    background: transparent !important;
+    border: 0;
+    padding: 0;
+    color: var(--primary-100) !important;
+}
+
+.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+    cursor: not-allowed;
+}
+
+.elseCondition p {
+    margin: 0;
+    font-weight: var(--font-weight-500);
+    background: #fff;
+    padding: 10px;
+    border: 1px solid var(--tertiary-600);
+    border-radius: 8px;
+}
+
+.pivotSidebar {
+    padding-right: 15px;
+    margin-right: 15px;
+    border-right: 1px solid var(--tertiary-300);
+}
+
+.pivotMain {
+    background: var(--tertiary-200);
+    border: 6px solid var(--tertiary-300);
+}
+
+.columnList {
+    max-height: 320px;
+    overflow-y: auto;
+}
+
+.dropAreaData {
+    border: 1px solid var(--tertiary-300);
+    border-radius: 6px;
+    padding: 15px;
+    width: 100%;
+    min-height: 150px;
+}
+
+.dropArea {
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+}
+
+.dropArea h6 {
+    font-size: var(--base-font);
+    margin: 0;
+}
+
+.pivotArea {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+}
+
+.groupbyArea {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+}
+
+.droppedItem {
+    background: #E9F5FE;
+    margin-bottom: 5px;
+    padding: 6px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-radius: 6px;
+    font-weight: 500;
+    color: #101828B2;
+}
+
+.droppedItem svg {
+    font-size: 12px;
+}
+
+.functionPivotWrapper {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.functionPivot {
+    display: flex;
+    flex-direction: row;
+    gap: 2rem;
+    flex-wrap: wrap;
+    border: 1px solid var(--tertiary-300);
+    border-radius: 8px;
+    padding: 10px;
+}
+
+.functionPivot h6 {
+    font-size: var(--font-xs);
+}
+
+.functionPivotCheckbox {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.arithmeticWrapper {
+    border: 1px solid var(--tertiary-300);
+    border-radius: 8px;
+    padding: 10px;
+    min-height: 300px;
+}
+
+.enteredValue,
+.operationValue {
+    margin: 5px;
+    display: inline-block;
+    padding: 6px 10px;
+    background: #E9F5FE;
+    font-size: var(--font-xs);
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.operationsBoxs {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    font-weight: 500;
+}
+
+.arithmeticWrapper {
+    display: block;
+}
+
+.arithmeticWrapper .droppedItem {
+    display: inline-flex;
+    margin-right: 10px;
+    gap: 10px;
+}
+
+.starting-point-label,
+.ending-point-label {
+    background: var(--tertiary-400);
+    text-align: left;
+    padding: 5px 15px;
+    display: inline-block;
+    font-weight: var(--font-weight-600);
+    border-radius: 6px;
+    position: absolute;
+    top: -35px;
+    left: 0;
+}
+
+.nodewrap {
+    flex-wrap: nowrap;
+}
