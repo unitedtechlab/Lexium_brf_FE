@@ -41,6 +41,7 @@ const WorkFlow: React.FC = () => {
     const [folders, setFolders] = useState<any[]>([]);
     const [currentWorkspace, setCurrentWorkspace] = useState<string | null>(null);
     const [sidebarItems, setSidebarItems] = useState(initialSidebarItems);
+    const [workflowName, setWorkflowName] = useState<string>('Workflow Name');
 
     useEffect(() => {
         const handleLoad = () => setLoading(false);
@@ -130,6 +131,7 @@ const WorkFlow: React.FC = () => {
         const exportedData = {
             workSpace: currentWorkspace,
             userEmail: email,
+            workflowName: workflowName,
             data: rules,
         };
 
@@ -163,7 +165,6 @@ const WorkFlow: React.FC = () => {
             message.error('An error occurred while saving the workflow');
         }
     };
-
 
     useEffect(() => {
         if (email) {
@@ -200,7 +201,7 @@ const WorkFlow: React.FC = () => {
     return (
         <div className={classes.workflowPage}>
             {loading && <Preloader />}
-            <Topbar onSaveClick={handleRunClick} />
+            <Topbar onSaveClick={handleRunClick} setWorkflowName={setWorkflowName} />
             <div className={classes.workflowWrapper}>
                 <Sidebar
                     workspaces={workspaces}

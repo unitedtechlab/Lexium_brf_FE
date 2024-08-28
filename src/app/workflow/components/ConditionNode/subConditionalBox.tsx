@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Row, Col, Select, Input, Form, Button, Radio } from 'antd';
 import { AiOutlineDelete } from "react-icons/ai";
 import classes from '../../workflow.module.css';
@@ -8,6 +8,9 @@ interface SubConditionRowProps {
     conditionId: number;
     columns: string[];
     handleDeleteCondition: (nodeId: number, conditionId: number, isOutsideCondition?: boolean) => void;
+    renderOperators: (dataType: string | undefined) => JSX.Element;
+    columnDataTypes: { [key: string]: string };
+    handleColumnChange: (nodeId: number, columnName: string) => void;
     isOutsideCondition?: boolean;
 }
 
@@ -16,8 +19,19 @@ const SubConditionRow: React.FC<SubConditionRowProps> = ({
     conditionId,
     columns,
     handleDeleteCondition,
+    renderOperators,
+    columnDataTypes,
+    handleColumnChange,
     isOutsideCondition = false
 }) => {
+    const [selectedDataType, setSelectedDataType] = useState<string>('text');
+
+    const onColumnChange = (value: string) => {
+        const dataType = columnDataTypes[value] || 'text';
+        setSelectedDataType(dataType);
+        handleColumnChange(nodeId, value);
+    };
+
     return (
         <div className={classes.RadioRepeatedBlock}>
             <Form.Item
@@ -25,10 +39,7 @@ const SubConditionRow: React.FC<SubConditionRowProps> = ({
                 initialValue="and"
                 noStyle
             >
-                <Radio.Group
-                    buttonStyle="solid"
-                    className='radiogroup'
-                >
+                <Radio.Group buttonStyle="solid" className='radiogroup'>
                     <Radio.Button value="and">And</Radio.Button>
                     <Radio.Button value="or">Or</Radio.Button>
                 </Radio.Group>
@@ -40,7 +51,10 @@ const SubConditionRow: React.FC<SubConditionRowProps> = ({
                             name={isOutsideCondition ? `outsideColumn_${nodeId}_${conditionId}` : `subcolumn_${nodeId}_${conditionId}`}
                             rules={[{ required: true, message: 'Please select a column' }]}
                         >
-                            <Select placeholder="Select Column">
+                            <Select
+                                placeholder="Select Column"
+                                onChange={onColumnChange}
+                            >
                                 {columns.map((column) => (
                                     <Select.Option key={column} value={column}>
                                         {column}
@@ -55,14 +69,7 @@ const SubConditionRow: React.FC<SubConditionRowProps> = ({
                             rules={[{ required: true, message: 'Please select a condition' }]}
                         >
                             <Select placeholder="Select Condition">
-                                <Select.Option value="=">{'='}</Select.Option>
-                                <Select.Option value="!=">{'!='}</Select.Option>
-                                <Select.Option value=">">{'>'}</Select.Option>
-                                <Select.Option value="<">{'<'}</Select.Option>
-                                <Select.Option value=">=">{'>='}</Select.Option>
-                                <Select.Option value="<=">{'<='}</Select.Option>
-                                <Select.Option value="string_match">(For string matching)</Select.Option>
-                                <Select.Option value="date_filter">(For date filters)</Select.Option>
+                                {renderOperators(selectedDataType)}
                             </Select>
                         </Form.Item>
                     </Col>

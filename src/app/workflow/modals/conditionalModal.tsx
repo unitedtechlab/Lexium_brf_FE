@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal, Select, Button, Form, Row, Col, message } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import classes from '../workflow.module.css';
 import ConditionRow from '../components/ConditionNode/conditionBox';
 import SubConditionRow from '../components/ConditionNode/subConditionalBox';
-import { fetchFolders } from '@/app/API/api';
+import { fetchFolders, fetchFolderData } from '@/app/API/api';
 import { RxDragHandleDots2 } from "react-icons/rx";
 
 interface ConditionalProps {
@@ -25,6 +25,7 @@ interface ConditionField {
     conditions: ConditionField[];
     outsideConditions: ConditionField[];
     operator?: string;
+    selectedDataType?: string; // Track selected data type
 }
 
 const ConditionalModal: React.FC<ConditionalProps> = ({
@@ -38,13 +39,15 @@ const ConditionalModal: React.FC<ConditionalProps> = ({
     initialValues
 }) => {
     const [form] = Form.useForm();
-    const [columns, setColumns] = useState<string[]>([]);
+    const [columns, setColumns] = useState<{ key: string, name: string }[]>([]);
+    const [columnDataTypes, setColumnDataTypes] = useState<{ [key: string]: string }>({});
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [conditionType, setConditionType] = useState<string>('');
     const [conditionNodes, setConditionNodes] = useState<ConditionField[]>([
-        { id: Date.now(), type: 'if', conditions: [], outsideConditions: [] }
+        { id: Date.now(), type: 'if', conditions: [], outsideConditions: [], selectedDataType: 'text' }
     ]);
 
+    // Fetch and set columns and data types when a table is selected
     const handleTableChange = async (value: string) => {
         setSelectedTable(value);
         setIsLoading(true);
@@ -53,8 +56,14 @@ const ConditionalModal: React.FC<ConditionalProps> = ({
             const folders = await fetchFolders(email, selectedWorkspace!, setIsLoading);
             const selectedFolder = folders.find(folder => folder.id === value);
             if (selectedFolder) {
-                const columns = selectedFolder.columns ? Object.values(selectedFolder.columns) : [];
-                setColumns(columns);
+                const columnsArray = selectedFolder.columns
+                    ? Object.entries(selectedFolder.columns).map(([key, name]) => ({ key, name }))
+                    : [];
+                setColumns(columnsArray);
+
+                // Fetch and set column data types
+                const confirmedDataTypes = await fetchFolderData(email, selectedWorkspace!, value);
+                setColumnDataTypes(confirmedDataTypes);
             }
         } catch (error) {
             message.error('Failed to fetch columns.');
@@ -63,27 +72,94 @@ const ConditionalModal: React.FC<ConditionalProps> = ({
         }
     };
 
+    // Handle condition type change (if, if/else, else/if)
     const handleConditionTypeChange = (value: string) => {
         setConditionType(value);
 
         let newConditionNodes: ConditionField[] = [];
 
         if (value === 'if') {
-            newConditionNodes = [{ id: Date.now(), type: 'if', conditions: [], outsideConditions: [] }];
+            newConditionNodes = [{ id: Date.now(), type: 'if', conditions: [], outsideConditions: [], selectedDataType: 'text' }];
         } else if (value === 'if/else') {
             newConditionNodes = [
-                { id: Date.now(), type: 'if', conditions: [], outsideConditions: [] },
-                { id: Date.now() + 1, type: 'else', conditions: [], outsideConditions: [] }
+                { id: Date.now(), type: 'if', conditions: [], outsideConditions: [], selectedDataType: 'text' },
+                { id: Date.now() + 1, type: 'else', conditions: [], outsideConditions: [], selectedDataType: 'text' }
             ];
         } else if (value === 'else/if') {
             newConditionNodes = [
-                { id: Date.now(), type: 'if', conditions: [], outsideConditions: [] },
-                { id: Date.now() + 1, type: 'else if', conditions: [], outsideConditions: [] },
-                { id: Date.now() + 2, type: 'else', conditions: [], outsideConditions: [] }
+                { id: Date.now(), type: 'if', conditions: [], outsideConditions: [], selectedDataType: 'text' },
+                { id: Date.now() + 1, type: 'else if', conditions: [], outsideConditions: [], selectedDataType: 'text' },
+                { id: Date.now() + 2, type: 'else', conditions: [], outsideConditions: [], selectedDataType: 'text' }
             ];
         }
 
         setConditionNodes(newConditionNodes);
+    };
+
+    const renderOperators = (dataType: string | undefined): JSX.Element => {
+        if (!dataType) return <></>;
+
+        switch (dataType) {
+            case 'number':
+                return (
+                    <>
+                        <Select.Option value="=">{'='}</Select.Option>
+                        <Select.Option value="!=">{'!='}</Select.Option>
+                        <Select.Option value=">">{'>'}</Select.Option>
+                        <Select.Option value="<">{'<'}</Select.Option>
+                        <Select.Option value=">=">{'>='}</Select.Option>
+                        <Select.Option value="<=">{'<='}</Select.Option>
+                    </>
+                );
+            case 'date':
+                return (
+                    <>
+                        <Select.Option value="=">{'='}</Select.Option>
+                        <Select.Option value="!=">{'!='}</Select.Option>
+                        <Select.Option value=">">{'>'}</Select.Option>
+                        <Select.Option value="<">{'<'}</Select.Option>
+                        <Select.Option value=">=">{'>='}</Select.Option>
+                        <Select.Option value="<=">{'<='}</Select.Option>
+                    </>
+                );
+            case 'text':
+                return (
+                    <>
+                        <Select.Option value="=">{'='}</Select.Option>
+                        <Select.Option value="!=">{'!='}</Select.Option>
+                        <Select.Option value="string_match">String Match</Select.Option>
+                    </>
+                );
+            default:
+                return (
+                    <>
+                        <Select.Option value="=">{'='}</Select.Option>
+                        <Select.Option value="!=">{'!='}</Select.Option>
+                        <Select.Option value="string_match">String Match</Select.Option>
+                    </>
+                );
+        }
+    };
+
+    const handleColumnChange = (nodeId: number, columnName: string, isOutsideCondition: boolean = false, conditionId?: number) => {
+        const dataType = columnDataTypes[columnName];
+        setConditionNodes(prevNodes =>
+            prevNodes.map(node => {
+                if (node.id === nodeId) {
+                    if (isOutsideCondition && conditionId !== undefined) {
+                        return {
+                            ...node,
+                            outsideConditions: node.outsideConditions.map(oc =>
+                                oc.id === conditionId ? { ...oc, selectedDataType: dataType } : oc
+                            ),
+                        };
+                    } else {
+                        return { ...node, selectedDataType: dataType };
+                    }
+                }
+                return node;
+            })
+        );
     };
 
     const onOk = () => {
@@ -119,22 +195,13 @@ const ConditionalModal: React.FC<ConditionalProps> = ({
         });
     };
 
-    const addInsideCondition = (nodeId: number) => {
+    const handleDeleteCondition = (nodeId: number, conditionId: number, isOutsideCondition: boolean = false) => {
         setConditionNodes(
             conditionNodes.map(node =>
                 node.id === nodeId
-                    ? {
-                        ...node,
-                        conditions: [
-                            ...node.conditions,
-                            {
-                                id: Date.now(),
-                                type: 'subCondition',
-                                conditions: [],
-                                outsideConditions: []
-                            }
-                        ]
-                    }
+                    ? isOutsideCondition
+                        ? { ...node, outsideConditions: node.outsideConditions.filter(condition => condition.id !== conditionId) }
+                        : { ...node, conditions: node.conditions.filter(condition => condition.id !== conditionId) }
                     : node
             )
         );
@@ -152,7 +219,30 @@ const ConditionalModal: React.FC<ConditionalProps> = ({
                                 id: Date.now(),
                                 type: 'outsideCondition',
                                 conditions: [],
-                                outsideConditions: []
+                                outsideConditions: [],
+                                selectedDataType: 'text',
+                            }
+                        ]
+                    }
+                    : node
+            )
+        );
+    };
+
+    const addInsideCondition = (nodeId: number) => {
+        setConditionNodes(
+            conditionNodes.map(node =>
+                node.id === nodeId
+                    ? {
+                        ...node,
+                        conditions: [
+                            ...node.conditions,
+                            {
+                                id: Date.now(),
+                                type: 'subCondition',
+                                conditions: [],
+                                outsideConditions: [],
+                                selectedDataType: 'text', // Initialize with a default value
                             }
                         ]
                     }
@@ -167,7 +257,8 @@ const ConditionalModal: React.FC<ConditionalProps> = ({
             id: Date.now(),
             type: 'else if',
             conditions: [],
-            outsideConditions: []
+            outsideConditions: [],
+            selectedDataType: 'text', // Initialize with a default value
         };
 
         setConditionNodes(prevNodes => {
@@ -185,18 +276,6 @@ const ConditionalModal: React.FC<ConditionalProps> = ({
         if (conditionNodes.length > 1) {
             setConditionNodes(conditionNodes.filter(node => node.id !== nodeId));
         }
-    };
-
-    const handleDeleteCondition = (nodeId: number, conditionId: number, isOutsideCondition: boolean = false) => {
-        setConditionNodes(
-            conditionNodes.map(node =>
-                node.id === nodeId
-                    ? isOutsideCondition
-                        ? { ...node, outsideConditions: node.outsideConditions.filter(condition => condition.id !== conditionId) }
-                        : { ...node, conditions: node.conditions.filter(condition => condition.id !== conditionId) }
-                    : node
-            )
-        );
     };
 
     return (
@@ -219,7 +298,7 @@ const ConditionalModal: React.FC<ConditionalProps> = ({
         >
             <Form
                 form={form}
-                name="filterForm"
+                name="conditionalForm"
                 layout="vertical"
                 initialValues={initialValues}
             >
@@ -264,7 +343,7 @@ const ConditionalModal: React.FC<ConditionalProps> = ({
                     {conditionType && (
                         <>
                             <Row gutter={16} className='margin_zero'>
-                                {conditionNodes.map((node, index) => (
+                                {conditionNodes.map((node) => (
                                     <React.Fragment key={node.id}>
                                         <Col md={8} sm={24}>
                                             <div className={classes.checkLabel}>
@@ -293,19 +372,25 @@ const ConditionalModal: React.FC<ConditionalProps> = ({
                                                                 <Col md={23} sm={24}>
                                                                     <ConditionRow
                                                                         nodeId={node.id}
-                                                                        columns={columns}
+                                                                        columns={columns.map(col => col.name)}
                                                                         handleDeleteConditionNode={handleDeleteConditionNode}
+                                                                        renderOperators={() => renderOperators(node.selectedDataType || 'text')} // Use node's selected data type
+                                                                        columnDataTypes={columnDataTypes}
+                                                                        handleColumnChange={(nodeId, columnName) => handleColumnChange(nodeId, columnName)}
                                                                     />
 
                                                                     {node.conditions.length > 0 && (
                                                                         <div className={classes.conditionList}>
-                                                                            {node.conditions.map((condition, idx) => (
+                                                                            {node.conditions.map((condition) => (
                                                                                 <SubConditionRow
                                                                                     key={condition.id}
                                                                                     nodeId={node.id}
                                                                                     conditionId={condition.id}
-                                                                                    columns={columns}
+                                                                                    columns={columns.map(col => col.name)}
                                                                                     handleDeleteCondition={handleDeleteCondition}
+                                                                                    renderOperators={(dataType) => renderOperators(dataType || 'text')} // Pass down the correct data type
+                                                                                    columnDataTypes={columnDataTypes}
+                                                                                    handleColumnChange={(nodeId, columnName) => handleColumnChange(nodeId, columnName)}
                                                                                 />
                                                                             ))}
                                                                         </div>
@@ -343,9 +428,12 @@ const ConditionalModal: React.FC<ConditionalProps> = ({
                                                                 key={outsideCondition.id}
                                                                 nodeId={node.id}
                                                                 conditionId={outsideCondition.id}
-                                                                columns={columns}
-                                                                isOutsideCondition={true} // Pass the outside condition flag
+                                                                columns={columns.map(col => col.name)}
+                                                                isOutsideCondition={true}
                                                                 handleDeleteCondition={(nodeId, conditionId) => handleDeleteCondition(nodeId, conditionId, true)}
+                                                                renderOperators={(dataType) => renderOperators(dataType || 'text')} // Use outside condition's selected data type with fallback
+                                                                columnDataTypes={columnDataTypes}
+                                                                handleColumnChange={(nodeId, columnName) => handleColumnChange(nodeId, columnName, true, outsideCondition.id)} // Pass handleColumnChange to update operator based on column
                                                             />
                                                         </div>
                                                     ))}

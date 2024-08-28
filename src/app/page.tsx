@@ -6,8 +6,8 @@ const HomePage: React.FC = () => {
     return (
         <div>
             <h1>Welcome to the Home Page</h1>
-            <Link href="/about">
-                <Button type="primary">Go to About Page</Button>
+            <Link href="/dashboard">
+                <Button type="primary">Go to Dashboard</Button>
             </Link>
         </div>
     );

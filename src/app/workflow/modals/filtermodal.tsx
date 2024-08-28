@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Select, Button, Form, Row, Col, Input, message, DatePicker } from 'antd';
+import { Modal, Select, Button, Form, Row, Col, Input, message } from 'antd';
 import { fetchFolders, fetchFolderData } from '@/app/API/api';
-
-const { RangePicker } = DatePicker;
 
 interface FilterModalProps {
     isModalVisible: boolean;
@@ -30,7 +28,6 @@ const FilterModal: React.FC<FilterModalProps> = ({
     const [columns, setColumns] = useState<{ key: string, name: string }[]>([]);
     const [columnDataTypes, setColumnDataTypes] = useState<{ [key: string]: string }>({});
     const [confirmedDataType, setConfirmedDataType] = useState<string | null>(null);
-    const [selectedOperator, setSelectedOperator] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
     const handleTableChange = async (value: string) => {
@@ -61,14 +58,10 @@ const FilterModal: React.FC<FilterModalProps> = ({
         if (column) {
             const dataType = columnDataTypes[column.name] || null;
             setConfirmedDataType(dataType);
-            setSelectedOperator(null);
+            form.setFieldValue('columnName', column.name);
         } else {
             console.log("Column not found for key:", value);
         }
-    };
-
-    const handleOperatorChange = (value: string) => {
-        setSelectedOperator(value);
     };
 
     const onOk = () => {
@@ -78,16 +71,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
                 if (selectedColumn) {
                     values.column = selectedColumn.name;
                 }
-
-                if (confirmedDataType === 'date' && values.value) {
-                    if (values.value instanceof Array) {
-                        const [startDate, endDate] = values.value;
-                        values.value = `Start: ${startDate.format('YYYY-MM-DD')}, End: ${endDate.format('YYYY-MM-DD')}`;
-                    } else {
-                        values.value = values.value.format('YYYY-MM-DD');
-                    }
-                }
-
+                console.log('Selected Column Name:', values.column);
                 handleOkay(values);
                 form.resetFields();
             })
@@ -111,18 +95,23 @@ const FilterModal: React.FC<FilterModalProps> = ({
                         <Select.Option value="<=">{'<='}</Select.Option>
                     </>
                 );
+            case 'date':
+                return (
+                    <>
+                        <Select.Option value="=">{'='}</Select.Option>
+                        <Select.Option value="!=">{'!='}</Select.Option>
+                        <Select.Option value=">">{'>'}</Select.Option>
+                        <Select.Option value="<">{'<'}</Select.Option>
+                        <Select.Option value=">=">{'>='}</Select.Option>
+                        <Select.Option value="<=">{'<='}</Select.Option>
+                    </>
+                );
             case 'text':
                 return (
                     <>
                         <Select.Option value="=">{'='}</Select.Option>
                         <Select.Option value="!=">{'!='}</Select.Option>
                         <Select.Option value="string_match">String Match</Select.Option>
-                    </>
-                );
-            case 'date':
-                return (
-                    <>
-                        <Select.Option value="range">Date Range</Select.Option>
                     </>
                 );
             default:
@@ -198,55 +187,30 @@ const FilterModal: React.FC<FilterModalProps> = ({
                                     ))}
                                 </Select>
                             </Form.Item>
+                            <Form.Item name="columnName" hidden={true}>
+                                <Input />
+                            </Form.Item>
                         </Col>
-                        {confirmedDataType === 'date' && (
-                            <Col md={12} sm={24}>
-                                <Form.Item
-                                    name="operator"
-                                    label="Comparison Operator"
-                                    rules={[{ required: true, message: 'Please select an operator' }]}
-                                >
-                                    <Select placeholder="Select Operator" onChange={handleOperatorChange}>
-                                        {renderOperators()}
-                                    </Select>
-                                </Form.Item>
-                            </Col>
-                        )}
-                        {confirmedDataType === 'date' && selectedOperator === 'range' && (
-                            <Col md={24} sm={24}>
-                                <Form.Item
-                                    name="value"
-                                    label="Select Date Range"
-                                    rules={[{ required: true, message: 'Please select a date range' }]}
-                                >
-                                    <RangePicker style={{ width: '100%' }} />
-                                </Form.Item>
-                            </Col>
-                        )}
-                        {confirmedDataType !== 'date' && (
-                            <>
-                                <Col md={12} sm={24}>
-                                    <Form.Item
-                                        name="operator"
-                                        label="Comparison Operator"
-                                        rules={[{ required: true, message: 'Please select an operator' }]}
-                                    >
-                                        <Select placeholder="Select Operator">
-                                            {renderOperators()}
-                                        </Select>
-                                    </Form.Item>
-                                </Col>
-                                <Col md={24} sm={24}>
-                                    <Form.Item
-                                        name="value"
-                                        label="Enter Value"
-                                        rules={[{ required: true, message: 'Please enter a value' }]}
-                                    >
-                                        <Input placeholder="Enter Value" />
-                                    </Form.Item>
-                                </Col>
-                            </>
-                        )}
+                        <Col md={12} sm={24}>
+                            <Form.Item
+                                name="operator"
+                                label="Comparison Operator"
+                                rules={[{ required: true, message: 'Please select an operator' }]}
+                            >
+                                <Select placeholder="Select Operator">
+                                    {renderOperators()}
+                                </Select>
+                            </Form.Item>
+                        </Col>
+                        <Col md={24} sm={24}>
+                            <Form.Item
+                                name="value"
+                                label="Enter Value"
+                                rules={[{ required: true, message: 'Please enter a value' }]}
+                            >
+                                <Input placeholder="Enter Value" />
+                            </Form.Item>
+                        </Col>
                     </Row>
                 </div>
             </Form>

@@ -4,7 +4,7 @@ import { fetchFolders } from '@/app/API/api';
 
 interface StartNodeModalProps {
     isModalVisible: boolean;
-    handleOkay: (values: any, isMergeSelected: boolean) => void;  // Added isMergeSelected flag
+    handleOkay: (values: any, isMergeSelected: boolean) => void;
     handleCancel: () => void;
     setSelectedTable: (value: string | null) => void;
     workspaces: any[];
