@@ -7,7 +7,7 @@ interface ConditionRowProps {
     nodeId: number;
     columns: string[];
     handleDeleteConditionNode: (nodeId: number) => void;
-    renderOperators: (dataType: string | undefined) => JSX.Element; // Update type to allow undefined
+    renderOperators: (dataType: string | undefined) => JSX.Element;
     columnDataTypes: { [key: string]: string };
     handleColumnChange: (nodeId: number, columnName: string) => void;
 }

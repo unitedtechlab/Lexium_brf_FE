@@ -25,7 +25,7 @@ interface ConditionField {
     conditions: ConditionField[];
     outsideConditions: ConditionField[];
     operator?: string;
-    selectedDataType?: string; // Track selected data type
+    selectedDataType?: string;
 }
 
 const ConditionalModal: React.FC<ConditionalProps> = ({
@@ -47,7 +47,6 @@ const ConditionalModal: React.FC<ConditionalProps> = ({
         { id: Date.now(), type: 'if', conditions: [], outsideConditions: [], selectedDataType: 'text' }
     ]);
 
-    // Fetch and set columns and data types when a table is selected
     const handleTableChange = async (value: string) => {
         setSelectedTable(value);
         setIsLoading(true);
@@ -61,7 +60,6 @@ const ConditionalModal: React.FC<ConditionalProps> = ({
                     : [];
                 setColumns(columnsArray);
 
-                // Fetch and set column data types
                 const confirmedDataTypes = await fetchFolderData(email, selectedWorkspace!, value);
                 setColumnDataTypes(confirmedDataTypes);
             }
@@ -72,7 +70,6 @@ const ConditionalModal: React.FC<ConditionalProps> = ({
         }
     };
 
-    // Handle condition type change (if, if/else, else/if)
     const handleConditionTypeChange = (value: string) => {
         setConditionType(value);
 
@@ -242,7 +239,7 @@ const ConditionalModal: React.FC<ConditionalProps> = ({
                                 type: 'subCondition',
                                 conditions: [],
                                 outsideConditions: [],
-                                selectedDataType: 'text', // Initialize with a default value
+                                selectedDataType: 'text',
                             }
                         ]
                     }
@@ -258,7 +255,7 @@ const ConditionalModal: React.FC<ConditionalProps> = ({
             type: 'else if',
             conditions: [],
             outsideConditions: [],
-            selectedDataType: 'text', // Initialize with a default value
+            selectedDataType: 'text',
         };
 
         setConditionNodes(prevNodes => {
@@ -374,7 +371,7 @@ const ConditionalModal: React.FC<ConditionalProps> = ({
                                                                         nodeId={node.id}
                                                                         columns={columns.map(col => col.name)}
                                                                         handleDeleteConditionNode={handleDeleteConditionNode}
-                                                                        renderOperators={() => renderOperators(node.selectedDataType || 'text')} // Use node's selected data type
+                                                                        renderOperators={() => renderOperators(node.selectedDataType || 'text')}
                                                                         columnDataTypes={columnDataTypes}
                                                                         handleColumnChange={(nodeId, columnName) => handleColumnChange(nodeId, columnName)}
                                                                     />
@@ -388,7 +385,7 @@ const ConditionalModal: React.FC<ConditionalProps> = ({
                                                                                     conditionId={condition.id}
                                                                                     columns={columns.map(col => col.name)}
                                                                                     handleDeleteCondition={handleDeleteCondition}
-                                                                                    renderOperators={(dataType) => renderOperators(dataType || 'text')} // Pass down the correct data type
+                                                                                    renderOperators={(dataType) => renderOperators(dataType || 'text')}
                                                                                     columnDataTypes={columnDataTypes}
                                                                                     handleColumnChange={(nodeId, columnName) => handleColumnChange(nodeId, columnName)}
                                                                                 />
@@ -431,9 +428,9 @@ const ConditionalModal: React.FC<ConditionalProps> = ({
                                                                 columns={columns.map(col => col.name)}
                                                                 isOutsideCondition={true}
                                                                 handleDeleteCondition={(nodeId, conditionId) => handleDeleteCondition(nodeId, conditionId, true)}
-                                                                renderOperators={(dataType) => renderOperators(dataType || 'text')} // Use outside condition's selected data type with fallback
+                                                                renderOperators={(dataType) => renderOperators(dataType || 'text')}
                                                                 columnDataTypes={columnDataTypes}
-                                                                handleColumnChange={(nodeId, columnName) => handleColumnChange(nodeId, columnName, true, outsideCondition.id)} // Pass handleColumnChange to update operator based on column
+                                                                handleColumnChange={(nodeId, columnName) => handleColumnChange(nodeId, columnName, true, outsideCondition.id)}
                                                             />
                                                         </div>
                                                     ))}
