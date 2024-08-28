@@ -102,10 +102,11 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
     setIsModalVisible(true);
   }, []);
 
-  const showFilterModal = useCallback((nodeData: { id: string; position: XYPosition; icon: keyof typeof Icons | keyof typeof FaIcons }) => {
+  const showFilterModal = useCallback((nodeData: { id: string; position: XYPosition; icon: IconNames; column?: string; operator?: string; value?: string }) => {
     setCurrentEditNodeData(nodeData);
     setIsFilterModalVisible(true);
   }, []);
+
 
   const showSortModal = useCallback((nodeData: { id: string; position: XYPosition; icon: keyof typeof Icons | keyof typeof FaIcons }) => {
     setCurrentEditNodeData(nodeData);
@@ -154,82 +155,9 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
 
   const handleEdit = useCallback(
     (nodeId: string) => {
-      console.log("Attempting to edit node with ID:", nodeId);
 
-      const nodeToEdit = nodes.find((node) => node.id === nodeId);
-
-      if (nodeToEdit) {
-        console.log("Found node to edit:", nodeToEdit);
-
-        const { type } = nodeToEdit.data; // Use the correct property to determine the node type
-        const nodeData = {
-          id: nodeId,
-          position: nodeToEdit.position,
-          icon: '' as IconNames // Initialize with empty icon
-        };
-
-        switch (type) {
-          case 'filter':
-            nodeData.icon = 'SlSliders' as IconNames;
-            showFilterModal(nodeData);
-            break;
-          case 'sort':
-            nodeData.icon = 'FaSort' as IconNames;
-            showSortModal(nodeData);
-            break;
-          case 'conditional':
-            nodeData.icon = 'FaCode' as IconNames;
-            showConditionalModal(nodeData);
-            break;
-          case 'groupby':
-            nodeData.icon = 'FaLayerGroup' as IconNames;
-            showGroupByModal(nodeData);
-            break;
-          case 'statistical':
-            nodeData.icon = 'FaChartBar' as IconNames;
-            showStatisticalModal(nodeData);
-            break;
-          case 'scaling':
-            nodeData.icon = 'FaExpand' as IconNames;
-            showScalingModal(nodeData);
-            break;
-          case 'arithmetic':
-            nodeData.icon = 'FaCalculator' as IconNames;
-            showArithmeticModal(nodeData);
-            break;
-          case 'pivotTable':
-            nodeData.icon = 'FaTable' as IconNames;
-            showPivotTableModal(nodeData);
-            break;
-          case 'output':
-            nodeData.icon = 'FaDownload' as IconNames;
-            showOutputModal(nodeData);
-            break;
-          case 'start':
-            nodeData.icon = 'FaPlay' as IconNames;
-            showStartModal(nodeData);
-            break;
-          default:
-            console.error('Unknown node type:', type);
-        }
-      } else {
-        console.error('Node not found:', nodeId);
-        console.log("Current nodes:", nodes);
-      }
     },
-    [
-      nodes,
-      showFilterModal,
-      showSortModal,
-      showConditionalModal,
-      showGroupByModal,
-      showStatisticalModal,
-      showScalingModal,
-      showArithmeticModal,
-      showPivotTableModal,
-      showOutputModal,
-      showStartModal,
-    ]
+    []
   );
 
 
@@ -610,49 +538,30 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
                     : 'Else'
                 : 'If';
 
-          const mappedSubConditions: Condition[] =
-            condition.subConditions?.map((subCondition) => ({
-              id: subCondition.id,
-              type: subCondition.type,
-              column: subCondition.column,
-              condition: subCondition.condition,
-              value: subCondition.value,
-              operator: subCondition.operator,
-            })) || [];
+          const isElseCondition = conditionTypeLabel === 'Else';
 
-          const mappedOutsideConditions: Condition[] =
-            condition.outsideConditions?.map((outsideCondition) => ({
-              id: outsideCondition.id,
-              type: outsideCondition.type,
-              column: outsideCondition.column,
-              condition: outsideCondition.condition,
-              value: outsideCondition.value,
-              operator: outsideCondition.operator,
-            })) || [];
-
+          // Adjust the conditions structure to match the Go backend expectations
           return {
             id: `${currentEditNodeData.id}-${index}`,
-            conditions: [
-              {
-                column: condition.column,
-                condition: condition.condition,
-                value: condition.value,
-                subConditions: mappedSubConditions,
-                outsideConditions: mappedOutsideConditions,
-              },
-            ],
             conditionType: conditionTypeLabel,
+            conditions: isElseCondition ? [] : [{
+              column: condition.column,
+              condition: condition.condition,
+              value: condition.value,
+              subConditions: condition.subConditions || [],
+              outsideConditions: condition.outsideConditions || [],
+            }]
           };
         });
 
-        // Parent conditional node
+        // Ensure that conditional is always an array, even if it's empty for Else
         const mainNode: Node = {
           id: currentEditNodeData.id,
           data: {
             table: selectedTable,
             type: 'conditional',
             isParentNode: true,
-            conditional: conditionsData,
+            conditional: conditionsData, // This is now an array of condition objects
             label: createNodeLabel(
               selectedTable,
               'Conditional Node',
@@ -715,6 +624,7 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
     },
     [currentEditNodeData, selectedTable, setNodes, setEdges]
   );
+
 
   const handleSortModalOk = useCallback(
     (values: any) => {
@@ -1018,14 +928,13 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
       } else if (itemData.title === 'Starting Node') {
         showStartModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons });
       } else {
-        const nodeType = itemData.title.toLowerCase().replace(' ', '');
 
         const newNode: Node = {
           id,
           data: {
             table: itemData.title,
-            type: nodeType,
-            label: createNodeLabel(itemData.title, nodeType),
+            type: itemData.title.toLowerCase().replace(' ', ''),
+            label: createNodeLabel(itemData.title, itemData.title.toLowerCase().replace(' ', '')),
           },
           position,
           draggable: true,
@@ -1105,6 +1014,7 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
               isModalVisible={isFilterModalVisible}
               handleOkay={handleFilterModalOk}
               handleCancel={handleCancel}
+              initialValues={currentEditNodeData} // Pass current edit node data to modal
               setSelectedTable={setSelectedTable}
               workspaces={workspaces}
               folders={folders}

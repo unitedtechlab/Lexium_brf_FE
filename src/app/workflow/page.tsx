@@ -151,20 +151,32 @@ const WorkFlow: React.FC = () => {
                 message.success('Workflow saved successfully');
                 console.log('API Response:', response.data);
             } else {
-                message.error('Failed to save workflow');
+                // Handle server returned errors
+                const errorMessage = response.data.error || 'Failed to save workflow';
+                message.error(errorMessage);
                 console.error('API Response:', response);
             }
         } catch (error) {
+            // Detailed error handling
             if (axios.isAxiosError(error)) {
-                console.error('API Error Response:', error.response?.data);
+                const backendError = error.response?.data?.error;
+                if (backendError) {
+                    message.error(`Error: ${backendError}`);
+                    console.error('Backend Error:', backendError);
+                } else {
+                    message.error('An error occurred while saving the workflow');
+                    console.error('API Error Response:', error.response?.data || error.message);
+                }
             } else if (error instanceof Error) {
+                message.error(`An unexpected error occurred: ${error.message}`);
                 console.error('General Error:', error.message);
             } else {
+                message.error('An unknown error occurred');
                 console.error('Unexpected Error:', error);
             }
-            message.error('An error occurred while saving the workflow');
         }
     };
+
 
     useEffect(() => {
         if (email) {

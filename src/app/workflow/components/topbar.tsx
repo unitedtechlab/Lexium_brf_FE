@@ -16,7 +16,7 @@ const Topbar: React.FC<TopbarProps> = ({ onSaveClick, setWorkflowName }) => {
         <div className={styles.topbarWrapper}>
             <div className={`flex ${styles.topbar}`}>
                 <div className={styles.discardBtn}>
-                    <a href="/dashboard" className='btn btn-discard'>Discard</a>
+                    <a href="/workflows-list" className='btn btn-discard'>Discard</a>
                 </div>
                 <div className={styles.workspaceName}>
                     <input

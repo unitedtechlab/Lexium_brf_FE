@@ -53,7 +53,7 @@ const SidebarMenu = ({ collapsed, onCollapse }: SidebarMenuProps) => {
         {
             key: '5',
             icon: <BiGitBranch />,
-            label: <Link href="/workflow">Workflow</Link>,
+            label: <Link href="/workflows-list">Workflow</Link>,
         },
     ];
 
