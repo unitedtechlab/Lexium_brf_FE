@@ -27,7 +27,6 @@ const Topbar: React.FC<TopbarProps> = ({ onSaveClick, setWorkflowName }) => {
                     />
                 </div>
                 <div className={`flex gap-1 ${styles.rightButtons}`}>
-                    <Button className='btn btn-outline'>Create</Button>
                     <Button className='btn' onClick={onSaveClick}>Save</Button>
                 </div>
             </div>

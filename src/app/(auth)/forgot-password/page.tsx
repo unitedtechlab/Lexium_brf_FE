@@ -20,9 +20,6 @@ export default function ForgotPassword() {
       });
 
       setLoading(false);
-
-      console.log('Response:', response.data);
-
       if (response.status === 200 && response.data.success) {
         message.success("Password reset link sent to your email.");
       } else {

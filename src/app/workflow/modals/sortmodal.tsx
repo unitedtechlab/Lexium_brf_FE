@@ -110,7 +110,6 @@ const SortModal: React.FC<SortModalProps> = ({
                             >
                                 <Select
                                     placeholder="Select Column"
-                                // disabled={!selectedTable}
                                 >
                                     {columns.map((column) => (
                                         <Select.Option key={column} value={column}>

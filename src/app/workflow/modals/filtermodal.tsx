@@ -30,7 +30,6 @@ const FilterModal: React.FC<FilterModalProps> = ({
     const [confirmedDataType, setConfirmedDataType] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
-    // Load initial table and column data based on initial values if editing an existing node
     useEffect(() => {
         if (initialValues && initialValues.table) {
             handleTableChange(initialValues.table);
@@ -54,7 +53,6 @@ const FilterModal: React.FC<FilterModalProps> = ({
                 const confirmedDataTypes = await fetchFolderData(email, selectedWorkspace!, value);
                 setColumnDataTypes(confirmedDataTypes);
 
-                // If editing, set the confirmed data type for the pre-selected column
                 if (initialValues && initialValues.column) {
                     const initialColumnType = confirmedDataTypes[initialValues.column];
                     setConfirmedDataType(initialColumnType);
@@ -85,7 +83,6 @@ const FilterModal: React.FC<FilterModalProps> = ({
                 if (selectedColumn) {
                     values.column = selectedColumn.name;
                 }
-                console.log('Selected Column Name:', values.column);
                 handleOkay(values);
                 form.resetFields();
             })

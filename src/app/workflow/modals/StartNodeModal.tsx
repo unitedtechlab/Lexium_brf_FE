@@ -49,7 +49,7 @@ const StartNodeModal: React.FC<StartNodeModalProps> = ({
     const onOk = () => {
         form.validateFields()
             .then(values => {
-                const isMergeSelected = values.table1 && values.table2;  // Check if the merge details section is selected
+                const isMergeSelected = values.table1 && values.table2;
                 handleOkay(values, isMergeSelected);
                 form.resetFields();
             })

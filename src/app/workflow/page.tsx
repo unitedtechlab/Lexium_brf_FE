@@ -17,15 +17,15 @@ import { BaseURL } from "@/app/constants/index";
 import { getToken } from '@/utils/auth';
 
 const initialSidebarItems = [
-    { id: 'start', icon: 'MdOutlineJoinInner' as const, title: 'Starting Node', description: 'Starting Node', enabled: true },
+    { id: 'startingnode', icon: 'MdOutlineJoinInner' as const, title: 'Starting Node', description: 'Starting Node', enabled: true },
     { id: 'filter', icon: 'MdOutlineFilterAlt' as const, title: 'Filter', description: 'Filter', enabled: false },
     { id: 'sort', icon: 'FaSortAlphaDown' as const, title: 'Sort', description: 'Sort', enabled: false },
-    { id: 'conditional', icon: 'FaProjectDiagram' as const, title: 'IF/Else/And/OR', description: 'IF/Else/And/OR', enabled: false },
+    { id: 'if/else/and/or', icon: 'FaProjectDiagram' as const, title: 'IF/Else/And/OR', description: 'IF/Else/And/OR', enabled: false },
     { id: 'groupby', icon: 'VscGroupByRefType' as const, title: 'Group By', description: 'Group By', enabled: false },
-    { id: 'Pivot', icon: 'MdOutlinePivotTableChart' as const, title: 'Pivot', description: 'Pivot', enabled: false },
-    { id: 'arithmetic', icon: 'TbMathSymbols' as const, title: 'Arithmetic Operations', description: 'Arithmetic Operations', enabled: false },
-    { id: 'statisticalFunction', icon: 'PiChartLineUp' as const, title: 'Statistical Function', description: 'Statistical Function', enabled: false },
-    { id: 'scaling', icon: 'SiTimescale' as const, title: 'Scaling Function', description: 'Scaling Function', enabled: false },
+    { id: 'pivot', icon: 'MdOutlinePivotTableChart' as const, title: 'Pivot', description: 'Pivot', enabled: false },
+    { id: 'arithmetic', icon: 'TbMathSymbols' as const, title: 'Arithmetic', description: 'Arithmetic', enabled: false },
+    { id: 'statistical', icon: 'PiChartLineUp' as const, title: 'Statistical', description: 'Statistical', enabled: false },
+    { id: 'scaling', icon: 'SiTimescale' as const, title: 'Scaling', description: 'Scaling', enabled: false },
     { id: 'output', icon: 'AiOutlineTable' as const, title: 'Output', description: 'Output', enabled: false },
 ];
 
@@ -73,8 +73,15 @@ const WorkFlow: React.FC = () => {
             const targetEdgeIds = outgoingEdges.map(edge => edge.target);
 
             const { label, pivotTable, ...nodeDataWithoutLabel } = currentNode.data as any;
-            const nodeData = pivotTable
-                ? {
+
+            let nodeData = nodeDataWithoutLabel;
+            if (currentNode.data.type === 'if' || currentNode.data.type === 'else') {
+                nodeData = {
+                    ...nodeDataWithoutLabel,
+                    conditional: undefined
+                };
+            } else if (pivotTable) {
+                nodeData = {
                     ...nodeDataWithoutLabel,
                     pivotTable: {
                         index: pivotTable.pivotColumns.index,
@@ -82,8 +89,8 @@ const WorkFlow: React.FC = () => {
                         value: pivotTable.pivotColumns.value,
                         functionCheckboxes: pivotTable.functionCheckboxes,
                     },
-                }
-                : nodeDataWithoutLabel;
+                };
+            }
 
             rule.push({
                 id: currentNode.id,
@@ -104,6 +111,7 @@ const WorkFlow: React.FC = () => {
 
         return rule;
     };
+
 
     const handleRunClick = async () => {
         const rules: { [key: string]: any[] } = {};
@@ -149,15 +157,12 @@ const WorkFlow: React.FC = () => {
 
             if (response.status === 200) {
                 message.success('Workflow saved successfully');
-                console.log('API Response:', response.data);
             } else {
-                // Handle server returned errors
                 const errorMessage = response.data.error || 'Failed to save workflow';
                 message.error(errorMessage);
                 console.error('API Response:', response);
             }
         } catch (error) {
-            // Detailed error handling
             if (axios.isAxiosError(error)) {
                 const backendError = error.response?.data?.error;
                 if (backendError) {

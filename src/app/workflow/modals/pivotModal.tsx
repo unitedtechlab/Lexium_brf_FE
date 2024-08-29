@@ -3,7 +3,7 @@ import { Modal, Select, Button, Form, Row, Col, Tabs, Input, Checkbox, message }
 import Classes from '../workflow.module.css';
 import { BiSearch } from "react-icons/bi";
 import { CloseOutlined } from '@ant-design/icons';
-import { fetchFolders, fetchFolderData } from '@/app/API/api'; // Import necessary API functions
+import { fetchFolders, fetchFolderData } from '@/app/API/api';
 
 interface PivotTableProps {
     isModalVisible: boolean;
@@ -14,6 +14,7 @@ interface PivotTableProps {
     folders: any[];
     selectedWorkspace: string | null;
     email: string;
+    initialValues?: any;
 }
 
 const PivotTableContent: React.FC<PivotTableProps> = ({
@@ -23,7 +24,8 @@ const PivotTableContent: React.FC<PivotTableProps> = ({
     setSelectedTable,
     folders,
     selectedWorkspace,
-    email
+    email,
+    initialValues,
 }) => {
     const [form] = Form.useForm();
     const [columns, setColumns] = useState<string[]>([]);
@@ -37,7 +39,16 @@ const PivotTableContent: React.FC<PivotTableProps> = ({
 
     const [checkedColumns, setCheckedColumns] = useState<string[]>([]);
     const [functionCheckboxes, setFunctionCheckboxes] = useState<{ [key: string]: string[] }>({});
-    const [columnDataTypes, setColumnDataTypes] = useState<{ [key: string]: string }>({}); // Store column data types
+    const [columnDataTypes, setColumnDataTypes] = useState<{ [key: string]: string }>({});
+
+    useEffect(() => {
+        if (initialValues && initialValues.table) {
+            handleTableChange(initialValues.table);
+            setPivotColumns(initialValues.pivotColumns || { index: [], column: [], value: [] });
+            setFunctionCheckboxes(initialValues.functionCheckboxes || {});
+            form.setFieldsValue(initialValues);
+        }
+    }, [initialValues]);
 
     const handleTableChange = async (tableId: string) => {
         setSelectedTable(tableId);
@@ -50,7 +61,6 @@ const PivotTableContent: React.FC<PivotTableProps> = ({
                 setColumns(columnsArray);
                 setFilteredColumns(columnsArray);
 
-                // Fetch and set column data types
                 const confirmedDataTypes = await fetchFolderData(email, selectedWorkspace!, tableId);
                 setColumnDataTypes(confirmedDataTypes);
             } else {
@@ -297,7 +307,6 @@ const PivotTableContent: React.FC<PivotTableProps> = ({
     ];
 
     const onOk = () => {
-        // Validation logic
         const hasPivotColumns = Object.values(pivotColumns).some(columns => columns.length > 0);
         const hasFunctionForValues = pivotColumns.value.every(valueColumn => functionCheckboxes[valueColumn]?.length > 0);
 
@@ -353,6 +362,7 @@ const PivotTableContent: React.FC<PivotTableProps> = ({
                 form={form}
                 name="folderselect"
                 layout="vertical"
+                initialValues={initialValues}
             >
                 <Row>
                     <Col md={6} sm={24}>

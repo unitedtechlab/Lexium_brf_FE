@@ -32,9 +32,6 @@ const OTPPage: React.FC = () => {
                 });
 
             setLoading(false);
-
-            console.log('Response:', response.data.message);
-
             if (response.status === 200) {
                 message.success(response.data.mesage || 'OTP verified successfully. Redirecting to dashboard...');
                 setToken(response.data.token);

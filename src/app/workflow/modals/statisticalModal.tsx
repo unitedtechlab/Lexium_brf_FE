@@ -29,12 +29,12 @@ const StatisticalModal: React.FC<StatisticalModalProps> = ({
     const [columns, setColumns] = useState<{ key: string, name: string }[]>([]);
     const [columnDataTypes, setColumnDataTypes] = useState<{ [key: string]: string }>({});
     const [confirmedDataType, setConfirmedDataType] = useState<string | null>(null);
-    const [selectedColumnName, setSelectedColumnName] = useState<string | null>(null); // Track selected column name
+    const [selectedColumnName, setSelectedColumnName] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
     useEffect(() => {
         setConfirmedDataType(null);
-        setSelectedColumnName(null); // Reset selected column name
+        setSelectedColumnName(null);
     }, [isModalVisible]);
 
     const handleTableChange = async (value: string) => {
@@ -65,7 +65,7 @@ const StatisticalModal: React.FC<StatisticalModalProps> = ({
         if (column) {
             const dataType = columnDataTypes[column.name] || null;
             setConfirmedDataType(dataType);
-            setSelectedColumnName(column.name); // Set the selected column name
+            setSelectedColumnName(column.name);
         } else {
             console.log("Column not found for key:", value);
         }
@@ -74,7 +74,7 @@ const StatisticalModal: React.FC<StatisticalModalProps> = ({
     const onOk = () => {
         form.validateFields()
             .then(values => {
-                values.column = selectedColumnName; // Ensure the selected column name is used
+                values.column = selectedColumnName;
                 handleOkay(values);
                 form.resetFields();
             })

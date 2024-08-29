@@ -92,6 +92,7 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
     id: string;
     position: XYPosition;
     icon: keyof typeof Icons | keyof typeof FaIcons;
+    pivotTable?: any;
   } | null>(null);
 
   const [selectedTable, setSelectedTable] = useState<string | null>(null);
@@ -138,7 +139,7 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
     setIsArithmeticModalVisible(true);
   }, []);
 
-  const showPivotTableModal = useCallback((nodeData: { id: string; position: XYPosition; icon: keyof typeof Icons | keyof typeof FaIcons }) => {
+  const showPivotTableModal = useCallback((nodeData: { id: string; position: XYPosition; icon: keyof typeof Icons | keyof typeof FaIcons, pivotTable: any }) => {
     setCurrentEditNodeData(nodeData);
     setIsPivotTableModalVisible(true);
   }, []);
@@ -155,9 +156,70 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
 
   const handleEdit = useCallback(
     (nodeId: string) => {
+      const nodeToEdit = nodes.find((node) => node.id === nodeId);
+      if (nodeToEdit) {
+        const { type, ...nodeData } = nodeToEdit.data;
 
+        const editData = {
+          id: nodeId,
+          position: nodeToEdit.position,
+          icon: 'FaEdit' as IconNames,
+          ...nodeData,
+        };
+
+        setCurrentEditNodeData(editData);
+
+        switch (type) {
+          case 'filter':
+            setIsFilterModalVisible(true);
+            break;
+          case 'sort':
+            setIsSortModalVisible(true);
+            break;
+          case 'if/else/and/or':
+            setIsConditionalModalVisible(true);
+            break;
+          case 'groupby':
+            setIsGroupByModalVisible(true);
+            break;
+          case 'statistical':
+            setIsStatisticalModalVisible(true);
+            break;
+          case 'scaling':
+            setIsScalingModalVisible(true);
+            break;
+          case 'arithmetic':
+            setIsArithmeticModalVisible(true);
+            break;
+          case 'pivot':
+            setIsPivotTableModalVisible(true);
+            break;
+          case 'output':
+            setIsOutputModalVisible(true);
+            break;
+          case 'startingnode':
+            setIsStartModalVisible(true);
+            break;
+          default:
+            console.error('Unknown node type:', type);
+        }
+      } else {
+        console.error('Node not found:', nodeId);
+      }
     },
-    []
+    [
+      nodes,
+      setIsFilterModalVisible,
+      setIsSortModalVisible,
+      setIsConditionalModalVisible,
+      setIsGroupByModalVisible,
+      setIsStatisticalModalVisible,
+      setIsScalingModalVisible,
+      setIsArithmeticModalVisible,
+      setIsPivotTableModalVisible,
+      setIsOutputModalVisible,
+      setIsStartModalVisible,
+    ]
   );
 
 
@@ -540,7 +602,6 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
 
           const isElseCondition = conditionTypeLabel === 'Else';
 
-          // Adjust the conditions structure to match the Go backend expectations
           return {
             id: `${currentEditNodeData.id}-${index}`,
             conditionType: conditionTypeLabel,
@@ -554,14 +615,13 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
           };
         });
 
-        // Ensure that conditional is always an array, even if it's empty for Else
         const mainNode: Node = {
           id: currentEditNodeData.id,
           data: {
             table: selectedTable,
             type: 'conditional',
             isParentNode: true,
-            conditional: conditionsData, // This is now an array of condition objects
+            conditional: conditionsData,
             label: createNodeLabel(
               selectedTable,
               'Conditional Node',
@@ -902,10 +962,20 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
         y: event.clientY,
       });
 
-      if (nodes.some((node) => node.id === id)) {
-        console.error('Node with the same ID already exists:', id);
-        return;
-      }
+      const newNode: Node = {
+        id,
+        data: {
+          table: itemData.title,
+          type: itemData.title.toLowerCase().replace(' ', ''),
+          label: createNodeLabel(itemData.title, itemData.title.toLowerCase().replace(' ', '')),
+        },
+        position,
+        draggable: true,
+        targetPosition: Position.Left,
+        sourcePosition: Position.Right,
+      };
+
+      setNodes((nds) => [...nds, newNode]);
 
       if (itemData.title === 'Filter') {
         showFilterModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons });
@@ -917,32 +987,16 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
         showConditionalModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons });
       } else if (itemData.title === 'Group By') {
         showGroupByModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons });
-      } else if (itemData.title === 'Statistical Function') {
+      } else if (itemData.title === 'Statistical') {
         showStatisticalModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons });
-      } else if (itemData.title === 'Scaling Function') {
+      } else if (itemData.title === 'Scaling') {
         showScalingModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons });
-      } else if (itemData.title === 'Arithmetic Operations') {
+      } else if (itemData.title === 'Arithmetic') {
         showArithmeticModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons });
       } else if (itemData.title === 'Pivot') {
-        showPivotTableModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons });
+        showPivotTableModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons, pivotTable: itemData.pivotTable });
       } else if (itemData.title === 'Starting Node') {
         showStartModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons });
-      } else {
-
-        const newNode: Node = {
-          id,
-          data: {
-            table: itemData.title,
-            type: itemData.title.toLowerCase().replace(' ', ''),
-            label: createNodeLabel(itemData.title, itemData.title.toLowerCase().replace(' ', '')),
-          },
-          position,
-          draggable: true,
-          targetPosition: Position.Left,
-          sourcePosition: Position.Right,
-        };
-
-        setNodes((nds) => [...nds, newNode]);
       }
     },
     [
@@ -1014,7 +1068,7 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
               isModalVisible={isFilterModalVisible}
               handleOkay={handleFilterModalOk}
               handleCancel={handleCancel}
-              initialValues={currentEditNodeData} // Pass current edit node data to modal
+              initialValues={currentEditNodeData}
               setSelectedTable={setSelectedTable}
               workspaces={workspaces}
               folders={folders}
@@ -1030,8 +1084,8 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
               folders={folders}
               selectedWorkspace={selectedWorkspace}
               email={email}
+              initialValues={currentEditNodeData?.pivotTable}
             />
-
             <SortModal
               isModalVisible={isSortModalVisible}
               handleOkay={handleSortModalOk}
