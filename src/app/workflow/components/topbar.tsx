@@ -1,15 +1,32 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styles from '../workflow.module.css';
-import { Button } from 'antd';
+import { Button, message } from 'antd';
 
 interface TopbarProps {
-    onSaveClick: () => void;
+    onSaveClick: () => Promise<boolean>;
     setWorkflowName: (name: string) => void;
 }
 
 const Topbar: React.FC<TopbarProps> = ({ onSaveClick, setWorkflowName }) => {
+    const [isRunEnabled, setIsRunEnabled] = useState(false);
+
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setWorkflowName(event.target.value);
+    };
+
+    const handleSaveClick = async () => {
+        try {
+            const success = await onSaveClick();
+            if (success) {
+                setIsRunEnabled(true);
+            } else {
+                setIsRunEnabled(false);
+                message.error('Failed to save workflow.');
+            }
+        } catch (error) {
+            setIsRunEnabled(false);
+            message.error('An error occurred while saving the workflow.');
+        }
     };
 
     return (
@@ -27,7 +44,8 @@ const Topbar: React.FC<TopbarProps> = ({ onSaveClick, setWorkflowName }) => {
                     />
                 </div>
                 <div className={`flex gap-1 ${styles.rightButtons}`}>
-                    <Button className='btn' onClick={onSaveClick}>Save</Button>
+                    <Button className='btn btn-outline' onClick={handleSaveClick}>Save</Button>
+                    <Button className='btn' disabled={!isRunEnabled}>Run</Button>
                 </div>
             </div>
         </div>

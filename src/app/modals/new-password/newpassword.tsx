@@ -26,7 +26,7 @@ const PasswordModal: React.FC<PasswordModalProps> = ({ open, onCancel, onSuccess
             }, {
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`, // Adding token to headers
+                    "Authorization": `Bearer ${token}`,
                 }
             });
 
@@ -34,7 +34,7 @@ const PasswordModal: React.FC<PasswordModalProps> = ({ open, onCancel, onSuccess
 
             if (response.status === 200) {
                 message.success(response.data.message || "Password reset successfully.");
-                onSuccess(); // Call the onSuccess callback on successful password change
+                onSuccess();
             } else {
                 message.error(response.data.message || "Failed to reset password. Please try again.");
             }

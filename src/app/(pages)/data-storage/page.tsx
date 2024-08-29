@@ -12,7 +12,6 @@ import folder from '../../assets/images/database.svg';
 import { fetchWorkspaces } from '@/app/API/api';
 import { Workspace } from '@/app/types/interface';
 
-// Dynamic imports
 const Searchbar = dynamic(() => import('../../components/Searchbar/search'), { ssr: false });
 const View = dynamic(() => import('../../components/GridListView/view'), { ssr: false });
 const Loader = dynamic(() => import('@/app/loading'), { ssr: false });
@@ -73,7 +72,6 @@ export default function CleanDataStorage() {
         loadWorkspaces();
     };
 
-    // Filter workspaces based on search input
     const filteredWorkspaces = workspaces.filter(workspace =>
         workspace.name.toLowerCase().includes(searchInput.toLowerCase())
     );

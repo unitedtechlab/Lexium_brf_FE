@@ -105,7 +105,6 @@ export default function CreateWorkSpace() {
         loadWorkspaces();
     }, [email]);
 
-    // Filter workspaces based on search input
     const filteredWorkspaces = workspaces.filter(workspace =>
         workspace.name.toLowerCase().includes(searchInput.toLowerCase())
     );

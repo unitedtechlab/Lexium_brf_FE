@@ -16,7 +16,6 @@ import BreadCrumb from "@/app/components/Breadcrumbs/breadcrumb";
 import { useEmail } from "@/app/context/emailContext";
 import Link from "next/link";
 
-// Dynamic imports
 const PreviewFolderModal = dynamic(() => import('../modals/folder-preview/folder-preview'), { ssr: false });
 const DeleteFolderModal = dynamic(() => import('../modals/delete-folder/delete-folder'), { ssr: false });
 const Loader = dynamic(() => import('@/app/loading'), { ssr: false });
@@ -104,7 +103,6 @@ const DataStorageFolder = () => {
                 setBreadcrumbs([{ href: `/data-storage`, label: `${id.replace(/-/g, " ")} Workspace` }]);
                 fetchFolders(email, id, setIsLoading)
                     .then(fetchedFolders => {
-                        // Filter folders to only include those where cleanDataExist is true
                         const filteredFolders = fetchedFolders.filter(folder => folder.cleanDataExist);
                         setFolders(filteredFolders);
                         setHasCleanData(filteredFolders.length > 0);

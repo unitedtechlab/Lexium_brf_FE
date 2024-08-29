@@ -123,7 +123,6 @@ const CreateFolderPage = () => {
         }
     }, [id, email]);
 
-    // Filter folders based on search input
     const filteredFolders = folders.filter(folder =>
         folder.name.toLowerCase().includes(searchInput.toLowerCase())
     );

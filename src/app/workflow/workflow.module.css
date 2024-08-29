@@ -98,6 +98,11 @@
     text-align: left;
 }
 
+.node-text span {
+    font-weight: var(--font-weight-700);
+    color: var(--primary-200);
+}
+
 .filterStyle {
     border: 1px solid var(--tertiary-300);
     border-radius: 4px;

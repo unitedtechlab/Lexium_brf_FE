@@ -1,5 +1,3 @@
-// interfaces.ts
-
 export interface User {
   id: number;
   firstName: string;

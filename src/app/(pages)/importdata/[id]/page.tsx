@@ -20,7 +20,6 @@ import { fetchFiles, fetchFolders } from '@/app/API/api';
 import { BaseURL } from '@/app/constants/index';
 import { getToken } from '@/utils/auth';
 
-// Dynamic imports for modals
 const DeleteFileModal = dynamic(() => import('./modals/delete-file/deletefile'));
 const EditFileModal = dynamic(() => import('./modals/edit-file/editfile'));
 const EstablishmentColumnModal = dynamic(() => import('@/app/modals/establishment-column/establishcolumn'));
@@ -222,7 +221,6 @@ export default function ImportData() {
         }
     };
 
-    // Filter files based on search input
     const filteredFiles = files.filter(file =>
         file.name.toLowerCase().includes(searchInput.toLowerCase())
     );

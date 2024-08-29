@@ -112,8 +112,7 @@ const WorkFlow: React.FC = () => {
         return rule;
     };
 
-
-    const handleRunClick = async () => {
+    const handleRunClick = async (): Promise<boolean> => {
         const rules: { [key: string]: any[] } = {};
         let ruleCounter = 1;
 
@@ -157,10 +156,12 @@ const WorkFlow: React.FC = () => {
 
             if (response.status === 200) {
                 message.success('Workflow saved successfully');
+                return true;
             } else {
                 const errorMessage = response.data.error || 'Failed to save workflow';
                 message.error(errorMessage);
                 console.error('API Response:', response);
+                return false;
             }
         } catch (error) {
             if (axios.isAxiosError(error)) {
@@ -179,9 +180,9 @@ const WorkFlow: React.FC = () => {
                 message.error('An unknown error occurred');
                 console.error('Unexpected Error:', error);
             }
+            return false;
         }
     };
-
 
     useEffect(() => {
         if (email) {
