@@ -221,7 +221,11 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
       setIsStartModalVisible,
     ]
   );
-
+  const handleReadMore = useCallback(
+	(nodeId : string) => {
+		
+	},[]
+)
 
   const handleDelete = useCallback(
     (nodeId: string) => {
@@ -278,7 +282,7 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
                 items: [
                   { label: 'Delete', key: '0', onClick: () => handleDelete(nodeId!) },
                   { label: 'Edit', key: '1', onClick: () => handleEdit(nodeId!) },
-                  { label: 'Read more', key: '2' }
+                  { label: 'Read more', key: '2', onClick: () => handleReadMore(nodeId!) },
                 ]
               }}
               trigger={['click']}
