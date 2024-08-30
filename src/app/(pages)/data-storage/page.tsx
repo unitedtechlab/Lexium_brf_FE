@@ -11,11 +11,14 @@ import classes from '@/app/assets/css/pages.module.css';
 import folder from '../../assets/images/database.svg';
 import { fetchWorkspaces } from '@/app/API/api';
 import { Workspace } from '@/app/types/interface';
+import axios from 'axios';
+import { BaseURL } from '@/app/constants/index';
+import { getToken } from '@/utils/auth';
 
 const Searchbar = dynamic(() => import('../../components/Searchbar/search'), { ssr: false });
 const View = dynamic(() => import('../../components/GridListView/view'), { ssr: false });
 const Loader = dynamic(() => import('@/app/loading'), { ssr: false });
-const DeleteWorkspaceModal = dynamic(() => import('./[id]/modals/delete-workspace/delete-workspace'), { ssr: false });
+const DeleteModal = dynamic(() => import('@/app/modals/delete-modal/delete-modal'), { ssr: false });
 
 export default function CleanDataStorage() {
     const [searchInput, setSearchInput] = useState('');
@@ -60,6 +63,25 @@ export default function CleanDataStorage() {
         }
     };
 
+    const deleteWorkspace = async (workspaceId: string) => {
+        if (!email) return;
+        const token = getToken();
+        try {
+            await axios.delete(`${BaseURL}/cleaned_workspace`, {
+                params: {
+                    userEmail: email,
+                    workSpace: workspaceId,
+                },
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+            });
+        } catch (error) {
+            message.error('Failed to delete workspace.');
+            console.error("Failed to delete workspace:", error);
+        }
+    };
+
     const closeDeleteModal = () => {
         setIsDeleteModalVisible(false);
         setSelectedWorkspace(null);
@@ -83,7 +105,7 @@ export default function CleanDataStorage() {
             </div>
 
             {hasCleanData && (
-                <Link href="/workflow" className={`btn btn-outline ${classes.validateBtn}`}>Move to Workflow & Rules</Link>
+                <Link href="/workflows-list" className={`btn btn-outline ${classes.validateBtn}`}>Move to Workflow & Rules</Link>
             )}
 
             <div className={`${classes.searchView} flex justify-space-between gap-1`}>
@@ -145,10 +167,11 @@ export default function CleanDataStorage() {
             )}
 
             {selectedWorkspace && (
-                <DeleteWorkspaceModal
+                <DeleteModal
                     open={isDeleteModalVisible}
-                    workspaceName={selectedWorkspace.name}
-                    workspaceId={selectedWorkspace.id}
+                    entityName="Workspace"
+                    entityId={selectedWorkspace.id}
+                    onDelete={deleteWorkspace}
                     onOk={onDeleteSuccess}
                     onCancel={closeDeleteModal}
                 />

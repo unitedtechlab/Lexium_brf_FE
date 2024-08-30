@@ -17,10 +17,13 @@ import Link from "next/link";
 import Loader from '@/app/loading';
 import { fetchFolders } from '@/app/API/api';
 import { FolderData as Folder } from '@/app/types/interface';
+import axios from 'axios';
+import { BaseURL } from '@/app/constants/index';
+import { getToken } from '@/utils/auth';
 
 const CreateFolderModal = dynamic(() => import('./modals/create-folder/folder'));
-const DeleteFolderModal = dynamic(() => import('./modals/delete-folder/deletefolder'));
 const EditFolderModal = dynamic(() => import('./modals/edit-folder/editfolder'));
+const DeleteModal = dynamic(() => import('@/app/modals/delete-modal/delete-modal'));
 
 const CreateFolderPage = () => {
     const { id } = useParams<{ id: string }>();
@@ -91,6 +94,27 @@ const CreateFolderPage = () => {
         setFolders(folders.filter((folder) => folder.id !== folderId));
     };
 
+    const deleteFolder = async (folderId: string) => {
+        if (!email || !id) return;
+        const token = getToken();
+        try {
+            await axios.delete(`${BaseURL}/folder`, {
+                params: {
+                    userEmail: email,
+                    workSpace: id,
+                    folderName: folderId,
+                },
+                headers: {
+                    "Content-Type": "application/json",
+                    'Authorization': `Bearer ${token}`
+                },
+            });
+        } catch (error) {
+            message.error("Failed to delete folder");
+            console.error("Error deleting folder:", error);
+        }
+    };
+
     const loadFolders = async () => {
         if (email && id) {
             try {
@@ -155,18 +179,20 @@ const CreateFolderPage = () => {
                 onOk={closeCreateModal}
                 onCancel={() => setIsCreateModalVisible(false)}
             />
-            <DeleteFolderModal
-                folderId={selectedFolder?.id || ''}
-                folderName={selectedFolder?.name || ''}
-                workspaceId={typeof id === 'string' ? id : ''}
-                open={isDeleteModalVisible}
-                onCancel={() => setIsDeleteModalVisible(false)}
-                onDeleteSuccess={() => {
-                    setIsDeleteModalVisible(false);
-                    removeFolder(selectedFolder?.id || '');
-                    setSelectedFolder(null);
-                }}
-            />
+            {selectedFolder && (
+                <DeleteModal
+                    open={isDeleteModalVisible}
+                    entityName="Folder"
+                    entityId={selectedFolder.id}
+                    onDelete={deleteFolder}
+                    onOk={() => {
+                        setIsDeleteModalVisible(false);
+                        removeFolder(selectedFolder.id);
+                        setSelectedFolder(null);
+                    }}
+                    onCancel={() => setIsDeleteModalVisible(false)}
+                />
+            )}
             <EditFolderModal
                 open={isEditModalVisible}
                 folderId={selectedFolder?.id || ""}

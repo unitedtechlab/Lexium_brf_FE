@@ -15,9 +15,12 @@ import { BiDotsVerticalRounded } from "react-icons/bi";
 import BreadCrumb from "@/app/components/Breadcrumbs/breadcrumb";
 import { useEmail } from "@/app/context/emailContext";
 import Link from "next/link";
+import axios from 'axios';
+import { BaseURL } from '@/app/constants/index';
+import { getToken } from '@/utils/auth';
 
 const PreviewFolderModal = dynamic(() => import('../modals/folder-preview/folder-preview'), { ssr: false });
-const DeleteFolderModal = dynamic(() => import('../modals/delete-folder/delete-folder'), { ssr: false });
+const DeleteModal = dynamic(() => import('@/app/modals/delete-modal/delete-modal'), { ssr: false });
 const Loader = dynamic(() => import('@/app/loading'), { ssr: false });
 
 interface Folder {
@@ -60,9 +63,25 @@ const DataStorageFolder = () => {
         setSelectedFolder(null);
     }, []);
 
-    const handleDeleteFolder = useCallback(() => {
-        handleDeleteModalCancel();
-    }, [handleDeleteModalCancel]);
+    const deleteFolder = async (folderId: string) => {
+        if (!email || !id) return;
+        const token = getToken();
+        try {
+            await axios.delete(`${BaseURL}/cleaned_folder`, {
+                params: {
+                    userEmail: email,
+                    workSpace: id,
+                    folderName: folderId,
+                },
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+            });
+        } catch (error) {
+            message.error("Failed to delete folder");
+            console.error("Error deleting folder:", error);
+        }
+    };
 
     const updateFolderListAfterDelete = useCallback((folderId: string) => {
         setFolders(prevFolders => prevFolders.filter(folder => folder.id !== folderId));
@@ -128,7 +147,7 @@ const DataStorageFolder = () => {
             </div>
 
             {hasCleanData && (
-                <Link href="/workflow" className={`btn btn-outline ${classes.validateBtn}`}>
+                <Link href="/workflows-list" className={`btn btn-outline ${classes.validateBtn}`}>
                     Move to Workflow & Rules
                 </Link>
             )}
@@ -191,19 +210,20 @@ const DataStorageFolder = () => {
                 folderName={selectedFolder?.id || ""}
             />
 
-            <DeleteFolderModal
-                open={isDeleteModalVisible}
-                workspaceName={selectedFolder?.name || ""}
-                workspaceId={id || ""}
-                folderName={selectedFolder?.id || ""}
-                onOk={() => {
-                    if (selectedFolder) {
+            {selectedFolder && (
+                <DeleteModal
+                    open={isDeleteModalVisible}
+                    entityName="Folder"
+                    entityId={selectedFolder.id}
+                    onDelete={deleteFolder}
+                    onOk={() => {
                         updateFolderListAfterDelete(selectedFolder.id);
-                    }
-                    handleDeleteFolder();
-                }}
-                onCancel={handleDeleteModalCancel}
-            />
+                        setIsDeleteModalVisible(false);
+                        setSelectedFolder(null);
+                    }}
+                    onCancel={handleDeleteModalCancel}
+                />
+            )}
         </div>
     );
 };

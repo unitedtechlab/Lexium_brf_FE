@@ -14,10 +14,13 @@ import folder from '../../assets/images/database.svg';
 import Loader from '@/app/loading';
 import { fetchWorkspaces } from '@/app/API/api';
 import { Workspace } from '@/app/types/interface';
+import axios from 'axios';
+import { BaseURL } from '@/app/constants/index';
+import { getToken } from '@/utils/auth';
 
 const CreateWorkspaceModal = dynamic(() => import('./modals/create-workspace/workspace'));
 const EditWorkspaceModal = dynamic(() => import('./modals/edit-modal/editmodal'));
-const DeleteWorkspaceModal = dynamic(() => import('./modals/delete-modal/deletemodal'));
+const DeleteModal = dynamic(() => import('@/app/modals/delete-modal/delete-modal'));
 
 export default function CreateWorkSpace() {
     const [searchInput, setSearchInput] = useState('');
@@ -84,6 +87,25 @@ export default function CreateWorkSpace() {
         setWorkspaces(workspaces.filter((workspace) => workspace.id !== workspaceId));
     };
 
+    const deleteWorkspace = async (workspaceId: string) => {
+        if (!email) return;
+        const token = getToken();
+        try {
+            await axios.delete(`${BaseURL}/workspace`, {
+                params: {
+                    userEmail: email,
+                    workSpace: workspaceId,
+                },
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+        } catch (error) {
+            message.error('Failed to delete workspace.');
+            console.error("Failed to delete workspace:", error);
+        }
+    };
+
     const loadWorkspaces = async () => {
         if (email) {
             setIsLoading(true);
@@ -140,17 +162,20 @@ export default function CreateWorkSpace() {
                 }}
                 onCancel={() => setIsEditModalVisible(false)}
             />
-            <DeleteWorkspaceModal
-                open={isDeleteModalVisible}
-                workspaceName={selectedWorkspace?.name || ''}
-                workspaceId={selectedWorkspace?.id || ''}
-                onOk={() => {
-                    setIsDeleteModalVisible(false);
-                    removeWorkspace(selectedWorkspace?.id || '');
-                    setSelectedWorkspace(null);
-                }}
-                onCancel={() => setIsDeleteModalVisible(false)}
-            />
+            {selectedWorkspace && (
+                <DeleteModal
+                    open={isDeleteModalVisible}
+                    entityName="Workspace"
+                    entityId={selectedWorkspace.id}
+                    onDelete={deleteWorkspace}
+                    onOk={() => {
+                        setIsDeleteModalVisible(false);
+                        removeWorkspace(selectedWorkspace.id);
+                        setSelectedWorkspace(null);
+                    }}
+                    onCancel={() => setIsDeleteModalVisible(false)}
+                />
+            )}
 
             {isLoading ? (
                 <Loader />

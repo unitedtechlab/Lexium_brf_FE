@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { BaseURL } from '@/app/constants/index';
-import { FolderData, Folder, FileData, Workspace } from "@/app/types/interface";
+import { FolderData, Folder, FileData, Workspace, Workflow } from "@/app/types/interface";
 import { getToken } from '@/utils/auth';
 
 const getAuthHeaders = () => {
@@ -41,6 +41,7 @@ export const fetchWorkspaces = async (email: string, setIsLoading: (isLoading: b
                     cleanDataExist: data[projectId].cleanDataExist,
                     cleanFileSize: data[projectId].cleanFileSize || 'Unknown',
                     cleanLastUpdated: data[projectId].cleanLastUpdated || 'Unknown',
+                    workFlowExist: data[projectId].workFlowExist || false,
                 }));
                 return flattenedWorkspaces;
             }
@@ -211,5 +212,44 @@ export const preValidateData = async (requestData: {
             console.error('Unexpected error during data pre-validation:', error);
             throw new Error('Failed to complete data pre-validation.');
         }
+    }
+};
+
+
+// Get Workflow API
+
+export const fetchWorkflows = async (email: string, workspaceId: string, setIsLoading: (isLoading: boolean) => void): Promise<Workflow[]> => {
+    setIsLoading(true);
+    try {
+        const response = await axios.get(`${BaseURL}/workflow`, {
+            params: {
+                userEmail: email,
+                workSpace: workspaceId,
+            },
+            headers: getAuthHeaders(),
+        });
+
+        if (response.status === 200) {
+            const workflows = response.data.data;
+            const formattedWorkflows: Workflow[] = Object.keys(workflows).map((workflowName) => ({
+                id: workflowName,
+                name: workflowName,
+                size: workflows[workflowName].size || 'Unknown',
+                lastUpdated: workflows[workflowName].lastUpdated || 'Unknown',
+            }));
+            return formattedWorkflows;
+        } else {
+            throw new Error(response.data.error || 'Failed to fetch workflows.');
+        }
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
+            console.error('Error fetching workflows:', error.response?.data?.error || error.message);
+            throw new Error(error.response?.data?.error || 'Failed to fetch workflows.');
+        } else {
+            console.error('Unexpected error fetching workflows:', error);
+            throw new Error('Failed to fetch workflows.');
+        }
+    } finally {
+        setIsLoading(false);
     }
 };

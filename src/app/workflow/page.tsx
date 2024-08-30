@@ -75,7 +75,7 @@ const WorkFlow: React.FC = () => {
             const { label, pivotTable, ...nodeDataWithoutLabel } = currentNode.data as any;
 
             let nodeData = nodeDataWithoutLabel;
-            if (currentNode.data.type === 'if' || currentNode.data.type === 'else') {
+            if (currentNode.data.type === 'if' || currentNode.data.type === 'else if' || currentNode.data.type === 'else') {
                 nodeData = {
                     ...nodeDataWithoutLabel,
                     conditional: undefined

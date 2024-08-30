@@ -39,6 +39,7 @@ export interface Workspace {
   cleanDataExist: boolean;
   cleanFileSize: string;
   cleanLastUpdated: string;
+  workFlowExist: boolean;
 }
 export interface FolderData {
   id: string;
@@ -58,4 +59,12 @@ export interface FileData {
   fileSize: string;
   lastUpdated: string;
   established: boolean;
+}
+
+
+export interface Workflow {
+  id: string;
+  name: string;
+  size: string;
+  lastUpdated: string;
 }
