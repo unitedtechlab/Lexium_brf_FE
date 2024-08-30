@@ -75,6 +75,10 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
 }) => {
   const { email } = useEmail();
   const { screenToFlowPosition } = useReactFlow();
+
+  // New state to track dropped but unconfirmed nodes
+  const [unconfirmedNodeId, setUnconfirmedNodeId] = useState<string | null>(null);
+
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
   const [isFilterModalVisible, setIsFilterModalVisible] = useState<boolean>(false);
   const [isSortModalVisible, setIsSortModalVisible] = useState<boolean>(false);
@@ -98,6 +102,7 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
   const [selectedTable, setSelectedTable] = useState<string | null>(null);
   const [isMergeNodeDropped, setIsMergeNodeDropped] = useState<boolean>(false);
 
+  // Modal show functions (keep existing)
   const showModal = useCallback((nodeData: { id: string; position: XYPosition; icon: keyof typeof Icons | keyof typeof FaIcons }) => {
     setCurrentEditNodeData(nodeData);
     setIsModalVisible(true);
@@ -107,7 +112,6 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
     setCurrentEditNodeData(nodeData);
     setIsFilterModalVisible(true);
   }, []);
-
 
   const showSortModal = useCallback((nodeData: { id: string; position: XYPosition; icon: keyof typeof Icons | keyof typeof FaIcons }) => {
     setCurrentEditNodeData(nodeData);
@@ -419,6 +423,9 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
     </>
   );
 
+  // Add similar show functions for other modals (e.g., Sort, Conditional, GroupBy, etc.)
+
+  // Modal OK handlers (example with Start Node)
   const handleStartModalOk = useCallback(
     (values: any, isMergeSelected: boolean) => {
       if (currentEditNodeData) {
@@ -466,6 +473,9 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
         setSelectedTable(tableName);
         setIsStartModalVisible(false);
         setIsMergeNodeDropped(true);
+
+        // Clear unconfirmed node state after confirming
+        setUnconfirmedNodeId(null);
 
         setSidebarItems((items) => items.map((item) => (item.id !== 'start' ? { ...item, enabled: true } : item)));
       }
@@ -888,6 +898,13 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
 
   const handleCancel = useCallback(() => {
     setSelectedTable(null);
+
+    // Remove the unconfirmed node if the modal is canceled
+    if (unconfirmedNodeId) {
+      setNodes((nds) => nds.filter(node => node.id !== unconfirmedNodeId));
+      setUnconfirmedNodeId(null);
+    }
+
     setIsOutputModalVisible(false);
     setIsModalVisible(false);
     setIsFilterModalVisible(false);
@@ -899,7 +916,7 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
     setIsArithmeticModalVisible(false);
     setIsPivotTableModalVisible(false);
     setIsStartModalVisible(false);
-  }, []);
+  }, [unconfirmedNodeId, setNodes]);
 
   const onConnect = useCallback(
     (connection: Connection) => {
@@ -961,6 +978,9 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
         x: event.clientX,
         y: event.clientY,
       });
+
+      // Track the ID of the node that was just dropped
+      setUnconfirmedNodeId(id);
 
       const newNode: Node = {
         id,
