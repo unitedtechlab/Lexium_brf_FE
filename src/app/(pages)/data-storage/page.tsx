@@ -169,7 +169,7 @@ export default function CleanDataStorage() {
             {selectedWorkspace && (
                 <DeleteModal
                     open={isDeleteModalVisible}
-                    entityName="Workspace"
+                    entityName="Cleaned Workspace"
                     entityId={selectedWorkspace.id}
                     onDelete={deleteWorkspace}
                     onOk={onDeleteSuccess}

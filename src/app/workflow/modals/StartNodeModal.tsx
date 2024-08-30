@@ -49,6 +49,13 @@ const StartNodeModal: React.FC<StartNodeModalProps> = ({
     const onOk = () => {
         form.validateFields()
             .then(values => {
+                const isTableSelected = values.table1Single || values.table1 || values.table2;
+
+                if (!isTableSelected) {
+                    message.error('Please select at least one table.');
+                    return;
+                }
+
                 const isMergeSelected = values.table1 && values.table2;
                 handleOkay(values, isMergeSelected);
                 form.resetFields();
