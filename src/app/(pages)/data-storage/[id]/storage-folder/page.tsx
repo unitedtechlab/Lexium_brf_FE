@@ -213,7 +213,7 @@ const DataStorageFolder = () => {
             {selectedFolder && (
                 <DeleteModal
                     open={isDeleteModalVisible}
-                    entityName="Folder"
+                    entityName="Cleaned File"
                     entityId={selectedFolder.id}
                     onDelete={deleteFolder}
                     onOk={() => {

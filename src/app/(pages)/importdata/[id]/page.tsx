@@ -20,10 +20,10 @@ import { fetchFiles, fetchFolders } from '@/app/API/api';
 import { BaseURL } from '@/app/constants/index';
 import { getToken } from '@/utils/auth';
 
-const DeleteFileModal = dynamic(() => import('./modals/delete-file/deletefile'));
 const EditFileModal = dynamic(() => import('./modals/edit-file/editfile'));
 const EstablishmentColumnModal = dynamic(() => import('@/app/modals/establishment-column/establishcolumn'));
 const Loader = dynamic(() => import('@/app/loading'), { ssr: false });
+const DeleteModal = dynamic(() => import('@/app/modals/delete-modal/delete-modal'), { ssr: false });
 
 export default function ImportData() {
     const { id } = useParams();
@@ -151,6 +151,26 @@ export default function ImportData() {
     const onDeleteSuccess = () => {
         cancelDeleteFile();
         loadFiles();
+    };
+
+    const deleteFile = async (fileId: string) => {
+        if (!email || !workspace || !folder) return;
+        try {
+            await axios.delete(`${BaseURL}/file`, {
+                params: {
+                    userEmail: email,
+                    workSpace: workspace,
+                    folderName: folder,
+                    fileName: fileId,
+                },
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+            });
+        } catch (error) {
+            message.error('Failed to delete file');
+            console.error("Error deleting file:", error);
+        }
     };
 
     const updateFileName = (fileId: string, newName: string) => {
@@ -302,14 +322,16 @@ export default function ImportData() {
                 </div>
             )}
 
-            <DeleteFileModal
-                fileId={selectedFile?.id || ''}
-                workspaceId={typeof id === 'string' ? id : ''}
-                folderName={folder || ''}
-                open={isDeleteModalVisible}
-                onCancel={cancelDeleteFile}
-                onDeleteSuccess={onDeleteSuccess}
-            />
+            {selectedFile && (
+                <DeleteModal
+                    open={isDeleteModalVisible}
+                    entityName="File"
+                    entityId={selectedFile.id}
+                    onDelete={() => deleteFile(selectedFile.id)}
+                    onOk={onDeleteSuccess}
+                    onCancel={cancelDeleteFile}
+                />
+            )}
 
             <EditFileModal
                 visible={isEditModalVisible}
