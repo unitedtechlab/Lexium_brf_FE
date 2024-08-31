@@ -217,7 +217,6 @@ export const preValidateData = async (requestData: {
 
 
 // Get Workflow API
-
 export const fetchWorkflows = async (email: string, workspaceId: string, setIsLoading: (isLoading: boolean) => void): Promise<Workflow[]> => {
     setIsLoading(true);
     try {
@@ -274,5 +273,34 @@ export const editWorkflow = async (email: string, workspaceId: string, workflowI
         }
     } catch (error) {
         throw error;
+    }
+};
+
+
+//Run Workflow API
+export const runWorkflow = async (email: string, workspaceId: string, workflowName: string): Promise<any> => {
+    try {
+        const response = await axios.get(`${BaseURL}/run_workflow`, {
+            params: {
+                userEmail: email,
+                workSpace: workspaceId,
+                workflowName: workflowName,
+            },
+            headers: getAuthHeaders(),
+        });
+
+        if (response.status === 200) {
+            return response.data.data; // Adjust based on your API response structure
+        } else {
+            throw new Error(response.data.error || 'Failed to run workflow.');
+        }
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
+            console.error('Error running workflow:', error.response?.data?.error || error.message);
+            throw new Error(error.response?.data?.error || 'Failed to run workflow.');
+        } else {
+            console.error('Unexpected error running workflow:', error);
+            throw new Error('Failed to run workflow.');
+        }
     }
 };

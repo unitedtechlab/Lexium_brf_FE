@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useEffect } from 'react';
+import React, { useCallback, useState } from 'react';
 import ReactFlow, {
   addEdge,
   Controls,
@@ -15,36 +15,15 @@ import 'reactflow/dist/style.css';
 import styles from '../workflow.module.css';
 import * as Icons from 'react-icons/sl';
 import * as FaIcons from 'react-icons/fa';
-import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import TableImage from '../../assets/images/layout.svg';
 import { FiMoreHorizontal } from 'react-icons/fi';
 import { Dropdown, message } from 'antd';
 import { useEmail } from '@/app/context/emailContext';
 import {
-  Filter,
-  Sort,
-  Conditional,
-  GroupBy,
-  Statistical,
-  NodeData,
-  Arithmetic,
-  Scaling,
-  CustomNode,
-  Condition,
-  Merge,
+  Filter, Sort, Conditional, GroupBy, Statistical, NodeData, Arithmetic, Scaling, CustomNode, Condition
 } from '../../types/workflowTypes';
-
-const FilterModal = dynamic(() => import('../modals/filtermodal'));
-const SortModal = dynamic(() => import('../modals/sortmodal'));
-const ConditionalModal = dynamic(() => import('../modals/conditionalModal'));
-const GroupByModal = dynamic(() => import('../modals/groupbyModal'));
-const StatisticalModal = dynamic(() => import('../modals/statisticalModal'));
-const ScalingModal = dynamic(() => import('../modals/scalingModal'));
-const ArithmeticModal = dynamic(() => import('../modals/arithmeticModal'));
-const PivotTable = dynamic(() => import('../modals/pivotModal'));
-const StartModal = dynamic(() => import('../modals/StartNodeModal'));
-const OutputModal = dynamic(() => import('../modals/outputModal'));
+import WorkflowModals from './WorkflowModals';
 
 type IconNames = keyof typeof Icons | keyof typeof FaIcons;
 
@@ -59,6 +38,8 @@ interface DragAndDropContainerProps {
   folders: any[];
   selectedWorkspace: string | null;
   setSidebarItems: React.Dispatch<React.SetStateAction<any[]>>;
+  outputNodeIds: string[];
+  workflowOutput: any;
 }
 
 const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
@@ -72,134 +53,611 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
   folders,
   selectedWorkspace,
   setSidebarItems,
+  outputNodeIds,
+  workflowOutput,
 }) => {
   const { email } = useEmail();
   const { screenToFlowPosition } = useReactFlow();
-  const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
-  const [isFilterModalVisible, setIsFilterModalVisible] = useState<boolean>(false);
-  const [isSortModalVisible, setIsSortModalVisible] = useState<boolean>(false);
-  const [isConditionalModalVisible, setIsConditionalModalVisible] = useState<boolean>(false);
-  const [isGroupByModalVisible, setIsGroupByModalVisible] = useState<boolean>(false);
-  const [isStatisticalModalVisible, setIsStatisticalModalVisible] = useState<boolean>(false);
-  const [isScalingModalVisible, setIsScalingModalVisible] = useState<boolean>(false);
-  const [isArithmeticModalVisible, setIsArithmeticModalVisible] = useState<boolean>(false);
-  const [isPivotTableModalVisible, setIsPivotTableModalVisible] = useState<boolean>(false);
-  const [isStartModalVisible, setIsStartModalVisible] = useState<boolean>(false);
-  const [isOutputModalVisible, setIsOutputModalVisible] = useState<boolean>(false);
-  const [confirmedDataType, setConfirmedDataType] = useState<string | null>(null);
-
   const [currentEditNodeData, setCurrentEditNodeData] = useState<{
     id: string;
     position: XYPosition;
     icon: keyof typeof Icons | keyof typeof FaIcons;
     pivotTable?: any;
   } | null>(null);
-
   const [selectedTable, setSelectedTable] = useState<string | null>(null);
-  const [isMergeNodeDropped, setIsMergeNodeDropped] = useState<boolean>(false);
-  const [expandedNodes, setExpandedNodes] = useState<{ [key: string]: boolean }>({});
+  const [isStartingNodeSaved, setIsStartingNodeSaved] = useState<boolean>(false);
 
-  const showModal = useCallback((nodeData: { id: string; position: XYPosition; icon: keyof typeof Icons | keyof typeof FaIcons }) => {
-    setCurrentEditNodeData(nodeData);
-    setIsModalVisible(true);
+  const [modalVisibility, setModalVisibility] = useState({
+    isStartModalVisible: false,
+    isOutputModalVisible: false,
+    isFilterModalVisible: false,
+    isSortModalVisible: false,
+    isConditionalModalVisible: false,
+    isGroupByModalVisible: false,
+    isStatisticalModalVisible: false,
+    isScalingModalVisible: false,
+    isArithmeticModalVisible: false,
+    isPivotTableModalVisible: false,
+  });
+
+  const modalKeyMap: { [key: string]: keyof typeof modalVisibility } = {
+    Filter: 'isFilterModalVisible',
+    Output: 'isOutputModalVisible',
+    Sort: 'isSortModalVisible',
+    'IF/Else/And/OR': 'isConditionalModalVisible',
+    'Group By': 'isGroupByModalVisible',
+    Statistical: 'isStatisticalModalVisible',
+    Scaling: 'isScalingModalVisible',
+    Arithmetic: 'isArithmeticModalVisible',
+    Pivot: 'isPivotTableModalVisible',
+    'Starting Node': 'isStartModalVisible',
+  };
+
+  const showModal = useCallback((modalType: keyof typeof modalVisibility) => {
+    setModalVisibility(prev => ({ ...prev, [modalType]: true }));
   }, []);
 
-  const showFilterModal = useCallback((nodeData: { id: string; position: XYPosition; icon: IconNames; column?: string; operator?: string; value?: string }) => {
-    setCurrentEditNodeData(nodeData);
-    setIsFilterModalVisible(true);
+  const hideModal = useCallback((modalType: keyof typeof modalVisibility) => {
+    setModalVisibility(prev => ({ ...prev, [modalType]: false }));
   }, []);
 
+  // Modal handlers
+  const handleStartModalOk = useCallback(
+    (values: any, isMergeSelected: boolean) => {
+      if (currentEditNodeData) {
+        const tableName = isMergeSelected ? `${values.table1} & ${values.table2}` : values.table1Single;
+        const nodeType = isMergeSelected ? 'mergeTable' : 'table';
+        const labelContent = isMergeSelected
+          ? createNodeLabel(
+            tableName,
+            'Starting Node',
+            {
+              mergeType: values.mergeType,
+              table1: values.table1,
+              column1: values.column1,
+              table2: values.table2,
+              column2: values.column2,
+            },
+            currentEditNodeData.id,
+            true
+          )
+          : createNodeLabel(tableName, 'Starting Node', undefined, currentEditNodeData.id, true);
 
-  const showSortModal = useCallback((nodeData: { id: string; position: XYPosition; icon: keyof typeof Icons | keyof typeof FaIcons }) => {
-    setCurrentEditNodeData(nodeData);
-    setIsSortModalVisible(true);
-  }, []);
+        const newNode: Node = {
+          id: currentEditNodeData.id,
+          data: {
+            type: nodeType,
+            table: tableName,
+            start: {
+              mergeType: values.mergeType || 'Single Table',
+              table1: isMergeSelected ? values.table1 : values.table1Single,
+              column1: isMergeSelected ? values.column1 : '',
+              table2: isMergeSelected ? values.table2 : '',
+              column2: isMergeSelected ? values.column2 : '',
+            },
+            label: labelContent,
+          },
+          position: currentEditNodeData.position,
+          draggable: true,
+          sourcePosition: Position.Right,
+          targetPosition: Position.Left,
+        };
 
-  const showConditionalModal = useCallback((nodeData: { id: string; position: XYPosition; icon: keyof typeof Icons | keyof typeof FaIcons }) => {
-    setCurrentEditNodeData(nodeData);
-    setIsConditionalModalVisible(true);
-  }, []);
+        setNodes((nds) => [...nds.filter(node => node.id !== currentEditNodeData.id), newNode]);
+        setSelectedTable(tableName);
+        setIsStartingNodeSaved(true);
+        hideModal('isStartModalVisible');
+        setSidebarItems((items) => items.map((item) => (item.id !== 'start' ? { ...item, enabled: true } : item)));
+      }
+    },
+    [currentEditNodeData, setNodes, setSidebarItems, hideModal]
+  );
 
-  const showGroupByModal = useCallback((nodeData: { id: string; position: XYPosition; icon: keyof typeof Icons | keyof typeof FaIcons }) => {
-    setCurrentEditNodeData(nodeData);
-    setIsGroupByModalVisible(true);
-  }, []);
+  const handleOutputModalOk = useCallback(
+    (values: any) => {
+      if (currentEditNodeData) {
+        const newNode: Node = {
+          id: currentEditNodeData.id,
+          data: {
+            type: 'output',
+            output: {
+              outputName: values.outputName,
+            },
+            label: createNodeLabel(values.outputName, 'Output Node', undefined, currentEditNodeData.id, false, true),
+          },
+          position: currentEditNodeData.position,
+          draggable: true,
+          sourcePosition: Position.Right,
+          targetPosition: Position.Left,
+        };
 
-  const showStatisticalModal = useCallback((nodeData: { id: string; position: XYPosition; icon: keyof typeof Icons | keyof typeof FaIcons }) => {
-    setCurrentEditNodeData(nodeData);
-    setIsStatisticalModalVisible(true);
-  }, []);
+        setNodes((nds) => [...nds.filter(node => node.id !== currentEditNodeData.id), newNode]);
+        setSelectedTable(null);
+        hideModal('isOutputModalVisible');
+      }
+    },
+    [currentEditNodeData, setNodes, hideModal]
+  );
 
-  const showScalingModal = useCallback((nodeData: { id: string; position: XYPosition; icon: keyof typeof Icons | keyof typeof FaIcons }) => {
-    setCurrentEditNodeData(nodeData);
-    setIsScalingModalVisible(true);
-  }, []);
+  const handlePivotTableModalOk = useCallback(
+    (values: any) => {
+      if (currentEditNodeData && selectedTable) {
+        const newNode: Node = {
+          id: currentEditNodeData.id,
+          data: {
+            table: selectedTable,
+            type: 'pivotTable',
+            pivotTable: {
+              pivotColumns: values.pivotColumns,
+              functionCheckboxes: values.functionCheckboxes,
+            },
+            label: createNodeLabel(
+              selectedTable,
+              'Pivot Node',
+              {
+                type: 'pivotTable',
+                pivotTable: {
+                  pivotColumns: values.pivotColumns,
+                  functionCheckboxes: values.functionCheckboxes,
+                },
+              },
+              currentEditNodeData.id
+            ),
+          },
+          position: currentEditNodeData.position,
+          draggable: true,
+          sourcePosition: Position.Right,
+          targetPosition: Position.Left,
+        };
 
-  const showArithmeticModal = useCallback((nodeData: { id: string; position: XYPosition; icon: keyof typeof Icons | keyof typeof FaIcons }) => {
-    setCurrentEditNodeData(nodeData);
-    setIsArithmeticModalVisible(true);
-  }, []);
+        setNodes((nds) => [...nds.filter(node => node.id !== currentEditNodeData.id), newNode]);
+        hideModal('isPivotTableModalVisible');
+      } else {
+        console.error('Selected table is null');
+      }
+    },
+    [currentEditNodeData, selectedTable, setNodes, hideModal]
+  );
 
-  const showPivotTableModal = useCallback((nodeData: { id: string; position: XYPosition; icon: keyof typeof Icons | keyof typeof FaIcons, pivotTable: any }) => {
-    setCurrentEditNodeData(nodeData);
-    setIsPivotTableModalVisible(true);
-  }, []);
+  const handleGroupByModalOk = useCallback(
+    (values: any) => {
+      if (currentEditNodeData && selectedTable) {
+        const newNode: Node = {
+          id: currentEditNodeData.id,
+          data: {
+            table: selectedTable,
+            type: 'groupby',
+            groupby: {
+              groupByColumns: values.groupbyColumn.index,
+              targetColumns: values.groupbyColumn.value,
+              functionCheckboxes: values.functionCheckboxes,
+            },
+            label: createNodeLabel(
+              selectedTable,
+              'Group By Node',
+              {
+                groupByColumns: values.groupbyColumn.index,
+                targetColumns: values.groupbyColumn.value,
+                functionCheckboxes: values.functionCheckboxes,
+              },
+              currentEditNodeData.id
+            ),
+          },
+          position: currentEditNodeData.position,
+          draggable: true,
+          sourcePosition: Position.Right,
+          targetPosition: Position.Left,
+        };
 
-  const showStartModal = useCallback((nodeData: { id: string; position: XYPosition; icon: keyof typeof Icons | keyof typeof FaIcons }) => {
-    setCurrentEditNodeData(nodeData);
-    setIsStartModalVisible(true);
-  }, []);
+        setNodes((nds) => [...nds.filter(node => node.id !== currentEditNodeData.id), newNode]);
+        setSelectedTable(null);
+        hideModal('isGroupByModalVisible');
+      } else {
+        console.error('Selected table is null');
+      }
+    },
+    [currentEditNodeData, selectedTable, setNodes, hideModal]
+  );
 
-  const showOutputModal = useCallback((nodeData: { id: string; position: XYPosition; icon: keyof typeof Icons | keyof typeof FaIcons }) => {
-    setCurrentEditNodeData(nodeData);
-    setIsOutputModalVisible(true);
-  }, []);
+  const handleConditionalModalOk = useCallback(
+    (values: any) => {
+      if (currentEditNodeData && selectedTable) {
+        const basePosition = currentEditNodeData.position;
+        const offsetX = 250;
+        const offsetY = 100;
+
+        const conditionsData = values.conditions.map((condition: Condition, index: number) => {
+          const conditionTypeLabel =
+            values.conditionType === 'if/else'
+              ? index === 0
+                ? 'If'
+                : 'Else'
+              : values.conditionType === 'else/if'
+                ? index === 0
+                  ? 'If'
+                  : index === 1
+                    ? 'Else If'
+                    : 'Else'
+                : 'If';
+
+          const isElseCondition = conditionTypeLabel === 'Else';
+
+          return {
+            id: `${currentEditNodeData.id}-${index}`,
+            conditionType: conditionTypeLabel,
+            conditions: isElseCondition ? [] : [{
+              column: condition.column,
+              condition: condition.condition,
+              value: condition.value,
+              subConditions: condition.subConditions || [],
+              outsideConditions: condition.outsideConditions || [],
+            }]
+          };
+        });
+
+        const mainNode: Node = {
+          id: currentEditNodeData.id,
+          data: {
+            table: selectedTable,
+            type: 'conditional',
+            isParentNode: true,
+            conditional: conditionsData,
+            label: createNodeLabel(
+              selectedTable,
+              'Conditional Node',
+              {
+                conditionType: values.conditionType,
+                conditions: conditionsData,
+              },
+              currentEditNodeData.id
+            ),
+          },
+          position: basePosition,
+          draggable: true,
+          sourcePosition: Position.Right,
+          targetPosition: Position.Left,
+        };
+
+        // Child nodes for each condition
+        const newNodes: Node[] = conditionsData.map((conditionData: any, index: number) => ({
+          id: conditionData.id,
+          data: {
+            table: selectedTable,
+            type: conditionData.conditionType.toLowerCase(),
+            parentId: currentEditNodeData.id,
+            conditional: conditionData,
+            label: createNodeLabel(
+              selectedTable,
+              `${conditionData.conditionType} Node`,
+              conditionData,
+              conditionData.id
+            ),
+          },
+          position: {
+            x: basePosition.x + offsetX * index,
+            y: basePosition.y + offsetY * index,
+          },
+          draggable: true,
+          sourcePosition: Position.Right,
+          targetPosition: Position.Left,
+        }));
+
+        setNodes((nds) => [...nds.filter(node => node.id !== currentEditNodeData.id), mainNode, ...newNodes]);
+        setEdges((eds) =>
+          eds.concat(
+            newNodes.map((node: Node, index: number) => ({
+              id: `edge-${currentEditNodeData.id}-${node.id}`,
+              source: currentEditNodeData.id,
+              target: node.id,
+              type: 'smoothstep',
+              animated: true,
+              label: index === 0 ? 'True' : 'False',
+            }))
+          )
+        );
+
+        setSelectedTable(null);
+        hideModal('isConditionalModalVisible');
+      } else {
+        console.error('Selected table is null');
+      }
+    },
+    [currentEditNodeData, selectedTable, setNodes, setEdges, hideModal]
+  );
+
+  const handleSortModalOk = useCallback(
+    (values: any) => {
+      if (currentEditNodeData && selectedTable) {
+        const newNode: Node = {
+          id: currentEditNodeData.id,
+          data: {
+            table: selectedTable,
+            type: 'sort',
+            sort: {
+              column: values.column,
+              sortType: values.sortType,
+            },
+            label: createNodeLabel(
+              selectedTable,
+              'Sort Node',
+              {
+                column: values.column,
+                sortType: values.sortType,
+              },
+              currentEditNodeData.id
+            ),
+          },
+          position: currentEditNodeData.position,
+          draggable: true,
+          sourcePosition: Position.Right,
+          targetPosition: Position.Left,
+        };
+
+        setNodes((nds) => [...nds.filter(node => node.id !== currentEditNodeData.id), newNode]);
+        setSelectedTable(null);
+        hideModal('isSortModalVisible');
+      } else {
+        console.error('Selected table is null');
+      }
+    },
+    [currentEditNodeData, selectedTable, setNodes, hideModal]
+  );
+
+  const handleFilterModalOk = useCallback(
+    (values: any) => {
+      if (currentEditNodeData && selectedTable) {
+        const newNode: Node = {
+          id: currentEditNodeData.id,
+          data: {
+            table: selectedTable,
+            type: 'filter',
+            filter: {
+              column: values.column,
+              operator: values.operator,
+              value: values.value,
+            },
+            label: createNodeLabel(
+              selectedTable,
+              'Filter Node',
+              {
+                column: values.column,
+                operator: values.operator,
+                value: values.value,
+              },
+              currentEditNodeData.id
+            ),
+          },
+          position: currentEditNodeData.position,
+          draggable: true,
+          sourcePosition: Position.Right,
+          targetPosition: Position.Left,
+        };
+
+        setNodes((nds) => [...nds.filter(node => node.id !== currentEditNodeData.id), newNode]);
+        setSelectedTable(null);
+        hideModal('isFilterModalVisible');
+      } else {
+        console.error('Selected table is null');
+      }
+    },
+    [currentEditNodeData, selectedTable, setNodes, hideModal]
+  );
+
+  const handleStatisticalModalOk = useCallback(
+    (values: any) => {
+      if (currentEditNodeData && selectedTable) {
+        const newNode: Node = {
+          id: currentEditNodeData.id,
+          data: {
+            table: selectedTable,
+            type: 'statistical',
+            statistical: {
+              column: values.column,
+              statisticalFunction: values.statisticalfunction,
+            },
+            label: createNodeLabel(
+              selectedTable,
+              'Statistical Node',
+              {
+                column: values.column,
+                statisticalFunction: values.statisticalfunction,
+              },
+              currentEditNodeData.id
+            ),
+          },
+          position: currentEditNodeData.position,
+          draggable: true,
+          sourcePosition: Position.Right,
+          targetPosition: Position.Left,
+        };
+
+        setNodes((nds) => [...nds.filter(node => node.id !== currentEditNodeData.id), newNode]);
+        setSelectedTable(null);
+        hideModal('isStatisticalModalVisible');
+      } else {
+        console.error('Selected table is null');
+      }
+    },
+    [currentEditNodeData, selectedTable, setNodes, hideModal]
+  );
+
+  const handleScalingModalOk = useCallback(
+    (values: any) => {
+      if (currentEditNodeData && selectedTable) {
+        const newNode: Node = {
+          id: currentEditNodeData.id,
+          data: {
+            table: selectedTable,
+            type: 'scaling',
+            scaling: {
+              column: values.column,
+              scalingFunction: values.scalingFunction,
+              minValue: values.minValue,
+              maxValue: values.maxValue,
+            },
+            label: createNodeLabel(
+              selectedTable,
+              'Scaling Node',
+              {
+                column: values.column,
+                scalingFunction: values.scalingFunction,
+                minValue: values.minValue,
+                maxValue: values.maxValue,
+              },
+              currentEditNodeData.id
+            ),
+          },
+          position: currentEditNodeData.position,
+          draggable: true,
+          sourcePosition: Position.Right,
+          targetPosition: Position.Left,
+        };
+
+        setNodes((nds) => [...nds.filter(node => node.id !== currentEditNodeData.id), newNode]);
+        setSelectedTable(null);
+        hideModal('isScalingModalVisible');
+      } else {
+        console.error('Selected table is null');
+      }
+    },
+    [currentEditNodeData, selectedTable, setNodes, hideModal]
+  );
+
+  const handleArithmeticModalOk = useCallback(
+    (values: any) => {
+      if (currentEditNodeData && selectedTable) {
+        const labelContent = values.operation;
+
+        const newNode: Node = {
+          id: currentEditNodeData.id,
+          data: {
+            table: selectedTable,
+            type: 'arithmetic',
+            arithmetic: {
+              sourceColumn: values.sourceColumns,
+              targetvalue: values.targetvalue,
+              operation: labelContent,
+            },
+            label: createNodeLabel(
+              selectedTable,
+              'Arithmetic Node',
+              {
+                sourceColumn: values.sourceColumns,
+                targetvalue: values.targetvalue,
+                operation: labelContent,
+              },
+              currentEditNodeData.id
+            ),
+          },
+          position: currentEditNodeData.position,
+          draggable: true,
+          sourcePosition: Position.Right,
+          targetPosition: Position.Left,
+        };
+
+        setNodes((nds) => [...nds.filter(node => node.id !== currentEditNodeData.id), newNode]);
+        setSelectedTable(null);
+        hideModal('isArithmeticModalVisible');
+      } else {
+        console.error('Selected table is null');
+      }
+    },
+    [currentEditNodeData, selectedTable, setNodes, hideModal]
+  );
+
+  const handleModalOk = useCallback(
+    (values: any, modalType: string) => {
+      switch (modalType) {
+        case 'StartModal':
+          handleStartModalOk(values, values.isMergeSelected);
+          break;
+        case 'OutputModal':
+          handleOutputModalOk(values);
+          break;
+        case 'PivotTableModal':
+          handlePivotTableModalOk(values);
+          break;
+        case 'GroupByModal':
+          handleGroupByModalOk(values);
+          break;
+        case 'ConditionalModal':
+          handleConditionalModalOk(values);
+          break;
+        case 'SortModal':
+          handleSortModalOk(values);
+          break;
+        case 'FilterModal':
+          handleFilterModalOk(values);
+          break;
+        case 'StatisticalModal':
+          handleStatisticalModalOk(values);
+          break;
+        case 'ScalingModal':
+          handleScalingModalOk(values);
+          break;
+        case 'ArithmeticModal':
+          handleArithmeticModalOk(values);
+          break;
+        default:
+          console.error('Unknown modal type:', modalType);
+      }
+    },
+    [
+      handleStartModalOk,
+      handleOutputModalOk,
+      handlePivotTableModalOk,
+      handleGroupByModalOk,
+      handleConditionalModalOk,
+      handleSortModalOk,
+      handleFilterModalOk,
+      handleStatisticalModalOk,
+      handleScalingModalOk,
+      handleArithmeticModalOk,
+    ]
+  );
 
   const handleEdit = useCallback(
     (nodeId: string) => {
       const nodeToEdit = nodes.find((node) => node.id === nodeId);
       if (nodeToEdit) {
         const { type, ...nodeData } = nodeToEdit.data;
-
-        const editData = {
+        setCurrentEditNodeData({
           id: nodeId,
           position: nodeToEdit.position,
           icon: 'FaEdit' as IconNames,
           ...nodeData,
-        };
-
-        setCurrentEditNodeData(editData);
+        });
 
         switch (type) {
           case 'filter':
-            setIsFilterModalVisible(true);
+            showModal('isFilterModalVisible');
             break;
           case 'sort':
-            setIsSortModalVisible(true);
+            showModal('isSortModalVisible');
             break;
           case 'if/else/and/or':
-            setIsConditionalModalVisible(true);
+            showModal('isConditionalModalVisible');
             break;
           case 'groupby':
-            setIsGroupByModalVisible(true);
+            showModal('isGroupByModalVisible');
             break;
           case 'statistical':
-            setIsStatisticalModalVisible(true);
+            showModal('isStatisticalModalVisible');
             break;
           case 'scaling':
-            setIsScalingModalVisible(true);
+            showModal('isScalingModalVisible');
             break;
           case 'arithmetic':
-            setIsArithmeticModalVisible(true);
+            showModal('isArithmeticModalVisible');
             break;
           case 'pivot':
-            setIsPivotTableModalVisible(true);
+            showModal('isPivotTableModalVisible');
             break;
           case 'output':
-            setIsOutputModalVisible(true);
+            showModal('isOutputModalVisible');
             break;
           case 'startingnode':
-            setIsStartModalVisible(true);
+            showModal('isStartModalVisible');
             break;
           default:
             console.error('Unknown node type:', type);
@@ -208,47 +666,13 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
         console.error('Node not found:', nodeId);
       }
     },
-    [
-      nodes,
-      setIsFilterModalVisible,
-      setIsSortModalVisible,
-      setIsConditionalModalVisible,
-      setIsGroupByModalVisible,
-      setIsStatisticalModalVisible,
-      setIsScalingModalVisible,
-      setIsArithmeticModalVisible,
-      setIsPivotTableModalVisible,
-      setIsOutputModalVisible,
-      setIsStartModalVisible,
-    ]
+    [nodes, showModal]
   );
-
-  const handleReadMore = useCallback(
-    (nodeId: string) => {
-      setExpandedNodes((prevExpandedNodes) => {
-        const newState = {
-          ...prevExpandedNodes,
-          [nodeId]: !prevExpandedNodes[nodeId], // Toggle the state for the specific node
-        };
-        console.log('Toggling details for node:', nodeId, newState[nodeId]); // Log the toggling action
-        console.log('Updated expandedNodes state:', newState); // Log the updated state
-        return newState; // Return the updated state object
-      });
-    },
-    [setExpandedNodes]
-  );
-
-
-  useEffect(() => {
-    console.log('expandedNodes state changed:', expandedNodes); // Log the entire state object whenever it changes
-  }, [expandedNodes]);
-
 
   const handleDelete = useCallback(
     (nodeId: string) => {
       setNodes((nds) => {
         const nodeToDelete = nds.find((node) => node.id === nodeId);
-
         if (nodeToDelete) {
           if (nodeToDelete.data?.isParentNode) {
             const childNodeIds = nds
@@ -257,24 +681,18 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
 
             return nds.filter((node) => ![nodeId, ...childNodeIds].includes(node.id));
           }
-
-          if (nodeToDelete.data?.parentId) {
-            return nds.filter((node) => node.id !== nodeId);
-          }
           return nds.filter((node) => node.id !== nodeId);
         }
-
         return nds;
       });
-
       setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId));
     },
     [setNodes, setEdges]
   );
 
   const createNodeLabel = (table: string, nodeType: string, data?: NodeData, nodeId?: string, isStartingPoint?: boolean, isEndingPoint?: boolean) => {
-    const isExpanded = expandedNodes[nodeId!] || false; // Default to false if undefined
-    console.log('Rendering node:', nodeId, 'Expanded:', isExpanded);
+    const hasOutput = nodeId && workflowOutput?.data?.rule1?.[nodeId];
+
     return (
       <>
         {isStartingPoint && (
@@ -302,7 +720,7 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
                   items: [
                     { label: 'Delete', key: '0', onClick: () => handleDelete(nodeId!) },
                     { label: 'Edit', key: '1', onClick: () => handleEdit(nodeId!) },
-                    { label: expandedNodes[nodeId!] ? 'Read less' : 'Read more', key: '2', onClick: () => handleReadMore(nodeId!) }
+                    ...(hasOutput ? [{ label: 'Preview Output', key: '2' }] : []),
                   ]
                 }}
                 trigger={['click']}
@@ -311,9 +729,11 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
                   <FiMoreHorizontal />
                 </a>
               </Dropdown>
+
             </div>
+
             {nodeType !== 'Else Node' && data && (
-              <div className={`${styles.filterStyle} ${expandedNodes[nodeId!] ? styles.showFilterList : styles.hideFilterList}`}>
+              <div className={`${styles.filterStyle}`}>
                 {nodeType === 'Filter Node' && 'column' in data && (
                   <>
                     <p>Selected Column: <b>{(data as Filter).column}</b></p>
@@ -441,490 +861,8 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
           </div>
         </div>
       </>
-    )
+    );
   };
-
-  const handleStartModalOk = useCallback(
-    (values: any, isMergeSelected: boolean) => {
-      if (currentEditNodeData) {
-        const tableName = isMergeSelected ? `${values.table1} & ${values.table2}` : values.table1Single;
-
-        const nodeType = isMergeSelected ? 'mergeTable' : 'table';
-
-        const labelContent = isMergeSelected
-          ? createNodeLabel(
-            tableName,
-            'Starting Node',
-            {
-              mergeType: values.mergeType,
-              table1: values.table1,
-              column1: values.column1,
-              table2: values.table2,
-              column2: values.column2,
-            },
-            currentEditNodeData.id,
-            true
-          )
-          : createNodeLabel(tableName, 'Starting Node', undefined, currentEditNodeData.id, true);
-
-        const newNode: Node = {
-          id: currentEditNodeData.id,
-          data: {
-            type: nodeType,
-            table: tableName,
-            start: {
-              mergeType: values.mergeType || 'Single Table',
-              table1: isMergeSelected ? values.table1 : values.table1Single,
-              column1: isMergeSelected ? values.column1 : '',
-              table2: isMergeSelected ? values.table2 : '',
-              column2: isMergeSelected ? values.column2 : '',
-            },
-            label: labelContent,
-          },
-          position: currentEditNodeData.position,
-          draggable: true,
-          sourcePosition: Position.Right,
-          targetPosition: Position.Left,
-        };
-
-        setNodes((nds) => [...nds.filter(node => node.id !== currentEditNodeData.id), newNode]);
-        setSelectedTable(tableName);
-        setIsStartModalVisible(false);
-        setIsMergeNodeDropped(true);
-
-        setSidebarItems((items) => items.map((item) => (item.id !== 'start' ? { ...item, enabled: true } : item)));
-      }
-    },
-    [currentEditNodeData, setNodes, setSidebarItems]
-  );
-
-  const handleOutputModalOk = useCallback(
-    (values: any) => {
-      if (currentEditNodeData) {
-        const newNode: Node = {
-          id: currentEditNodeData.id,
-          data: {
-            type: 'output',
-            output: {
-              outputName: values.outputName,
-            },
-            label: createNodeLabel(values.outputName, 'Output Node', undefined, currentEditNodeData.id, false, true),
-          },
-          position: currentEditNodeData.position,
-          draggable: true,
-          sourcePosition: Position.Right,
-          targetPosition: Position.Left,
-        };
-
-        setNodes((nds) => [...nds.filter(node => node.id !== currentEditNodeData.id), newNode]);
-        setSelectedTable(null);
-        setIsOutputModalVisible(false);
-      }
-    },
-    [currentEditNodeData, setNodes]
-  );
-
-  const handlePivotTableModalOk = useCallback(
-    (values: any) => {
-      if (currentEditNodeData && selectedTable) {
-        const newNode: Node = {
-          id: currentEditNodeData.id,
-          data: {
-            table: selectedTable,
-            type: 'pivotTable',
-            pivotTable: {
-              pivotColumns: values.pivotColumns,
-              functionCheckboxes: values.functionCheckboxes,
-            },
-            label: createNodeLabel(
-              selectedTable,
-              'Pivot Node',
-              {
-                type: 'pivotTable',
-                pivotTable: {
-                  pivotColumns: values.pivotColumns,
-                  functionCheckboxes: values.functionCheckboxes,
-                },
-              },
-              currentEditNodeData.id
-            ),
-          },
-          position: currentEditNodeData.position,
-          draggable: true,
-          sourcePosition: Position.Right,
-          targetPosition: Position.Left,
-        };
-
-        setNodes((nds) => [...nds.filter(node => node.id !== currentEditNodeData.id), newNode]);
-        setIsPivotTableModalVisible(false);
-      } else {
-        console.error('Selected table is null');
-      }
-    },
-    [currentEditNodeData, selectedTable, setNodes]
-  );
-
-  const handleGroupByModalOk = useCallback(
-    (values: any) => {
-      if (currentEditNodeData && selectedTable) {
-        const newNode: Node = {
-          id: currentEditNodeData.id,
-          data: {
-            table: selectedTable,
-            type: 'groupby',
-            groupby: {
-              groupByColumns: values.groupbyColumn.index,
-              targetColumns: values.groupbyColumn.value,
-              functionCheckboxes: values.functionCheckboxes,
-            },
-            label: createNodeLabel(
-              selectedTable,
-              'Group By Node',
-              {
-                groupByColumns: values.groupbyColumn.index,
-                targetColumns: values.groupbyColumn.value,
-                functionCheckboxes: values.functionCheckboxes,
-              },
-              currentEditNodeData.id
-            ),
-          },
-          position: currentEditNodeData.position,
-          draggable: true,
-          sourcePosition: Position.Right,
-          targetPosition: Position.Left,
-        };
-
-        setNodes((nds) => [...nds.filter(node => node.id !== currentEditNodeData.id), newNode]);
-        setSelectedTable(null);
-        setIsGroupByModalVisible(false);
-      } else {
-        console.error('Selected table is null');
-      }
-    },
-    [currentEditNodeData, selectedTable, setNodes]
-  );
-
-  const handleConditionalModalOk = useCallback(
-    (values: any) => {
-      if (currentEditNodeData && selectedTable) {
-        const basePosition = currentEditNodeData.position;
-        const offsetX = 250;
-        const offsetY = 100;
-
-        const conditionsData = values.conditions.map((condition: Condition, index: number) => {
-          const conditionTypeLabel =
-            values.conditionType === 'if/else'
-              ? index === 0
-                ? 'If'
-                : 'Else'
-              : values.conditionType === 'else/if'
-                ? index === 0
-                  ? 'If'
-                  : index === 1
-                    ? 'Else If'
-                    : 'Else'
-                : 'If';
-
-          const isElseCondition = conditionTypeLabel === 'Else';
-
-          return {
-            id: `${currentEditNodeData.id}-${index}`,
-            conditionType: conditionTypeLabel,
-            conditions: isElseCondition ? [] : [{
-              column: condition.column,
-              condition: condition.condition,
-              value: condition.value,
-              subConditions: condition.subConditions || [],
-              outsideConditions: condition.outsideConditions || [],
-            }]
-          };
-        });
-
-        const mainNode: Node = {
-          id: currentEditNodeData.id,
-          data: {
-            table: selectedTable,
-            type: 'conditional',
-            isParentNode: true,
-            conditional: conditionsData,
-            label: createNodeLabel(
-              selectedTable,
-              'Conditional Node',
-              {
-                conditionType: values.conditionType,
-                conditions: conditionsData,
-              },
-              currentEditNodeData.id
-            ),
-          },
-          position: basePosition,
-          draggable: true,
-          sourcePosition: Position.Right,
-          targetPosition: Position.Left,
-        };
-
-        // Child nodes for each condition
-        const newNodes: Node[] = conditionsData.map((conditionData: any, index: number) => ({
-          id: conditionData.id,
-          data: {
-            table: selectedTable,
-            type: conditionData.conditionType.toLowerCase(),
-            parentId: currentEditNodeData.id,
-            conditional: conditionData,
-            label: createNodeLabel(
-              selectedTable,
-              `${conditionData.conditionType} Node`,
-              conditionData,
-              conditionData.id
-            ),
-          },
-          position: {
-            x: basePosition.x + offsetX * index,
-            y: basePosition.y + offsetY * index,
-          },
-          draggable: true,
-          sourcePosition: Position.Right,
-          targetPosition: Position.Left,
-        }));
-
-        setNodes((nds) => [...nds.filter(node => node.id !== currentEditNodeData.id), mainNode, ...newNodes]);
-        setEdges((eds) =>
-          eds.concat(
-            newNodes.map((node: Node, index: number) => ({
-              id: `edge-${currentEditNodeData.id}-${node.id}`,
-              source: currentEditNodeData.id,
-              target: node.id,
-              type: 'smoothstep',
-              animated: true,
-              label: index === 0 ? 'True' : 'False',
-            }))
-          )
-        );
-
-        setSelectedTable(null);
-        setIsConditionalModalVisible(false);
-      } else {
-        console.error('Selected table is null');
-      }
-    },
-    [currentEditNodeData, selectedTable, setNodes, setEdges]
-  );
-
-
-  const handleSortModalOk = useCallback(
-    (values: any) => {
-      if (currentEditNodeData && selectedTable) {
-        const newNode: Node = {
-          id: currentEditNodeData.id,
-          data: {
-            table: selectedTable,
-            type: 'sort',
-            sort: {
-              column: values.column,
-              sortType: values.sortType,
-            },
-            label: createNodeLabel(
-              selectedTable,
-              'Sort Node',
-              {
-                column: values.column,
-                sortType: values.sortType,
-              },
-              currentEditNodeData.id
-            ),
-          },
-          position: currentEditNodeData.position,
-          draggable: true,
-          sourcePosition: Position.Right,
-          targetPosition: Position.Left,
-        };
-
-        setNodes((nds) => [...nds.filter(node => node.id !== currentEditNodeData.id), newNode]);
-        setSelectedTable(null);
-        setIsSortModalVisible(false);
-      } else {
-        console.error('Selected table is null');
-      }
-    },
-    [currentEditNodeData, selectedTable, setNodes]
-  );
-
-  const handleFilterModalOk = useCallback(
-    (values: any) => {
-      if (currentEditNodeData && selectedTable) {
-        const newNode: Node = {
-          id: currentEditNodeData.id,
-          data: {
-            table: selectedTable,
-            type: 'filter',
-            filter: {
-              column: values.column,
-              operator: values.operator,
-              value: values.value,
-            },
-            label: createNodeLabel(
-              selectedTable,
-              'Filter Node',
-              {
-                column: values.column,
-                operator: values.operator,
-                value: values.value,
-              },
-              currentEditNodeData.id
-            ),
-          },
-          position: currentEditNodeData.position,
-          draggable: true,
-          sourcePosition: Position.Right,
-          targetPosition: Position.Left,
-        };
-
-        setNodes((nds) => [...nds.filter(node => node.id !== currentEditNodeData.id), newNode]);
-        setSelectedTable(null);
-        setIsFilterModalVisible(false);
-      } else {
-        console.error('Selected table is null');
-      }
-    },
-    [currentEditNodeData, selectedTable, setNodes, confirmedDataType]
-  );
-
-  const handleStatisticalModalOk = useCallback(
-    (values: any) => {
-      if (currentEditNodeData && selectedTable) {
-        const newNode: Node = {
-          id: currentEditNodeData.id,
-          data: {
-            table: selectedTable,
-            type: 'statistical',
-            statistical: {
-              column: values.column,
-              statisticalFunction: values.statisticalfunction,
-            },
-            label: createNodeLabel(
-              selectedTable,
-              'Statistical Node',
-              {
-                column: values.column,
-                statisticalFunction: values.statisticalfunction,
-              },
-              currentEditNodeData.id
-            ),
-          },
-          position: currentEditNodeData.position,
-          draggable: true,
-          sourcePosition: Position.Right,
-          targetPosition: Position.Left,
-        };
-
-        setNodes((nds) => [...nds.filter(node => node.id !== currentEditNodeData.id), newNode]);
-        setSelectedTable(null);
-        setIsStatisticalModalVisible(false);
-      } else {
-        console.error('Selected table is null');
-      }
-    },
-    [currentEditNodeData, selectedTable, setNodes]
-  );
-
-  const handleScalingModalOk = useCallback(
-    (values: any) => {
-      if (currentEditNodeData && selectedTable) {
-        const newNode: Node = {
-          id: currentEditNodeData.id,
-          data: {
-            table: selectedTable,
-            type: 'scaling',
-            scaling: {
-              column: values.column,
-              scalingFunction: values.scalingFunction,
-              minValue: values.minValue,
-              maxValue: values.maxValue,
-            },
-            label: createNodeLabel(
-              selectedTable,
-              'Scaling Node',
-              {
-                column: values.column,
-                scalingFunction: values.scalingFunction,
-                minValue: values.minValue,
-                maxValue: values.maxValue,
-              },
-              currentEditNodeData.id
-            ),
-          },
-          position: currentEditNodeData.position,
-          draggable: true,
-          sourcePosition: Position.Right,
-          targetPosition: Position.Left,
-        };
-
-        setNodes((nds) => [...nds.filter(node => node.id !== currentEditNodeData.id), newNode]);
-        setSelectedTable(null);
-        setIsScalingModalVisible(false);
-      } else {
-        console.error('Selected table is null');
-      }
-    },
-    [currentEditNodeData, selectedTable, setNodes]
-  );
-
-  const handleArithmeticModalOk = useCallback(
-    (values: any) => {
-      if (currentEditNodeData && selectedTable) {
-        const labelContent = values.operation;
-
-        const newNode: Node = {
-          id: currentEditNodeData.id,
-          data: {
-            table: selectedTable,
-            type: 'arithmetic',
-            arithmetic: {
-              sourceColumn: values.sourceColumns,
-              targetvalue: values.targetvalue,
-              operation: labelContent,
-            },
-            label: createNodeLabel(
-              selectedTable,
-              'Arithmetic Node',
-              {
-                sourceColumn: values.sourceColumns,
-                targetvalue: values.targetvalue,
-                operation: labelContent,
-              },
-              currentEditNodeData.id
-            ),
-          },
-          position: currentEditNodeData.position,
-          draggable: true,
-          sourcePosition: Position.Right,
-          targetPosition: Position.Left,
-        };
-
-        setNodes((nds) => [...nds.filter(node => node.id !== currentEditNodeData.id), newNode]);
-        setSelectedTable(null);
-        setIsArithmeticModalVisible(false);
-      } else {
-        console.error('Selected table is null');
-      }
-    },
-    [currentEditNodeData, selectedTable, setNodes]
-  );
-
-  const handleCancel = useCallback(() => {
-    setSelectedTable(null);
-    setIsOutputModalVisible(false);
-    setIsModalVisible(false);
-    setIsFilterModalVisible(false);
-    setIsSortModalVisible(false);
-    setIsConditionalModalVisible(false);
-    setIsGroupByModalVisible(false);
-    setIsStatisticalModalVisible(false);
-    setIsScalingModalVisible(false);
-    setIsArithmeticModalVisible(false);
-    setIsPivotTableModalVisible(false);
-    setIsStartModalVisible(false);
-  }, []);
 
   const onConnect = useCallback(
     (connection: Connection) => {
@@ -987,6 +925,11 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
         y: event.clientY,
       });
 
+      if (!isStartingNodeSaved && itemData.title !== 'Starting Node') {
+        message.error('Please add a Starting Node first.');
+        return;
+      }
+
       const newNode: Node = {
         id,
         data: {
@@ -1002,54 +945,53 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
 
       setNodes((nds) => [...nds, newNode]);
 
-      if (itemData.title === 'Filter') {
-        showFilterModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons });
-      } else if (itemData.title === 'Output') {
-        showOutputModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons });
-      } else if (itemData.title === 'Sort') {
-        showSortModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons });
-      } else if (itemData.title === 'IF/Else/And/OR') {
-        showConditionalModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons });
-      } else if (itemData.title === 'Group By') {
-        showGroupByModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons });
-      } else if (itemData.title === 'Statistical') {
-        showStatisticalModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons });
-      } else if (itemData.title === 'Scaling') {
-        showScalingModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons });
-      } else if (itemData.title === 'Arithmetic') {
-        showArithmeticModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons });
-      } else if (itemData.title === 'Pivot') {
-        showPivotTableModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons, pivotTable: itemData.pivotTable });
-      } else if (itemData.title === 'Starting Node') {
-        showStartModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons });
+      const modalKey = modalKeyMap[itemData.title];
+      if (modalKey) {
+        showModal(modalKey);
+        setCurrentEditNodeData({
+          id,
+          position,
+          icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons,
+        });
+      } else {
+        console.error('Unknown modal type for item title:', itemData.title);
       }
     },
-    [
-      nodes,
-      screenToFlowPosition,
-      showModal,
-      showFilterModal,
-      showSortModal,
-      showPivotTableModal,
-      showConditionalModal,
-      showGroupByModal,
-      showStatisticalModal,
-      showScalingModal,
-      showArithmeticModal,
-      showStartModal,
-      setNodes,
-    ]
+    [nodes, screenToFlowPosition, setNodes, showModal, isStartingNodeSaved]
   );
 
   const handleDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
   }, []);
 
+  const handleCancel = useCallback(() => {
+    setSelectedTable(null);
+    setModalVisibility({
+      isStartModalVisible: false,
+      isOutputModalVisible: false,
+      isFilterModalVisible: false,
+      isSortModalVisible: false,
+      isConditionalModalVisible: false,
+      isGroupByModalVisible: false,
+      isStatisticalModalVisible: false,
+      isScalingModalVisible: false,
+      isArithmeticModalVisible: false,
+      isPivotTableModalVisible: false,
+    });
+  }, []);
+
   return (
     <>
       <div className={styles['home-container']} onDrop={handleDrop} onDragOver={handleDragOver}>
         <ReactFlow
-          nodes={nodes}
+          nodes={nodes.map(node => ({
+            ...node,
+            data: {
+              ...node.data,
+              showOutputLabel: outputNodeIds.includes(node.id),
+            },
+            draggable: isStartingNodeSaved || node.data.type === 'startingnode',
+          }))}
           edges={edges}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
@@ -1060,109 +1002,17 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
           <Background color="#5C5E64" gap={12} />
         </ReactFlow>
 
-        {email && (
-          <>
-            <StartModal
-              isModalVisible={isStartModalVisible}
-              handleOkay={handleStartModalOk}
-              handleCancel={handleCancel}
-              setSelectedTable={setSelectedTable}
-              workspaces={workspaces}
-              folders={folders}
-              selectedWorkspace={selectedWorkspace}
-              email={email}
-            />
-            <OutputModal
-              isModalVisible={isOutputModalVisible}
-              handleOkay={handleOutputModalOk}
-              handleCancel={handleCancel}
-              selectedWorkspace={selectedWorkspace}
-              email={email}
-            />
-            <GroupByModal
-              isModalVisible={isGroupByModalVisible}
-              handleOk={handleGroupByModalOk}
-              handleCancel={handleCancel}
-              setSelectedTable={setSelectedTable}
-              workspaces={workspaces}
-              folders={folders}
-              selectedWorkspace={selectedWorkspace}
-              email={email}
-            />
-            <FilterModal
-              isModalVisible={isFilterModalVisible}
-              handleOkay={handleFilterModalOk}
-              handleCancel={handleCancel}
-              initialValues={currentEditNodeData}
-              setSelectedTable={setSelectedTable}
-              workspaces={workspaces}
-              folders={folders}
-              selectedWorkspace={selectedWorkspace}
-              email={email}
-            />
-            <PivotTable
-              isModalVisible={isPivotTableModalVisible}
-              handleOk={handlePivotTableModalOk}
-              handleCancel={handleCancel}
-              setSelectedTable={setSelectedTable}
-              workspaces={workspaces}
-              folders={folders}
-              selectedWorkspace={selectedWorkspace}
-              email={email}
-              initialValues={currentEditNodeData?.pivotTable}
-            />
-            <SortModal
-              isModalVisible={isSortModalVisible}
-              handleOkay={handleSortModalOk}
-              handleCancel={handleCancel}
-              setSelectedTable={setSelectedTable}
-              workspaces={workspaces}
-              folders={folders}
-              selectedWorkspace={selectedWorkspace}
-              email={email}
-            />
-            <ConditionalModal
-              isModalVisible={isConditionalModalVisible}
-              handleOkay={handleConditionalModalOk}
-              handleCancel={handleCancel}
-              setSelectedTable={setSelectedTable}
-              workspaces={workspaces}
-              folders={folders}
-              selectedWorkspace={selectedWorkspace}
-              email={email}
-            />
-            <StatisticalModal
-              isModalVisible={isStatisticalModalVisible}
-              handleOkay={handleStatisticalModalOk}
-              handleCancel={handleCancel}
-              setSelectedTable={setSelectedTable}
-              workspaces={workspaces}
-              folders={folders}
-              selectedWorkspace={selectedWorkspace}
-              email={email}
-            />
-            <ScalingModal
-              isModalVisible={isScalingModalVisible}
-              handleOkay={handleScalingModalOk}
-              handleCancel={handleCancel}
-              setSelectedTable={setSelectedTable}
-              workspaces={workspaces}
-              folders={folders}
-              selectedWorkspace={selectedWorkspace}
-              email={email}
-            />
-            <ArithmeticModal
-              isModalVisible={isArithmeticModalVisible}
-              handleOkay={handleArithmeticModalOk}
-              handleCancel={handleCancel}
-              setSelectedTable={setSelectedTable}
-              workspaces={workspaces}
-              folders={folders}
-              selectedWorkspace={selectedWorkspace}
-              email={email}
-            />
-          </>
-        )}
+        <WorkflowModals
+          currentEditNodeData={currentEditNodeData}
+          modalVisibility={modalVisibility}
+          handleModalOk={handleModalOk}
+          handleCancel={handleCancel}
+          setSelectedTable={setSelectedTable}
+          workspaces={workspaces}
+          folders={folders}
+          selectedWorkspace={selectedWorkspace}
+          email={email}
+        />
       </div>
     </>
   );

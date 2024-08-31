@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import classes from './workflow.module.css';
 import { useNodesState, useEdgesState, ReactFlowProvider } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { fetchWorkspaces, fetchFolders, fetchWorkflows } from '@/app/API/api';
+import { fetchWorkspaces, fetchFolders } from '@/app/API/api';
 import { useEmail } from '@/app/context/emailContext';
-import { message } from 'antd';
+import { message, Dropdown } from 'antd';
 import { CustomNode } from '../types/workflowTypes';
 import Sidebar from './components/sidebar';
 import Topbar from './components/topbar';
@@ -42,7 +42,8 @@ const WorkFlow: React.FC = () => {
     const [currentWorkspace, setCurrentWorkspace] = useState<string | null>(null);
     const [sidebarItems, setSidebarItems] = useState(initialSidebarItems);
     const [workflowName, setWorkflowName] = useState<string>('Workflow Name');
-    const [workflowId, setWorkflowId] = useState<string>('defaultWorkflowId'); // Adjust accordingly
+    const [outputNodeIds, setOutputNodeIds] = useState<string[]>([]);
+    const [workflowOutput, setWorkflowOutput] = useState<any>(null);
 
     useEffect(() => {
         const handleLoad = () => setLoading(false);
@@ -155,13 +156,19 @@ const WorkFlow: React.FC = () => {
                 },
             });
 
+            console.log('API Response:', response.data.data);
+
             if (response.status === 200) {
-                message.success('Workflow saved successfully');
+                message.success(response.data.data || 'Workflow saved successfully');
+                const ids = response.data.data.outputNodeIds || [];
+                setOutputNodeIds(ids);
+                setWorkflowOutput(response.data);
+
                 return true;
             } else {
                 const errorMessage = response.data.error || 'Failed to save workflow';
                 message.error(errorMessage);
-                console.error('API Response:', response);
+                console.error('API Response Error:', response);
                 return false;
             }
         } catch (error) {
@@ -220,7 +227,12 @@ const WorkFlow: React.FC = () => {
     return (
         <div className={classes.workflowPage}>
             {loading && <Preloader />}
-            <Topbar onSaveClick={handleRunClick} setWorkflowName={setWorkflowName} />
+            <Topbar
+                onSaveClick={handleRunClick}
+                setWorkflowName={setWorkflowName}
+                workspaceId={currentWorkspace || undefined}
+            />
+
             <div className={classes.workflowWrapper}>
                 <Sidebar
                     workspaces={workspaces}
@@ -241,6 +253,8 @@ const WorkFlow: React.FC = () => {
                             folders={folders}
                             selectedWorkspace={currentWorkspace}
                             setSidebarItems={setSidebarItems}
+                            outputNodeIds={outputNodeIds}
+                            workflowOutput={workflowOutput}
                         />
                     </ReactFlowProvider>
                 </div>
