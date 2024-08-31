@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { Button, message, Empty, Dropdown } from 'antd';
@@ -6,8 +6,6 @@ import Link from 'next/link';
 import { BiDotsVerticalRounded } from 'react-icons/bi';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
-import Searchbar from '../../components/Searchbar/search';
-import View from '../../components/GridListView/view';
 import { useEmail } from '@/app/context/emailContext';
 import classes from '@/app/assets/css/pages.module.css';
 import folder from '../../assets/images/database.svg';
@@ -17,10 +15,13 @@ import { Workspace } from '@/app/types/interface';
 import axios from 'axios';
 import { BaseURL } from '@/app/constants/index';
 import { getToken } from '@/utils/auth';
+import BreadCrumb from "@/app/components/Breadcrumbs/breadcrumb";
 
-const CreateWorkspaceModal = dynamic(() => import('./modals/create-workspace/workspace'));
-const EditWorkspaceModal = dynamic(() => import('./modals/edit-modal/editmodal'));
-const DeleteModal = dynamic(() => import('@/app/modals/delete-modal/delete-modal'));
+const Searchbar = dynamic(() => import('../../components/Searchbar/search'), { ssr: false });
+const View = dynamic(() => import('../../components/GridListView/view'), { ssr: false });
+const DeleteModal = dynamic(() => import('@/app/modals/delete-modal/delete-modal'), { ssr: false });
+const EditableModal = dynamic(() => import('@/app/modals/edit-modal/edit-modal'), { ssr: false });
+const CreateWorkspaceModal = dynamic(() => import('@/app/modals/create-modal/create-modal'), { ssr: false });
 
 export default function CreateWorkSpace() {
     const [searchInput, setSearchInput] = useState('');
@@ -31,6 +32,7 @@ export default function CreateWorkSpace() {
     const [selectedWorkspace, setSelectedWorkspace] = useState<Workspace | null>(null);
     const { email } = useEmail();
     const [isLoading, setIsLoading] = useState(false);
+    const [breadcrumbs, setBreadcrumbs] = useState<{ href: string; label: string }[]>([]);
 
     const items = [
         {
@@ -53,11 +55,6 @@ export default function CreateWorkSpace() {
         setIsCreateModalVisible(true);
     };
 
-    const handleCreateModalOk = () => {
-        setIsCreateModalVisible(false);
-        loadWorkspaces();
-    };
-
     const handleCreateModalCancel = () => {
         setIsCreateModalVisible(false);
     };
@@ -76,11 +73,42 @@ export default function CreateWorkSpace() {
         }
     };
 
+    const handleCreateModalOk = async (workspaceName: string) => {
+        if (!email) return;
+        const token = getToken();
+        try {
+            const response = await axios.post(`${BaseURL}/workspace`, {
+                UserEmail: email,
+                WorkSpace: workspaceName,
+            }, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+            });
+
+            if (response.status === 200) {
+                message.success('Workspace created successfully!');
+                setIsCreateModalVisible(false);
+                loadWorkspaces();
+            } else {
+                message.error(response.data.message || 'Failed to create workspace.');
+            }
+        } catch (error) {
+            message.error('Failed to create workspace.');
+            console.error('Error creating workspace:', error);
+        }
+    };
+
     const updateWorkspaceName = (workspaceId: string, newName: string) => {
         const updatedWorkspaces = workspaces.map((workspace) =>
             workspace.id === workspaceId ? { ...workspace, name: newName } : workspace
         );
         setWorkspaces(updatedWorkspaces);
+
+        if (selectedWorkspace && selectedWorkspace.id === workspaceId) {
+            setSelectedWorkspace({ ...selectedWorkspace, name: newName });
+        }
     };
 
     const removeWorkspace = (workspaceId: string) => {
@@ -100,9 +128,40 @@ export default function CreateWorkSpace() {
                     'Authorization': `Bearer ${token}`,
                 },
             });
+            message.success('Workspace deleted successfully!');
+            removeWorkspace(workspaceId);
         } catch (error) {
             message.error('Failed to delete workspace.');
             console.error("Failed to delete workspace:", error);
+        }
+    };
+
+    const editWorkspaceName = async (newName: string) => {
+        if (!email || !selectedWorkspace) return;
+        const token = getToken();
+
+        try {
+            const response = await axios.put(`${BaseURL}/workspace`, {
+                UserEmail: email,
+                workSpace: selectedWorkspace.name,
+                Data: newName,
+            }, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.status === 200) {
+                updateWorkspaceName(selectedWorkspace.id, newName);
+                message.success('Workspace name updated successfully!');
+                setIsEditModalVisible(false);
+            } else {
+                throw new Error('API response not OK');
+            }
+        } catch (error) {
+            message.error('Failed to update workspace name.');
+            console.error("Failed to update workspace:", error);
         }
     };
 
@@ -114,7 +173,7 @@ export default function CreateWorkSpace() {
                 setWorkspaces(workspacesData);
             } catch (error) {
                 message.error('Failed to fetch workspaces.');
-                console.error("Failed to fetch workspaces.")
+                console.error("Failed to fetch workspaces.");
             } finally {
                 setIsLoading(false);
             }
@@ -125,6 +184,9 @@ export default function CreateWorkSpace() {
 
     useEffect(() => {
         loadWorkspaces();
+        setBreadcrumbs([
+            { href: `/dashboard`, label: `Dashboard` }
+        ]);
     }, [email]);
 
     const filteredWorkspaces = workspaces.filter(workspace =>
@@ -136,30 +198,34 @@ export default function CreateWorkSpace() {
             <div className={classes.heading}>
                 <h1>Workspace Management</h1>
             </div>
+
             <div className={`${classes.searchView} flex justify-space-between gap-1`}>
-                <Searchbar value={searchInput} onChange={handleSearchInputChange} />
-                <div className="flex gap-1">
-                    <View />
-                    <Button className="btn" onClick={openCreateWorkspaceModal}>
-                        Create Workspace
-                    </Button>
+                <BreadCrumb breadcrumbs={breadcrumbs} />
+                <div className={`${classes.searchlist} flex gap-1`}>
+                    <Searchbar value={searchInput} onChange={handleSearchInputChange} />
+                    <div className="flex gap-1">
+                        <View />
+                        <Button className="btn" onClick={openCreateWorkspaceModal}>
+                            Create Workspace
+                        </Button>
+                    </div>
                 </div>
             </div>
+
             <CreateWorkspaceModal
                 open={isCreateModalVisible}
-                onOk={handleCreateModalOk}
+                title="Create Workspace"
+                fieldLabel="Workspace Name"
+                onSubmit={handleCreateModalOk}
                 onCancel={handleCreateModalCancel}
+                isLoading={isLoading}
             />
-            <EditWorkspaceModal
+            <EditableModal
                 open={isEditModalVisible}
-                workspaceId={selectedWorkspace?.id || ''}
-                initialWorkspaceName={selectedWorkspace?.name || ''}
-                onOk={(newName: string) => {
-                    setIsEditModalVisible(false);
-                    updateWorkspaceName(selectedWorkspace?.id || '', newName);
-                    setSelectedWorkspace(null);
-                    loadWorkspaces();
-                }}
+                title="Edit Workspace"
+                initialValue={selectedWorkspace?.name || ''}
+                fieldLabel="New Workspace Name"
+                onSubmit={editWorkspaceName}
                 onCancel={() => setIsEditModalVisible(false)}
             />
             {selectedWorkspace && (
@@ -167,10 +233,9 @@ export default function CreateWorkSpace() {
                     open={isDeleteModalVisible}
                     entityName="Workspace"
                     entityId={selectedWorkspace.id}
-                    onDelete={deleteWorkspace}
+                    onDelete={() => deleteWorkspace(selectedWorkspace.id)}
                     onOk={() => {
                         setIsDeleteModalVisible(false);
-                        removeWorkspace(selectedWorkspace.id);
                         setSelectedWorkspace(null);
                     }}
                     onCancel={() => setIsDeleteModalVisible(false)}
@@ -188,7 +253,7 @@ export default function CreateWorkSpace() {
                     {filteredWorkspaces.map((workspace) => (
                         <div key={workspace.id} className={`${classes.workspacebox}`}>
                             <div className={`flex gap-1 alinc ${classes.link}`}>
-                                <Link href={`/create-folder/${workspace.id}`}>
+                                <Link href={`/create-folder/${encodeURIComponent(workspace.name)}`}>
                                     <div className={`${classes.workspaceName} flex gap-1`}>
                                         <Image src={folder} alt="Folder Icon" width={32} height={32} />
                                         <p>

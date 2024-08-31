@@ -253,3 +253,26 @@ export const fetchWorkflows = async (email: string, workspaceId: string, setIsLo
         setIsLoading(false);
     }
 };
+
+
+// Edit Workflow API
+export const editWorkflow = async (email: string, workspaceId: string, workflowId: string, newName: string) => {
+    try {
+        const response = await axios.put(`${BaseURL}/workflow`, {
+            userEmail: email,
+            workSpace: workspaceId,
+            workFlowName: workflowId,
+            data: newName,
+        }, {
+            headers: getAuthHeaders(),
+        });
+
+        if (response.status === 200) {
+            return response.data;
+        } else {
+            throw new Error(response.data.error || 'Failed to update workflow.');
+        }
+    } catch (error) {
+        throw error;
+    }
+};

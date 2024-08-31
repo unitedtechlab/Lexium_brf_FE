@@ -77,9 +77,11 @@ const DataStorageFolder = () => {
                     'Authorization': `Bearer ${token}`
                 },
             });
+            return true;
         } catch (error) {
             message.error("Failed to delete folder");
             console.error("Error deleting folder:", error);
+            return false;
         }
     };
 
@@ -215,7 +217,12 @@ const DataStorageFolder = () => {
                     open={isDeleteModalVisible}
                     entityName="Cleaned File"
                     entityId={selectedFolder.id}
-                    onDelete={deleteFolder}
+                    onDelete={async (folderId) => {
+                        const success = await deleteFolder(folderId);
+                        if (success) {
+                            message.success('Folder deleted successfully!');
+                        }
+                    }}
                     onOk={() => {
                         updateFolderListAfterDelete(selectedFolder.id);
                         setIsDeleteModalVisible(false);

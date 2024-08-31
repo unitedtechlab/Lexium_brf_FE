@@ -15,6 +15,7 @@ import { fetchWorkspaces, fetchFolders } from '@/app/API/api';
 import axios from 'axios';
 import { BaseURL } from '@/app/constants/index';
 import { getToken, isBrowser } from '@/utils/auth';
+import BreadCrumb from "@/app/components/Breadcrumbs/breadcrumb";
 
 const CustomfillModal = dynamic(() => import('@/app/modals/customfillValueModal/customfillValue'));
 const CompositeKeyModal = dynamic(() => import('@/app/modals/composite-keyModal/compositekey'));
@@ -37,6 +38,7 @@ const DataPrevalidation: React.FC = () => {
     const [form] = Form.useForm();
     const workspace = searchParams.get('workspace');
     const folder = searchParams.get('folder');
+    const [breadcrumbs, setBreadcrumbs] = useState<{ href: string; label: string }[]>([]);
 
     const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
     const [selectedWorkspace, setSelectedWorkspace] = useState<string>(workspace || '');
@@ -71,6 +73,10 @@ const DataPrevalidation: React.FC = () => {
         if (isBrowser()) {
             setToken(getToken());
         }
+
+        setBreadcrumbs([
+            { href: `/create-workspace`, label: `Workspace Management` }
+        ]);
     }, [selectedWorkspace, selectedFolder]);
 
     const loadWorkspaces = async () => {
@@ -466,9 +472,13 @@ const DataPrevalidation: React.FC = () => {
 
     return (
         <div className={classes.prevalidation}>
+            <div className={classes.bread_crumb_single}>
+                <BreadCrumb breadcrumbs={breadcrumbs} />
+            </div>
             <div className={classes.heading}>
                 <h1>Data Pre-Validation</h1>
             </div>
+
             <Form layout="vertical" autoComplete="off" scrollToFirstError form={form} id='data-prevalidation-form'>
                 <Row gutter={16} className='alinbottom'>
                     <Col lg={6} md={10} sm={24}>

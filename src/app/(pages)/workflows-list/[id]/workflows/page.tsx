@@ -18,6 +18,8 @@ import Link from "next/link";
 import axios from 'axios';
 import { BaseURL } from '@/app/constants/index';
 import { getToken } from '@/utils/auth';
+import EditableModal from "@/app/modals/edit-modal/edit-modal";
+import { editWorkflow } from "@/app/API/api"; // Import the new API function
 
 const Loader = dynamic(() => import('@/app/loading'), { ssr: false });
 const DeleteModal = dynamic(() => import('@/app/modals/delete-modal/delete-modal'), { ssr: false });
@@ -36,7 +38,9 @@ const WorkflowsList = () => {
     const [breadcrumbs, setBreadcrumbs] = useState<{ href: string; label: string }[]>([]);
     const [workflows, setWorkflows] = useState<Workflow[]>([]);
     const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+    const [editModalVisible, setEditModalVisible] = useState(false);
     const [selectedWorkflow, setSelectedWorkflow] = useState<Workflow | null>(null);
+    const [editWorkflowName, setEditWorkflowName] = useState("");
     const { email } = useEmail();
     const token = getToken();
 
@@ -54,10 +58,34 @@ const WorkflowsList = () => {
         });
     };
 
+    const handleEditWorkflow = async (newName: string) => {
+        if (!email || !selectedWorkflow || !id) return;
+
+        try {
+            await editWorkflow(email, id, selectedWorkflow.id, newName);
+            message.success('Workflow updated successfully.');
+
+            setEditModalVisible(false);
+            setEditWorkflowName("");
+
+            const fetchedWorkflows = await fetchWorkflows(email, id, setIsLoading);
+            setWorkflows(fetchedWorkflows);
+
+        } catch (error) {
+            message.error('Failed to update workflow.');
+            console.error('Error:', error);
+        }
+    };
+
+
     const handleMenuClick = useCallback((key: string, workflow: Workflow) => {
         if (key === 'delete') {
             setSelectedWorkflow(workflow);
             setDeleteModalVisible(true);
+        } else if (key === 'edit') {
+            setSelectedWorkflow(workflow);
+            setEditWorkflowName(workflow.name);
+            setEditModalVisible(true);
         }
     }, []);
 
@@ -79,7 +107,7 @@ const WorkflowsList = () => {
     useEffect(() => {
         if (id && email) {
             if (typeof id === "string" && email) {
-                setBreadcrumbs([{ href: `/workflows-list`, label: `${id.replace(/-/g, " ")} Workspace` }]);
+                setBreadcrumbs([{ href: `/workflows-list`, label: `${id.replace(/-/g, " ")} Workflow Workspace` }]);
                 fetchWorkflows(email, id, setIsLoading)
                     .then(fetchedWorkflows => {
                         setWorkflows(fetchedWorkflows);
@@ -103,13 +131,15 @@ const WorkflowsList = () => {
             <div className={classes.heading}>
                 <h1>Workflow Management</h1>
             </div>
-            <BreadCrumb breadcrumbs={breadcrumbs} />
 
             <div className={`${classes.searchView} flex justify-space-between gap-1`}>
-                <Searchbar value={searchInput} onChange={handleSearchInputChange} />
-                <div className="flex gap-1">
-                    <View />
-                    <Link href="/workflow" className="btn">Create WorkFlow</Link>
+                <BreadCrumb breadcrumbs={breadcrumbs} />
+                <div className={`${classes.searchlist} flex gap-1`}>
+                    <Searchbar value={searchInput} onChange={handleSearchInputChange} />
+                    <div className="flex gap-1">
+                        <View />
+                        <Link href="/workflow" className="btn">Create WorkFlow</Link>
+                    </div>
                 </div>
             </div>
 
@@ -169,6 +199,18 @@ const WorkflowsList = () => {
                         }
                     }}
                     onCancel={() => setDeleteModalVisible(false)}
+                />
+            )}
+
+            {selectedWorkflow && (
+                <EditableModal
+                    open={editModalVisible}
+                    title="Edit Workflow"
+                    initialValue={editWorkflowName}
+                    fieldLabel="Workflow Name"
+                    onSubmit={handleEditWorkflow}
+                    onCancel={() => setEditModalVisible(false)}
+                    isLoading={isLoading}
                 />
             )}
         </div>

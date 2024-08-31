@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import ReactFlow, {
   addEdge,
   Controls,
@@ -75,10 +75,6 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
 }) => {
   const { email } = useEmail();
   const { screenToFlowPosition } = useReactFlow();
-
-  // New state to track dropped but unconfirmed nodes
-  const [unconfirmedNodeId, setUnconfirmedNodeId] = useState<string | null>(null);
-
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
   const [isFilterModalVisible, setIsFilterModalVisible] = useState<boolean>(false);
   const [isSortModalVisible, setIsSortModalVisible] = useState<boolean>(false);
@@ -101,8 +97,8 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
 
   const [selectedTable, setSelectedTable] = useState<string | null>(null);
   const [isMergeNodeDropped, setIsMergeNodeDropped] = useState<boolean>(false);
+  const [expandedNodes, setExpandedNodes] = useState<{ [key: string]: boolean }>({});
 
-  // Modal show functions (keep existing)
   const showModal = useCallback((nodeData: { id: string; position: XYPosition; icon: keyof typeof Icons | keyof typeof FaIcons }) => {
     setCurrentEditNodeData(nodeData);
     setIsModalVisible(true);
@@ -112,6 +108,7 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
     setCurrentEditNodeData(nodeData);
     setIsFilterModalVisible(true);
   }, []);
+
 
   const showSortModal = useCallback((nodeData: { id: string; position: XYPosition; icon: keyof typeof Icons | keyof typeof FaIcons }) => {
     setCurrentEditNodeData(nodeData);
@@ -226,6 +223,26 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
     ]
   );
 
+  const handleReadMore = useCallback(
+    (nodeId: string) => {
+      setExpandedNodes((prevExpandedNodes) => {
+        const newState = {
+          ...prevExpandedNodes,
+          [nodeId]: !prevExpandedNodes[nodeId], // Toggle the state for the specific node
+        };
+        console.log('Toggling details for node:', nodeId, newState[nodeId]); // Log the toggling action
+        console.log('Updated expandedNodes state:', newState); // Log the updated state
+        return newState; // Return the updated state object
+      });
+    },
+    [setExpandedNodes]
+  );
+
+
+  useEffect(() => {
+    console.log('expandedNodes state changed:', expandedNodes); // Log the entire state object whenever it changes
+  }, [expandedNodes]);
+
 
   const handleDelete = useCallback(
     (nodeId: string) => {
@@ -255,177 +272,178 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
     [setNodes, setEdges]
   );
 
-  const createNodeLabel = (table: string, nodeType: string, data?: NodeData, nodeId?: string, isStartingPoint?: boolean, isEndingPoint?: boolean) => (
-    <>
-      {isStartingPoint && (
-        <div className={styles['starting-point-label']}>
-          STARTING POINT
-        </div>
-      )}
-      {isEndingPoint && (
-        <div className={styles['starting-point-label']}>
-          ENDING POINT
-        </div>
-      )}
-      <div className={styles['node-content']}>
-        <div className={`flex gap-1 ${styles['node-main']}`}>
-          <div className={`flex gap-1 ${styles['node']}`}>
-            <div className={`flex gap-1 ${styles['nodewrap']}`}>
-              <Image src={TableImage} alt='Table Image' width={32} height={32} />
-              <div className={styles['node-text']}>
-                <h6>{table}</h6>
-                <span>{nodeType}</span>
-              </div>
-            </div>
-            <Dropdown
-              menu={{
-                items: [
-                  { label: 'Delete', key: '0', onClick: () => handleDelete(nodeId!) },
-                  { label: 'Edit', key: '1', onClick: () => handleEdit(nodeId!) },
-                  { label: 'Read more', key: '2' }
-                ]
-              }}
-              trigger={['click']}
-            >
-              <a onClick={(e) => e.preventDefault()} className='iconFont'>
-                <FiMoreHorizontal />
-              </a>
-            </Dropdown>
+  const createNodeLabel = (table: string, nodeType: string, data?: NodeData, nodeId?: string, isStartingPoint?: boolean, isEndingPoint?: boolean) => {
+    const isExpanded = expandedNodes[nodeId!] || false; // Default to false if undefined
+    console.log('Rendering node:', nodeId, 'Expanded:', isExpanded);
+    return (
+      <>
+        {isStartingPoint && (
+          <div className={styles['starting-point-label']}>
+            STARTING POINT
           </div>
-          {nodeType !== 'Else Node' && data && (
-            <div className={styles.filterStyle}>
-              {nodeType === 'Filter Node' && 'column' in data && (
-                <>
-                  <p>Selected Column: <b>{(data as Filter).column}</b></p>
-                  <p>Operator: <b>{(data as Filter).operator}</b></p>
-                  <p>Value: <b>{(data as Filter).value}</b></p>
-                </>
-              )}
-              {nodeType === 'Sort Node' && 'column' in data && (
-                <>
-                  <p>Selected Column: <b>{(data as Sort).column}</b></p>
-                  <p>Sort Type: <b>{(data as Sort).sortType}</b></p>
-                </>
-              )}
-              {nodeType === 'Conditional Node' && 'conditionType' in data && (
-                <p>Condition Type: <b>{(data as Conditional).conditionType}</b></p>
-              )}
-              {nodeType !== 'Conditional Node' && nodeType.includes('Node') && 'conditions' in data && (
-                <>
-                  {(data as Conditional).conditions.map((condition, index) => (
-                    <div key={index} className={styles.conditionNodeData}>
-                      <ul className={styles.listNodeShow}>
-                        <li>Column Name: <b>{condition.column}</b></li>
-                        <li>Condition Name: <b>{condition.condition}</b></li>
-                        <li>Compare value: <b>{condition.value}</b></li>
-                        {condition.subConditions && condition.subConditions.length > 0 && (
-                          <>
-                            <hr />
-                            <h6>Sub Conditions:</h6>
-                            {condition.subConditions.map((subCondition, subIndex) => (
-                              <ul key={subIndex} className={styles.listNodeShow}>
-                                <li>Operator: <b>{subCondition.operator ? subCondition.operator.toUpperCase() : 'AND'}</b></li>
-                                <li>Column Name: <b>{subCondition.column}</b></li>
-                                <li>Condition Name: <b>{subCondition.condition}</b></li>
-                                <li>Compare value: <b>{subCondition.value}</b></li>
-                              </ul>
-                            ))}
-                          </>
-                        )}
-                        {condition.outsideConditions && condition.outsideConditions.length > 0 && (
-                          <>
-                            <hr />
-                            <h6>Outside Conditions:</h6>
-                            {condition.outsideConditions.map((outsideCondition, outIndex) => (
-                              <ul key={outIndex} className={styles.listNodeShow}>
-                                <li>Operator: <b>{outsideCondition.operator ? outsideCondition.operator.toUpperCase() : 'AND'}</b></li>
-                                <li>Column Name: <b>{outsideCondition.column}</b></li>
-                                <li>Condition Name: <b>{outsideCondition.condition}</b></li>
-                                <li>Compare value: <b>{outsideCondition.value}</b></li>
-                              </ul>
-                            ))}
-                          </>
-                        )}
-                      </ul>
-                    </div>
-                  ))}
-                </>
-              )}
-              {nodeType === 'Group By Node' && 'groupByColumns' in data && (
-                <>
-                  <p>Group By Columns: <b>{data.groupByColumns?.join(', ') || 'No Columns'}</b></p>
-                  <p>Target Columns: <b>{data.targetColumns?.join(', ') || 'No Columns'}</b></p>
-                  <hr />
-                  <p>Functions:</p>
-                  <ul>
-                    {data.functionCheckboxes &&
-                      Object.keys(data.functionCheckboxes).map(column => (
+        )}
+        {isEndingPoint && (
+          <div className={styles['starting-point-label']}>
+            ENDING POINT
+          </div>
+        )}
+        <div className={styles['node-content']}>
+          <div className={`flex gap-1 ${styles['node-main']}`}>
+            <div className={`flex gap-1 ${styles['node']}`}>
+              <div className={`flex gap-1 ${styles['nodewrap']}`}>
+                <Image src={TableImage} alt='Table Image' width={32} height={32} />
+                <div className={styles['node-text']}>
+                  <h6>{table}</h6>
+                  <span>{nodeType}</span>
+                </div>
+              </div>
+              <Dropdown
+                menu={{
+                  items: [
+                    { label: 'Delete', key: '0', onClick: () => handleDelete(nodeId!) },
+                    { label: 'Edit', key: '1', onClick: () => handleEdit(nodeId!) },
+                    { label: expandedNodes[nodeId!] ? 'Read less' : 'Read more', key: '2', onClick: () => handleReadMore(nodeId!) }
+                  ]
+                }}
+                trigger={['click']}
+              >
+                <a onClick={(e) => e.preventDefault()} className='iconFont'>
+                  <FiMoreHorizontal />
+                </a>
+              </Dropdown>
+            </div>
+            {nodeType !== 'Else Node' && data && (
+              <div className={`${styles.filterStyle} ${expandedNodes[nodeId!] ? styles.showFilterList : styles.hideFilterList}`}>
+                {nodeType === 'Filter Node' && 'column' in data && (
+                  <>
+                    <p>Selected Column: <b>{(data as Filter).column}</b></p>
+                    <p>Operator: <b>{(data as Filter).operator}</b></p>
+                    <p>Value: <b>{(data as Filter).value}</b></p>
+                  </>
+                )}
+                {nodeType === 'Sort Node' && 'column' in data && (
+                  <>
+                    <p>Selected Column: <b>{(data as Sort).column}</b></p>
+                    <p>Sort Type: <b>{(data as Sort).sortType}</b></p>
+                  </>
+                )}
+                {nodeType === 'Conditional Node' && 'conditionType' in data && (
+                  <p>Condition Type: <b>{(data as Conditional).conditionType}</b></p>
+                )}
+                {nodeType !== 'Conditional Node' && nodeType.includes('Node') && 'conditions' in data && (
+                  <>
+                    {(data as Conditional).conditions.map((condition, index) => (
+                      <div key={index} className={styles.conditionNodeData}>
+                        <ul className={styles.listNodeShow}>
+                          <li>Column Name: <b>{condition.column}</b></li>
+                          <li>Condition Name: <b>{condition.condition}</b></li>
+                          <li>Compare value: <b>{condition.value}</b></li>
+                          {condition.subConditions && condition.subConditions.length > 0 && (
+                            <>
+                              <hr />
+                              <h6>Sub Conditions:</h6>
+                              {condition.subConditions.map((subCondition, subIndex) => (
+                                <ul key={subIndex} className={styles.listNodeShow}>
+                                  <li>Operator: <b>{subCondition.operator ? subCondition.operator.toUpperCase() : 'AND'}</b></li>
+                                  <li>Column Name: <b>{subCondition.column}</b></li>
+                                  <li>Condition Name: <b>{subCondition.condition}</b></li>
+                                  <li>Compare value: <b>{subCondition.value}</b></li>
+                                </ul>
+                              ))}
+                            </>
+                          )}
+                          {condition.outsideConditions && condition.outsideConditions.length > 0 && (
+                            <>
+                              <hr />
+                              <h6>Outside Conditions:</h6>
+                              {condition.outsideConditions.map((outsideCondition, outIndex) => (
+                                <ul key={outIndex} className={styles.listNodeShow}>
+                                  <li>Operator: <b>{outsideCondition.operator ? outsideCondition.operator.toUpperCase() : 'AND'}</b></li>
+                                  <li>Column Name: <b>{outsideCondition.column}</b></li>
+                                  <li>Condition Name: <b>{outsideCondition.condition}</b></li>
+                                  <li>Compare value: <b>{outsideCondition.value}</b></li>
+                                </ul>
+                              ))}
+                            </>
+                          )}
+                        </ul>
+                      </div>
+                    ))}
+                  </>
+                )}
+                {nodeType === 'Group By Node' && 'groupByColumns' in data && (
+                  <>
+                    <p>Group By Columns: <b>{data.groupByColumns?.join(', ') || 'No Columns'}</b></p>
+                    <p>Target Columns: <b>{data.targetColumns?.join(', ') || 'No Columns'}</b></p>
+                    <hr />
+                    <p>Functions:</p>
+                    <ul>
+                      {data.functionCheckboxes &&
+                        Object.keys(data.functionCheckboxes).map(column => (
+                          <li key={column}>
+                            <p>{column}: <b>{data.functionCheckboxes?.[column]?.join(', ') || 'No Functions'}</b></p>
+                          </li>
+                        ))}
+                    </ul>
+                  </>
+                )}
+
+                {nodeType === 'Statistical Node' && 'statisticalFunction' in data && (
+                  <>
+                    <p>Selected Column: <b>{data.column}</b></p>
+                    <p>Function: <b>{data.statisticalFunction}</b></p>
+                  </>
+                )}
+                {nodeType === 'Scaling Node' && (
+                  <>
+                    <p>Selected Column: <b>{(data as Scaling).column}</b></p>
+                    <p>Function: <b>{(data as Scaling).scalingFunction}</b></p>
+                    {(data as Scaling).minValue && (
+                      <p>Min Value: <b>{(data as Scaling).minValue}</b></p>
+                    )}
+                    {(data as Scaling).maxValue && (
+                      <p>Max Value: <b>{(data as Scaling).maxValue}</b></p>
+                    )}
+                  </>
+                )}
+                {nodeType === 'Arithmetic Node' && 'sourceColumn' in data && (
+                  <>
+                    <p>Operation: <b>{(data as Arithmetic).operation}</b></p>
+                  </>
+                )}
+                {nodeType === 'Pivot Node' && data && (data as CustomNode).pivotTable && (
+                  <div className={styles.pivotNodeData}>
+                    <p>Index Columns: <b>{(data as CustomNode).pivotTable!.pivotColumns.index.join(', ')}</b></p>
+                    <p>Column Columns: <b>{(data as CustomNode).pivotTable!.pivotColumns.column.join(', ')}</b></p>
+                    <p>Value Columns: <b>{(data as CustomNode).pivotTable!.pivotColumns.value.join(', ')}</b></p>
+                    <hr />
+                    <p>Functions:</p>
+                    <ul>
+                      {Object.keys((data as CustomNode).pivotTable!.functionCheckboxes).map(column => (
                         <li key={column}>
-                          <p>{column}: <b>{data.functionCheckboxes?.[column]?.join(', ') || 'No Functions'}</b></p>
+                          <p>{column}: <b>{(data as CustomNode).pivotTable!.functionCheckboxes[column].join(', ')}</b></p>
                         </li>
                       ))}
-                  </ul>
-                </>
-              )}
-
-              {nodeType === 'Statistical Node' && 'statisticalFunction' in data && (
-                <>
-                  <p>Selected Column: <b>{data.column}</b></p>
-                  <p>Function: <b>{data.statisticalFunction}</b></p>
-                </>
-              )}
-              {nodeType === 'Scaling Node' && (
-                <>
-                  <p>Selected Column: <b>{(data as Scaling).column}</b></p>
-                  <p>Function: <b>{(data as Scaling).scalingFunction}</b></p>
-                  {(data as Scaling).minValue && (
-                    <p>Min Value: <b>{(data as Scaling).minValue}</b></p>
-                  )}
-                  {(data as Scaling).maxValue && (
-                    <p>Max Value: <b>{(data as Scaling).maxValue}</b></p>
-                  )}
-                </>
-              )}
-              {nodeType === 'Arithmetic Node' && 'sourceColumn' in data && (
-                <>
-                  <p>Operation: <b>{(data as Arithmetic).operation}</b></p>
-                </>
-              )}
-              {nodeType === 'Pivot Node' && data && (data as CustomNode).pivotTable && (
-                <div className={styles.pivotNodeData}>
-                  <p>Index Columns: <b>{(data as CustomNode).pivotTable!.pivotColumns.index.join(', ')}</b></p>
-                  <p>Column Columns: <b>{(data as CustomNode).pivotTable!.pivotColumns.column.join(', ')}</b></p>
-                  <p>Value Columns: <b>{(data as CustomNode).pivotTable!.pivotColumns.value.join(', ')}</b></p>
-                  <hr />
-                  <p>Functions:</p>
-                  <ul>
-                    {Object.keys((data as CustomNode).pivotTable!.functionCheckboxes).map(column => (
-                      <li key={column}>
-                        <p>{column}: <b>{(data as CustomNode).pivotTable!.functionCheckboxes[column].join(', ')}</b></p>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              {nodeType === 'Starting Node' && 'mergeType' in data && (
-                <>
-                  <p>Table 1: <b>{data.table1}</b></p>
-                  <p>Column 1: <b>{data.column1}</b></p>
-                  <p>Merge Type: <b>{data.mergeType}</b></p>
-                  <p>Table 2: <b>{data.table2}</b></p>
-                  <p>Column 2: <b>{data.column2}</b></p>
-                </>
-              )}
-            </div>
-          )}
+                    </ul>
+                  </div>
+                )}
+                {nodeType === 'Starting Node' && 'mergeType' in data && (
+                  <>
+                    <p>Table 1: <b>{data.table1}</b></p>
+                    <p>Column 1: <b>{data.column1}</b></p>
+                    <p>Merge Type: <b>{data.mergeType}</b></p>
+                    <p>Table 2: <b>{data.table2}</b></p>
+                    <p>Column 2: <b>{data.column2}</b></p>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-    </>
-  );
+      </>
+    )
+  };
 
-  // Add similar show functions for other modals (e.g., Sort, Conditional, GroupBy, etc.)
-
-  // Modal OK handlers (example with Start Node)
   const handleStartModalOk = useCallback(
     (values: any, isMergeSelected: boolean) => {
       if (currentEditNodeData) {
@@ -473,9 +491,6 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
         setSelectedTable(tableName);
         setIsStartModalVisible(false);
         setIsMergeNodeDropped(true);
-
-        // Clear unconfirmed node state after confirming
-        setUnconfirmedNodeId(null);
 
         setSidebarItems((items) => items.map((item) => (item.id !== 'start' ? { ...item, enabled: true } : item)));
       }
@@ -898,13 +913,6 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
 
   const handleCancel = useCallback(() => {
     setSelectedTable(null);
-
-    // Remove the unconfirmed node if the modal is canceled
-    if (unconfirmedNodeId) {
-      setNodes((nds) => nds.filter(node => node.id !== unconfirmedNodeId));
-      setUnconfirmedNodeId(null);
-    }
-
     setIsOutputModalVisible(false);
     setIsModalVisible(false);
     setIsFilterModalVisible(false);
@@ -916,7 +924,7 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
     setIsArithmeticModalVisible(false);
     setIsPivotTableModalVisible(false);
     setIsStartModalVisible(false);
-  }, [unconfirmedNodeId, setNodes]);
+  }, []);
 
   const onConnect = useCallback(
     (connection: Connection) => {
@@ -978,9 +986,6 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
         x: event.clientX,
         y: event.clientY,
       });
-
-      // Track the ID of the node that was just dropped
-      setUnconfirmedNodeId(id);
 
       const newNode: Node = {
         id,

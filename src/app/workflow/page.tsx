@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import classes from './workflow.module.css';
 import { useNodesState, useEdgesState, ReactFlowProvider } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { fetchWorkspaces, fetchFolders } from '@/app/API/api';
+import { fetchWorkspaces, fetchFolders, fetchWorkflows } from '@/app/API/api';
 import { useEmail } from '@/app/context/emailContext';
 import { message } from 'antd';
 import { CustomNode } from '../types/workflowTypes';
@@ -42,6 +42,7 @@ const WorkFlow: React.FC = () => {
     const [currentWorkspace, setCurrentWorkspace] = useState<string | null>(null);
     const [sidebarItems, setSidebarItems] = useState(initialSidebarItems);
     const [workflowName, setWorkflowName] = useState<string>('Workflow Name');
+    const [workflowId, setWorkflowId] = useState<string>('defaultWorkflowId'); // Adjust accordingly
 
     useEffect(() => {
         const handleLoad = () => setLoading(false);

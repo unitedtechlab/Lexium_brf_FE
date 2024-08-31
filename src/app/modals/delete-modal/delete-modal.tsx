@@ -18,7 +18,6 @@ const DeleteModal: React.FC<DeleteModalProps> = ({ open, entityName, entityId, o
         setInternalLoading(true);
         try {
             await onDelete(entityId);
-            message.success(`${entityName} deleted successfully!`);
             onOk();
         } catch (error) {
             message.error(`Failed to delete ${entityName}.`);
