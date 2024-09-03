@@ -255,7 +255,7 @@ export default function CreateWorkSpace() {
                             <div className={`flex gap-1 alinc ${classes.link}`}>
                                 <Link href={`/create-folder/${encodeURIComponent(workspace.name)}`}>
                                     <div className={`${classes.workspaceName} flex gap-1`}>
-                                        <Image src={folder} alt="Folder Icon" width={32} height={32} />
+                                        <Image src={folder} alt="Folder Icon" width={32} height={32} loading="lazy" />
                                         <p>
                                             <b>{workspace.name.toUpperCase()}</b>
                                         </p>

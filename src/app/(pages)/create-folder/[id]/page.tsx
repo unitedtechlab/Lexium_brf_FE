@@ -281,7 +281,7 @@ const CreateFolderPage = () => {
                             <div className={`flex gap-1 alinc ${classes.link}`}>
                                 <Link href={`/importdata/${id}?workspace=${encodeURIComponent(id)}&folder=${folder.id}`} passHref>
                                     <div className={`${classes.workspaceName} flex gap-1`}>
-                                        <Image src={folderIcon} alt="Folder Icon" width={32} height={32} />
+                                        <Image src={folderIcon} alt="Folder Icon" width={32} height={32} loading="lazy" />
                                         <p>
                                             <b>{folder.name.toUpperCase()}</b>
                                         </p>

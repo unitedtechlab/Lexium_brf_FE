@@ -139,7 +139,7 @@ export default function CleanDataStorage() {
                             <div className={`flex gap-1 alinc ${classes.link}`}>
                                 <Link href={`/data-storage/${workspace.id}/storage-folder`} passHref>
                                     <div className={`${classes.workspaceName} flex gap-1`}>
-                                        <Image src={folder} alt="Folder Icon" width={32} height={32} />
+                                        <Image src={folder} alt="Folder Icon" width={32} height={32} loading="lazy" />
                                         <p>
                                             <b>{workspace.name}</b>
                                         </p>

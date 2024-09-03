@@ -3,12 +3,13 @@
 import { Layout } from 'antd';
 import React, { useState, useCallback, useMemo } from 'react';
 import type { ReactNode } from 'react';
-import Sidebar from "@/app/components/Sidebar/sidebar";
 import HeaderMain from "../Header/header";
 import classes from './customlayout.module.css';
 import { BiCode, BiCollapseHorizontal } from "react-icons/bi";
+import dynamic from 'next/dynamic';
 
 const { Header, Content } = Layout;
+const Sidebar = dynamic(() => import('@/app/components/Sidebar/sidebar'), { ssr: false });
 
 type LayoutProps = {
     children: ReactNode;
