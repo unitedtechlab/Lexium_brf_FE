@@ -130,7 +130,7 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
             start: {
               mergeType: 'Single Table',
               table1: values.table1Single,
-              column1: '',  // These values should be empty if not used
+              column1: '',
               table2: '',
               column2: '',
             }
@@ -166,6 +166,7 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
     },
     [currentEditNodeData, setNodes, setSidebarItems, hideModal]
   );
+
 
 
   const handleOutputModalOk = useCallback(
@@ -706,7 +707,7 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
   );
 
   const createNodeLabel = (table: string, nodeType: string, data?: NodeData, nodeId?: string, isStartingPoint?: boolean, isEndingPoint?: boolean, hasOutput?: boolean) => {
-    const renderData = (key: string, value: any) => {
+    const renderData = (key: string, value: unknown) => {
       if (typeof value === 'object' && value !== null) {
         if (Array.isArray(value)) {
           return value.map((v, index) => (
@@ -730,16 +731,22 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
     };
 
     const details = Object.entries(data || {})
-      .filter(([key, value]) => value && !['table', 'type', 'label', 'hasOutput'].includes(key))
+      .filter(([key, value]) => {
+        if (!value) return false;
+        if (['table', 'type', 'label', 'hasOutput'].includes(key)) return false;
+        if (nodeType === 'mergeTable' && ['mergeType', 'table1', 'column1', 'table2', 'column2'].includes(key)) return false;
+        return true;
+      })
       .map(([key, value]) => (
         <span key={key}>
           {renderData(key, value)}
         </span>
       ));
 
+
     return (
       <>
-        {isStartingPoint && (
+        {(isStartingPoint || nodeType === 'startingnode') && (
           <div className={styles['starting-point-label']}>
             STARTING POINT
           </div>
@@ -750,7 +757,7 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
           </div>
         )}
         {hasOutput && (
-          <div className={styles['preview-output-label']}>
+          <div className={styles['starting-output-label']}>
             PREVIEW OUTPUT
           </div>
         )}
@@ -779,10 +786,10 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
                 </a>
               </Dropdown>
             </div>
-            {nodeType !== 'Else Node' && data && (
+            {nodeType !== 'Else Node' && data && nodeType !== 'table' && (
               <div className={`${styles.filterStyle}`}>
 
-                {isRunClicked && details}
+                {isRunClicked && nodeType !== 'mergeTable' && details}
 
                 {nodeType === 'Filter Node' && 'column' in data && (
                   <>
