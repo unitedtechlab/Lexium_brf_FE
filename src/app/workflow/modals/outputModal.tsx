@@ -16,21 +16,20 @@ const OutputModal: React.FC<OutputModalProps> = ({
     handleCancel,
     selectedWorkspace,
     email,
-    initialValues
+    initialValues = { outputName: 'rule_' } // Default value if not provided
 }) => {
     const [form] = Form.useForm();
 
     useEffect(() => {
-        form.setFieldsValue({ outputName: initialValues?.outputName || 'rule_' });
-    }, [form, initialValues]);
+        if (isModalVisible) {
+            form.setFieldsValue({ outputName: initialValues.outputName });
+        }
+    }, [isModalVisible, form, initialValues]);
 
     const onOk = () => {
         form.validateFields()
             .then(values => {
-                handleOkay({
-                    ...values,
-                    outputName: values.outputName,
-                });
+                handleOkay(values);
                 form.resetFields();
             })
             .catch(info => {
@@ -58,7 +57,6 @@ const OutputModal: React.FC<OutputModalProps> = ({
                 form={form}
                 name="outputForm"
                 layout="vertical"
-                initialValues={initialValues}
             >
                 <div className="padding-16">
                     <Row gutter={16}>
@@ -68,12 +66,11 @@ const OutputModal: React.FC<OutputModalProps> = ({
                                 label="Output Name"
                                 rules={[{
                                     required: true,
-                                    message: 'Please add a Output name'
+                                    message: 'Please add an Output name'
                                 }]}
                             >
                                 <Input
                                     placeholder='Enter Output name'
-                                    value={form.getFieldValue('outputName')}
                                     onChange={(e) => {
                                         let value = e.target.value;
                                         if (!value.startsWith('rule_')) {

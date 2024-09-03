@@ -1,4 +1,4 @@
-const TOKEN_KEY = 'Authorization';
+import { TOKEN_KEY } from '@/app/constants/index';
 
 export const setToken = (token: string) => {
     if (typeof window !== 'undefined') {

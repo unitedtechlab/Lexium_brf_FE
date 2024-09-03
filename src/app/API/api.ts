@@ -304,3 +304,33 @@ export const runWorkflow = async (email: string, workspaceId: string, workflowNa
         }
     }
 };
+
+
+// API file: Add the fetchSpecificWorkflow function
+
+export const fetchSpecificWorkflow = async (email: string, workspaceId: string, workflowName: string): Promise<any> => {
+    try {
+        const response = await axios.get(`${BaseURL}/specific_workflow`, {
+            params: {
+                userEmail: email,
+                workSpace: workspaceId,
+                workflowName: workflowName,
+            },
+            headers: getAuthHeaders(),
+        });
+
+        if (response.status === 200) {
+            return response.data.data;
+        } else {
+            throw new Error(response.data.error || 'Failed to fetch specific workflow.');
+        }
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
+            console.error('Error fetching specific workflow:', error.response?.data?.error || error.message);
+            throw new Error(error.response?.data?.error || 'Failed to fetch specific workflow.');
+        } else {
+            console.error('Unexpected error fetching specific workflow:', error);
+            throw new Error('Failed to fetch specific workflow.');
+        }
+    }
+};

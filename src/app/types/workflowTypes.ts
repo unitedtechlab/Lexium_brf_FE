@@ -100,6 +100,13 @@ export interface CustomNode {
     arithmetic?: Arithmetic;
     merge?: Merge;
     output?: RuleData;
+    start?: {
+        mergeType: string;
+        table1: string;
+        column1: string;
+        table2: string;
+        column2: string;
+    };
 }
 
 export type NodeData =

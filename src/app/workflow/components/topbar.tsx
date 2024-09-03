@@ -8,9 +8,11 @@ interface TopbarProps {
     onSaveClick: () => Promise<boolean>;
     setWorkflowName: (name: string) => void;
     workspaceId?: string | null;
+    setWorkflowOutput: (output: any) => void;
+    setIsRunClicked: (isRun: boolean) => void; // Prop to trigger run action in the main container
 }
 
-const Topbar: React.FC<TopbarProps> = ({ onSaveClick, setWorkflowName, workspaceId }) => {
+const Topbar: React.FC<TopbarProps> = ({ onSaveClick, setWorkflowName, workspaceId, setWorkflowOutput, setIsRunClicked }) => {
     const [isRunEnabled, setIsRunEnabled] = useState(false);
     const [isSaved, setIsSaved] = useState(false);
     const [workflowName, setWorkflowNameLocal] = useState<string>('');
@@ -69,8 +71,14 @@ const Topbar: React.FC<TopbarProps> = ({ onSaveClick, setWorkflowName, workspace
         setIsLoading(true);
         try {
             const workflowData = await runWorkflow(email, workspaceId, workflowName);
-            console.log('Workflow Data:', workflowData);
-            message.success('Workflow run successfully!');
+
+            if (workflowData) {
+                setWorkflowOutput(workflowData);
+                setIsRunClicked(true); // Trigger the state to show output details
+                message.success('Workflow run successfully!');
+            } else {
+                message.error('No output nodes found in the workflow.');
+            }
         } catch (error) {
             message.error('Failed to run workflow.');
             console.error('Error running workflow:', error);
@@ -81,9 +89,10 @@ const Topbar: React.FC<TopbarProps> = ({ onSaveClick, setWorkflowName, workspace
 
     return (
         <div className={styles.topbarWrapper}>
-            <div className={`flex ${styles.topbar}`}>
-                <div className={styles.discardBtn}>
-                    <a href="/workflows-list" className='btn btn-discard btn-outline'>Discard</a>
+            <div className={`flex gap-1 ${styles.topbar}`}>
+                <div className={`flex gap-1 ${styles.discardBtn}`}>
+                    <a href="/workflows-list" className='btn btn-discard'>Discard</a>
+                    <a href="/workflow" className='btn btn-discard btn-outline'>Create New</a>
                 </div>
                 <div className={styles.workspaceName}>
                     <input

@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import ReactFlow, {
   addEdge,
   Controls,
@@ -21,7 +21,7 @@ import { FiMoreHorizontal } from 'react-icons/fi';
 import { Dropdown, message } from 'antd';
 import { useEmail } from '@/app/context/emailContext';
 import {
-  Filter, Sort, Conditional, GroupBy, Statistical, NodeData, Arithmetic, Scaling, CustomNode, Condition
+  Filter, Sort, Conditional, GroupBy, Statistical, NodeData, Arithmetic, Scaling, CustomNode, Condition, Merge
 } from '../../types/workflowTypes';
 import WorkflowModals from './WorkflowModals';
 
@@ -39,7 +39,9 @@ interface DragAndDropContainerProps {
   selectedWorkspace: string | null;
   setSidebarItems: React.Dispatch<React.SetStateAction<any[]>>;
   outputNodeIds: string[];
+  setOutputNodeIds: React.Dispatch<React.SetStateAction<string[]>>;
   workflowOutput: any;
+  isRunClicked: boolean;
 }
 
 const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
@@ -55,6 +57,8 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
   setSidebarItems,
   outputNodeIds,
   workflowOutput,
+  setOutputNodeIds,
+  isRunClicked,
 }) => {
   const { email } = useEmail();
   const { screenToFlowPosition } = useReactFlow();
@@ -101,40 +105,50 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
     setModalVisibility(prev => ({ ...prev, [modalType]: false }));
   }, []);
 
+
   // Modal handlers
   const handleStartModalOk = useCallback(
-    (values: any, isMergeSelected: boolean) => {
+    (values: any) => {
+      const isMergeSelected = values.table1 && values.table2 ? true : false;
+
       if (currentEditNodeData) {
         const tableName = isMergeSelected ? `${values.table1} & ${values.table2}` : values.table1Single;
         const nodeType = isMergeSelected ? 'mergeTable' : 'table';
-        const labelContent = isMergeSelected
-          ? createNodeLabel(
-            tableName,
-            'Starting Node',
-            {
+
+        const nodeData: CustomNode = {
+          type: nodeType,
+          table: tableName,
+          ...(isMergeSelected ? {
+            merge: {
               mergeType: values.mergeType,
               table1: values.table1,
               column1: values.column1,
               table2: values.table2,
               column2: values.column2,
-            },
-            currentEditNodeData.id,
-            true
-          )
-          : createNodeLabel(tableName, 'Starting Node', undefined, currentEditNodeData.id, true);
+            }
+          } : {
+            start: {
+              mergeType: 'Single Table',
+              table1: values.table1Single,
+              column1: '',  // These values should be empty if not used
+              table2: '',
+              column2: '',
+            }
+          })
+        };
+
+        const labelContent = createNodeLabel(
+          tableName,
+          nodeType,
+          nodeData,
+          currentEditNodeData.id,
+          true
+        );
 
         const newNode: Node = {
           id: currentEditNodeData.id,
           data: {
-            type: nodeType,
-            table: tableName,
-            start: {
-              mergeType: values.mergeType || 'Single Table',
-              table1: isMergeSelected ? values.table1 : values.table1Single,
-              column1: isMergeSelected ? values.column1 : '',
-              table2: isMergeSelected ? values.table2 : '',
-              column2: isMergeSelected ? values.column2 : '',
-            },
+            ...nodeData,
             label: labelContent,
           },
           position: currentEditNodeData.position,
@@ -147,11 +161,12 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
         setSelectedTable(tableName);
         setIsStartingNodeSaved(true);
         hideModal('isStartModalVisible');
-        setSidebarItems((items) => items.map((item) => (item.id !== 'start' ? { ...item, enabled: true } : item)));
+        setSidebarItems((items) => items.map((item) => (item.id !== 'startingnode' ? { ...item, enabled: true } : item)));
       }
     },
     [currentEditNodeData, setNodes, setSidebarItems, hideModal]
   );
+
 
   const handleOutputModalOk = useCallback(
     (values: any) => {
@@ -569,7 +584,7 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
     (values: any, modalType: string) => {
       switch (modalType) {
         case 'StartModal':
-          handleStartModalOk(values, values.isMergeSelected);
+          handleStartModalOk(values);
           break;
         case 'OutputModal':
           handleOutputModalOk(values);
@@ -690,8 +705,37 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
     [setNodes, setEdges]
   );
 
-  const createNodeLabel = (table: string, nodeType: string, data?: NodeData, nodeId?: string, isStartingPoint?: boolean, isEndingPoint?: boolean) => {
-    const hasOutput = nodeId && workflowOutput?.data?.rule1?.[nodeId];
+  const createNodeLabel = (table: string, nodeType: string, data?: NodeData, nodeId?: string, isStartingPoint?: boolean, isEndingPoint?: boolean, hasOutput?: boolean) => {
+    const renderData = (key: string, value: any) => {
+      if (typeof value === 'object' && value !== null) {
+        if (Array.isArray(value)) {
+          return value.map((v, index) => (
+            <div key={`${key}-${index}`}>
+              {renderData(key, v)}
+            </div>
+          ));
+        } else {
+          return (
+            <>
+              {Object.entries(value).map(([subKey, subValue]) => (
+                <p key={subKey} className={styles['subkeyvalue']}>
+                  {subKey}: <b>{renderData(subKey, subValue)}</b>
+                </p>
+              ))}
+            </>
+          );
+        }
+      }
+      return String(value);
+    };
+
+    const details = Object.entries(data || {})
+      .filter(([key, value]) => value && !['table', 'type', 'label', 'hasOutput'].includes(key))
+      .map(([key, value]) => (
+        <span key={key}>
+          {renderData(key, value)}
+        </span>
+      ));
 
     return (
       <>
@@ -703,6 +747,11 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
         {isEndingPoint && (
           <div className={styles['starting-point-label']}>
             ENDING POINT
+          </div>
+        )}
+        {hasOutput && (
+          <div className={styles['preview-output-label']}>
+            PREVIEW OUTPUT
           </div>
         )}
         <div className={styles['node-content']}>
@@ -729,11 +778,12 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
                   <FiMoreHorizontal />
                 </a>
               </Dropdown>
-
             </div>
-
             {nodeType !== 'Else Node' && data && (
               <div className={`${styles.filterStyle}`}>
+
+                {isRunClicked && details}
+
                 {nodeType === 'Filter Node' && 'column' in data && (
                   <>
                     <p>Selected Column: <b>{(data as Filter).column}</b></p>
@@ -847,13 +897,19 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
                     </ul>
                   </div>
                 )}
-                {nodeType === 'Starting Node' && 'mergeType' in data && (
+                {nodeType === 'mergeTable' && 'merge' in data && data.merge && (
                   <>
-                    <p>Table 1: <b>{data.table1}</b></p>
-                    <p>Column 1: <b>{data.column1}</b></p>
-                    <p>Merge Type: <b>{data.mergeType}</b></p>
-                    <p>Table 2: <b>{data.table2}</b></p>
-                    <p>Column 2: <b>{data.column2}</b></p>
+                    <p>Table 1: <b>{data.merge.table1}</b></p>
+                    <p>Column 1: <b>{data.merge.column1}</b></p>
+                    <p>Merge Type: <b>{data.merge.mergeType}</b></p>
+                    <p>Table 2: <b>{data.merge.table2}</b></p>
+                    <p>Column 2: <b>{data.merge.column2}</b></p>
+                  </>
+                )}
+                {nodeType === 'table' && 'start' in data && data.start && (
+                  <>
+                    <p>Table 1: <b>{data.start.table1}</b></p>
+                    <p>Merge Type: <b>{data.start.mergeType}</b></p>
                   </>
                 )}
               </div>
@@ -863,6 +919,41 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
       </>
     );
   };
+
+
+  useEffect(() => {
+    if (workflowOutput && typeof workflowOutput === 'object') {
+      const allOutputIds = Object.keys(workflowOutput).flatMap(ruleKey =>
+        Object.keys(workflowOutput[ruleKey] || {})
+      );
+      const uniqueOutputIds = Array.from(new Set(allOutputIds));
+      setOutputNodeIds(uniqueOutputIds);
+
+      setNodes((currentNodes) => {
+        return currentNodes.map((node) => {
+          const nodeData = node.data;
+          const hasOutput = uniqueOutputIds.includes(node.id);
+
+          return {
+            ...node,
+            data: {
+              ...nodeData,
+              hasOutput,
+              label: createNodeLabel(
+                nodeData.table || '',
+                nodeData.type || 'Unknown',
+                nodeData,
+                node.id,
+                nodeData.type === 'startingnode',
+                nodeData.type === 'output',
+                hasOutput
+              ),
+            },
+          };
+        });
+      });
+    }
+  }, [workflowOutput, setNodes, setOutputNodeIds]);
 
   const onConnect = useCallback(
     (connection: Connection) => {
