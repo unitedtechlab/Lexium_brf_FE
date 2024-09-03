@@ -167,10 +167,16 @@ export default function ImportData() {
                     'Authorization': `Bearer ${token}`
                 },
             });
+            message.success('File deleted successfully!');
+            removeFile(fileId);
         } catch (error) {
             message.error('Failed to delete file');
             console.error("Error deleting file:", error);
         }
+    };
+
+    const removeFile = (fileId: string) => {
+        setFiles(files.filter((file) => file.id !== fileId));
     };
 
     const updateFileName = (fileId: string, newName: string) => {

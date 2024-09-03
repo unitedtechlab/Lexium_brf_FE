@@ -14,6 +14,7 @@ import { Workspace } from '@/app/types/interface';
 import axios from 'axios';
 import { BaseURL } from '@/app/constants/index';
 import { getToken } from '@/utils/auth';
+import BreadCrumb from "@/app/components/Breadcrumbs/breadcrumb";
 
 const Searchbar = dynamic(() => import('../../components/Searchbar/search'), { ssr: false });
 const View = dynamic(() => import('../../components/GridListView/view'), { ssr: false });
@@ -28,6 +29,7 @@ export default function CleanDataStorage() {
     const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
     const [selectedWorkspace, setSelectedWorkspace] = useState<Workspace | null>(null);
     const [hasCleanData, setHasCleanData] = useState(false);
+    const [breadcrumbs, setBreadcrumbs] = useState<{ href: string; label: string }[]>([]);
 
     const handleSearchInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setSearchInput(event.target.value);
@@ -54,6 +56,9 @@ export default function CleanDataStorage() {
 
     useEffect(() => {
         loadWorkspaces();
+        setBreadcrumbs([
+            { href: `/dashboard`, label: `Dashboard` }
+        ]);
     }, [email]);
 
     const handleDeleteWorkspace = (workspace: Workspace | null) => {
@@ -76,10 +81,15 @@ export default function CleanDataStorage() {
                     'Authorization': `Bearer ${token}`
                 },
             });
+            onDeleteSuccess();
         } catch (error) {
             message.error('Failed to delete workspace.');
             console.error("Failed to delete workspace:", error);
         }
+    };
+
+    const removeWorkspace = (workspaceId: string) => {
+        setWorkspaces(workspaces.filter((workspace) => workspace.id !== workspaceId));
     };
 
     const closeDeleteModal = () => {
@@ -88,10 +98,8 @@ export default function CleanDataStorage() {
     };
 
     const onDeleteSuccess = () => {
-        message.success('Workspace deleted successfully');
-        setIsDeleteModalVisible(false);
-        setSelectedWorkspace(null);
-        loadWorkspaces();
+        closeDeleteModal();
+        removeWorkspace(selectedWorkspace?.id || '');
     };
 
     const filteredWorkspaces = workspaces.filter(workspace =>
@@ -109,9 +117,12 @@ export default function CleanDataStorage() {
             )}
 
             <div className={`${classes.searchView} flex justify-space-between gap-1`}>
-                <Searchbar value={searchInput} onChange={handleSearchInputChange} />
-                <div className="flex gap-1">
-                    <View />
+                <BreadCrumb breadcrumbs={breadcrumbs} />
+                <div className={`${classes.searchlist} flex gap-1`}>
+                    <Searchbar value={searchInput} onChange={handleSearchInputChange} />
+                    <div className="flex gap-1">
+                        <View />
+                    </div>
                 </div>
             </div>
 
@@ -171,7 +182,7 @@ export default function CleanDataStorage() {
                     open={isDeleteModalVisible}
                     entityName="Cleaned Workspace"
                     entityId={selectedWorkspace.id}
-                    onDelete={deleteWorkspace}
+                    onDelete={() => deleteWorkspace(selectedWorkspace.id)}
                     onOk={onDeleteSuccess}
                     onCancel={closeDeleteModal}
                 />

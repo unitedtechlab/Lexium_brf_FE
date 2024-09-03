@@ -23,7 +23,8 @@ const ImportFilePage: React.FC = () => {
     const router = useRouter();
 
     const [fileTypes, setFileTypes] = useState<string[]>([]);
-    const [fileSize, setFileSize] = useState<number>(0);
+    const [remainingBucketSize, setRemainingFileSize] = useState<number>(0);
+    const [totalBucketSize, setTotalBucketSize] = useState<number>(0);
     const [workspaceId, setWorkspaceId] = useState<string>('');
     const [folderName, setFolderName] = useState<string>('');
     const [fileList, setFileList] = useState<any[]>([]);
@@ -55,9 +56,10 @@ const ImportFilePage: React.FC = () => {
             });
 
             if (response.status === 200) {
-                const { fileTypes = [], fileSize = 0 } = response.data.data;
+                const { fileTypes = [], remainingBucketSize = 0, totalBucketSize = 0 } = response.data.data;
                 setFileTypes(fileTypes);
-                setFileSize(fileSize);
+                setRemainingFileSize(remainingBucketSize);
+                setTotalBucketSize(totalBucketSize);
             } else {
                 message.error(response.data.message || 'Failed to fetch file space.');
             }
@@ -243,6 +245,10 @@ const ImportFilePage: React.FC = () => {
                                 <p>Data size should be less than 100 MB and the number of rows should be less than 1 million.</p>
                                 <p>To upload more, ensure your data is in CSV or XLS text file formats.</p>
                                 <p>Contact support@kainest.com for any assistance.</p>
+                                <p>
+                                    <b>Total bucket Size: {totalBucketSize}</b><br />
+                                    <b>Remaining Bucket size: {remainingBucketSize}</b>
+                                </p>
                             </div>
                             <div className={classes.fileuploaded}>
                                 <h6>File Uploaded</h6>
@@ -254,7 +260,7 @@ const ImportFilePage: React.FC = () => {
                                                 <p>{file.name}</p>
                                                 <ul className={`flex gap-1 ${classes.fileListData}`}>
                                                     <li>
-                                                        {formatFileSize(file.size)} of {fileSize} •
+                                                        Uploaded File Size - {formatFileSize(file.size)}
                                                     </li>
                                                     {file.status === 'uploading' ? (
                                                         <li>

@@ -10,6 +10,7 @@ import classes from '@/app/assets/css/pages.module.css';
 import folder from '../../assets/images/database.svg';
 import { fetchWorkspaces } from '@/app/API/api';
 import { Workspace } from '@/app/types/interface';
+import BreadCrumb from "@/app/components/Breadcrumbs/breadcrumb";
 
 const Searchbar = dynamic(() => import('../../components/Searchbar/search'), { ssr: false });
 const View = dynamic(() => import('../../components/GridListView/view'), { ssr: false });
@@ -20,6 +21,7 @@ export default function WorkflowsWorkspaces() {
     const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
     const { email } = useEmail();
     const [isLoading, setIsLoading] = useState(false);
+    const [breadcrumbs, setBreadcrumbs] = useState<{ href: string; label: string }[]>([]);
 
     const handleSearchInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setSearchInput(event.target.value);
@@ -45,6 +47,9 @@ export default function WorkflowsWorkspaces() {
 
     useEffect(() => {
         loadWorkspaces();
+        setBreadcrumbs([
+            { href: `/data-storage`, label: `Data Storage` }
+        ]);
     }, [email]);
 
     const filteredWorkspaces = workspaces.filter(workspace =>
@@ -58,10 +63,13 @@ export default function WorkflowsWorkspaces() {
             </div>
 
             <div className={`${classes.searchView} flex justify-space-between gap-1`}>
-                <Searchbar value={searchInput} onChange={handleSearchInputChange} />
-                <div className="flex gap-1">
-                    <View />
-                    <Link href="/workflow" className="btn">Create WorkFlow</Link>
+                <BreadCrumb breadcrumbs={breadcrumbs} />
+                <div className={`${classes.searchlist} flex gap-1`}>
+                    <Searchbar value={searchInput} onChange={handleSearchInputChange} />
+                    <div className="flex gap-1">
+                        <View />
+                        <Link href="/workflow" className="btn">Create WorkFlow</Link>
+                    </div>
                 </div>
             </div>
 

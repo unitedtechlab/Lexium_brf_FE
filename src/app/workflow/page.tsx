@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import classes from './workflow.module.css';
 import { useNodesState, useEdgesState, ReactFlowProvider } from 'reactflow';
@@ -42,6 +42,9 @@ const WorkFlow: React.FC = () => {
     const [currentWorkspace, setCurrentWorkspace] = useState<string | null>(null);
     const [sidebarItems, setSidebarItems] = useState(initialSidebarItems);
     const [workflowName, setWorkflowName] = useState<string>('Workflow Name');
+    const [outputNodeIds, setOutputNodeIds] = useState<string[]>([]);
+    const [workflowOutput, setWorkflowOutput] = useState<any>(null);
+    const [isRunClicked, setIsRunClicked] = useState<boolean>(false); // New state to manage the "Run" click
 
     useEffect(() => {
         const handleLoad = () => setLoading(false);
@@ -155,31 +158,20 @@ const WorkFlow: React.FC = () => {
             });
 
             if (response.status === 200) {
-                message.success('Workflow saved successfully');
+                const outputIds = response.data.data || [];
+                setOutputNodeIds(outputIds);
+                setWorkflowOutput(response.data.data);
+                setIsRunClicked(true); // Trigger state change to show details after run
+
+                message.success(response.data.message || 'Workflow saved successfully');
                 return true;
             } else {
-                const errorMessage = response.data.error || 'Failed to save workflow';
-                message.error(errorMessage);
-                console.error('API Response:', response);
+                message.error('Failed to save workflow');
                 return false;
             }
         } catch (error) {
-            if (axios.isAxiosError(error)) {
-                const backendError = error.response?.data?.error;
-                if (backendError) {
-                    message.error(`Error: ${backendError}`);
-                    console.error('Backend Error:', backendError);
-                } else {
-                    message.error('An error occurred while saving the workflow');
-                    console.error('API Error Response:', error.response?.data || error.message);
-                }
-            } else if (error instanceof Error) {
-                message.error(`An unexpected error occurred: ${error.message}`);
-                console.error('General Error:', error.message);
-            } else {
-                message.error('An unknown error occurred');
-                console.error('Unexpected Error:', error);
-            }
+            console.error('Error saving workflow:', error);
+            message.error('An error occurred while saving the workflow');
             return false;
         }
     };
@@ -219,7 +211,14 @@ const WorkFlow: React.FC = () => {
     return (
         <div className={classes.workflowPage}>
             {loading && <Preloader />}
-            <Topbar onSaveClick={handleRunClick} setWorkflowName={setWorkflowName} />
+            <Topbar
+                onSaveClick={handleRunClick}
+                setWorkflowName={setWorkflowName}
+                workspaceId={currentWorkspace || undefined}
+                setWorkflowOutput={setWorkflowOutput}
+                setIsRunClicked={setIsRunClicked} // Pass callback to manage the run state
+            />
+
             <div className={classes.workflowWrapper}>
                 <Sidebar
                     workspaces={workspaces}
@@ -240,6 +239,10 @@ const WorkFlow: React.FC = () => {
                             folders={folders}
                             selectedWorkspace={currentWorkspace}
                             setSidebarItems={setSidebarItems}
+                            setOutputNodeIds={setOutputNodeIds}
+                            workflowOutput={workflowOutput}
+                            outputNodeIds={outputNodeIds}
+                            isRunClicked={isRunClicked} // Pass the state to DragAndDropContainer
                         />
                     </ReactFlowProvider>
                 </div>

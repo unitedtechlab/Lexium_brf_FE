@@ -78,6 +78,10 @@
     padding: 10px 24px;
 }
 
+.discardBtn {
+    justify-content: flex-start;
+}
+
 .node-main {
     justify-content: space-between;
     align-items: flex-start;
@@ -417,4 +421,8 @@
 
 .nodewrap {
     flex-wrap: nowrap;
+}
+
+.subkeyvalue {
+    width: 100%;
 }
