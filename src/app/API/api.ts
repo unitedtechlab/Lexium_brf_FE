@@ -23,25 +23,31 @@ interface FolderDataWithColumns extends FolderData {
 export const fetchWorkspaces = async (email: string, setIsLoading: (isLoading: boolean) => void): Promise<Workspace[]> => {
     setIsLoading(true);
     try {
+        if (!email) {
+            throw new Error('Email is required to fetch workspaces.');
+        }
+
         const response = await axios.get(`${BaseURL}/workspace/${email}`, {
             headers: getAuthHeaders(),
         });
 
         if (response.status === 200) {
             const data = response.data.data;
+            console.log("data", data);
 
             if (Object.keys(data).length === 0) {
                 return [];
             } else {
-                const flattenedWorkspaces: Workspace[] = Object.keys(data).map((projectId) => ({
-                    id: projectId,
-                    name: data[projectId].name || projectId,
-                    fileSize: data[projectId].fileSize || 'Unknown',
-                    lastUpdated: data[projectId].lastUpdated || 'Unknown',
-                    cleanDataExist: data[projectId].cleanDataExist,
-                    cleanFileSize: data[projectId].cleanFileSize || 'Unknown',
-                    cleanLastUpdated: data[projectId].cleanLastUpdated || 'Unknown',
-                    workFlowExist: data[projectId].workFlowExist || false,
+                const flattenedWorkspaces: Workspace[] = Object.keys(data).map((workspaceID) => ({
+                    id: workspaceID,
+                    name: data[workspaceID].name || workspaceID,
+                    fileSize: data[workspaceID].fileSize || 'Unknown',
+                    lastUpdated: data[workspaceID].lastUpdated || 'Unknown',
+                    cleanDataExist: data[workspaceID].cleanDataExist || false,
+                    cleanFileSize: data[workspaceID].cleanFileSize || 'Unknown',
+                    cleanLastUpdated: data[workspaceID].cleanLastUpdated || 'Unknown',
+                    workFlowExist: data[workspaceID].workFlowExist || false,
+                    workspaceID: data[workspaceID].workspaceID || workspaceID
                 }));
                 return flattenedWorkspaces;
             }
@@ -60,6 +66,7 @@ export const fetchWorkspaces = async (email: string, setIsLoading: (isLoading: b
         setIsLoading(false);
     }
 };
+
 
 // Folder fetch API
 export const fetchFolders = async (email: string, workspaceId: string, setIsLoading: (isLoading: boolean) => void): Promise<FolderDataWithColumns[]> => {
