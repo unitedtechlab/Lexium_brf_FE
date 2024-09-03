@@ -68,18 +68,6 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
     icon: keyof typeof Icons | keyof typeof FaIcons;
     pivotTable?: any;
   } | null>(null);
-  type IconNames = keyof typeof Icons | keyof typeof FaIcons;
-  type ModalFunctions = {
-			[key: string]: (nodeData: {
-			  id: string;
-			  position: XYPosition;
-			  icon: IconNames;
-			  column?: string;
-			  operator?: string;
-			  value?: string;
-			  pivotTable?: any;
-			}) => void;
- };
 	  
   const [selectedTable, setSelectedTable] = useState<string | null>(null);
   const [isStartingNodeSaved, setIsStartingNodeSaved] = useState<boolean>(false);
@@ -968,52 +956,35 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
     }
   }, [workflowOutput, setNodes, setOutputNodeIds]);
 
-	const onConnect = useCallback(
-		(connection: Connection) => {
-			const sourceNode = nodes.find((node) => node.id === connection.source);
-			const targetNode = nodes.find((node) => node.id === connection.target);
-		
-			if (!sourceNode || !targetNode) {
-			  return;
-			}
-	  
-		  // source node is always 'input' and the target node is always 'output'
-		  sourceNode.data.type = 'input';
-  		  targetNode.data.type = 'output';
-	  
-		//   const sourceTables = (sourceNode.data.table || '').split(' & ').map((table: string) => table.trim());
-		//   const targetTables = (targetNode.data.table || '').split(' & ').map((table: string) => table.trim());
-	  
-		  setEdges((eds) => addEdge(connection, eds));
+  const onConnect = useCallback(
+    (connection: Connection) => {
+      const sourceNode = nodes.find((node) => node.id === connection.source);
+      const targetNode = nodes.find((node) => node.id === connection.target);
 
-		  const modalKey = targetNode?.data.table?.toString();
-		  const openModals: ModalFunctions = {
-			'Filter': showFilterModal,
-			'Output': showOutputModal,
-			'Sort': showSortModal,
-			'IF/Else/And/OR': showConditionalModal,
-			'Group By': showGroupByModal,
-			'Statistical': showStatisticalModal,
-			'Scaling': showScalingModal,
-			'Arithmetic': showArithmeticModal,
-			'Pivot': showPivotTableModal,
-		  };
-	  
-		  if (modalKey && modalKey in openModals) {
-			const modalFunction = openModals[modalKey];
-			modalFunction({
-			  id: targetNode.id,
-			  position: targetNode.position,
-			  icon: targetNode.data.icon as IconNames,
-			  pivotTable: targetNode.data.pivotTable,
-			});
-		  } else {
-			console.error(`No modal function defined for key: ${modalKey}`);
-		  }
-		},
-		[nodes, setEdges]
-	  );
+      if (!sourceNode || !targetNode) {
+        return;
+      }
 
+	//   const isSourceInput = sourceNode.data.type === 'input';
+	//   const isTargetOutput = targetNode.data.type === 'output';
+	  
+	  const modalKey = targetNode?.data.table?.toString();
+	  if(modalKey && modalKey in modalKeyMap) {
+		setEdges((eds) => addEdge(connection, eds));
+		const modalFunction = modalKeyMap[modalKey]
+		showModal(modalFunction);
+        setCurrentEditNodeData({
+			id: targetNode.id,
+			position: targetNode.position,
+          icon: targetNode.data.icon as keyof typeof Icons | keyof typeof FaIcons,
+        });
+
+	  }   else {
+        message.error('Invalid connection: ensure nodes are connected in a proper sequence.');
+      }	
+    },
+    [nodes, setEdges]
+  );
   const onEdgeClick = useCallback(
     (event: React.MouseEvent, edge: Edge) => {
       event.stopPropagation();
@@ -1050,8 +1021,7 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
         message.error('Please add a Starting Node first.');
         return;
       }
-
-      const newNode: Node = {
+	  const newNode: Node = {
         id,
         data: {
           table: itemData.title,
@@ -1066,44 +1036,19 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
 
       setNodes((nds) => [...nds, newNode]);
 
-    //   if (itemData.title === 'Filter') {
-    //     showFilterModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons });
-    //   } else if (itemData.title === 'Output') {
-    //     showOutputModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons });
-    //   } else if (itemData.title === 'Sort') {
-    //     showSortModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons });
-    //   } else if (itemData.title === 'IF/Else/And/OR') {
-    //     showConditionalModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons });
-    //   } else if (itemData.title === 'Group By') {
-    //     showGroupByModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons });
-    //   } else if (itemData.title === 'Statistical') {
-    //     showStatisticalModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons });
-    //   } else if (itemData.title === 'Scaling') {
-    //     showScalingModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons });
-    //   } else if (itemData.title === 'Arithmetic') {
-    //     showArithmeticModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons });
-    //   } else if (itemData.title === 'Pivot') {
-    //     showPivotTableModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons, pivotTable: itemData.pivotTable });
-    //   } else
-	   if (itemData.title === 'Starting Node') {
-        showStartModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons });
+      const modalKey = modalKeyMap[itemData.title];
+      if (modalKey == "isStartModalVisible") {
+        showModal(modalKey);
+        setCurrentEditNodeData({
+          id,
+          position,
+          icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons,
+        });
+      } else {
+        console.error('Unknown modal type for item title:', itemData.title);
       }
     },
-    [
-      nodes,
-      screenToFlowPosition,
-      showModal,
-    //   showFilterModal,
-    //   showSortModal,
-    //   showPivotTableModal,
-    //   showConditionalModal,
-    //   showGroupByModal,
-    //   showStatisticalModal,
-    //   showScalingModal,
-    //   showArithmeticModal,
-      showStartModal,
-      setNodes,
-    ]
+    [nodes, screenToFlowPosition, setNodes, showModal, isStartingNodeSaved]
   );
 
   const handleDragOver = useCallback((event: React.DragEvent) => {
