@@ -98,7 +98,19 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
     icon: keyof typeof Icons | keyof typeof FaIcons;
     pivotTable?: any;
   } | null>(null);
-
+  type IconNames = keyof typeof Icons | keyof typeof FaIcons;
+  type ModalFunctions = {
+			[key: string]: (nodeData: {
+			  id: string;
+			  position: XYPosition;
+			  icon: IconNames;
+			  column?: string;
+			  operator?: string;
+			  value?: string;
+			  pivotTable?: any;
+			}) => void;
+ };
+	  
   const [selectedTable, setSelectedTable] = useState<string | null>(null);
   const [isMergeNodeDropped, setIsMergeNodeDropped] = useState<boolean>(false);
 
@@ -922,7 +934,6 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
     setIsStartModalVisible(false);
   }, [unconfirmedNodeId, setNodes]);
 
-	// testhandle(nodeId!)
 	const onConnect = useCallback(
 		(connection: Connection) => {
 			const sourceNode = nodes.find((node) => node.id === connection.source);
@@ -933,28 +944,11 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
 			}
 	  
 		  // source node is always 'input' and the target node is always 'output'
-		  if (sourceNode.data.type !== 'input') {
-			sourceNode.data.type = 'input';
-		  }
-		  if (targetNode.data.type !== 'output') {
-			targetNode.data.type = 'output';
-		  }
+		  sourceNode.data.type = 'input';
+  		  targetNode.data.type = 'output';
 	  
 		//   const sourceTables = (sourceNode.data.table || '').split(' & ').map((table: string) => table.trim());
 		//   const targetTables = (targetNode.data.table || '').split(' & ').map((table: string) => table.trim());
-	  
-		  type IconNames = keyof typeof Icons | keyof typeof FaIcons;
-		  type ModalFunctions = {
-			[key: string]: (nodeData: {
-			  id: string;
-			  position: XYPosition;
-			  icon: IconNames;
-			  column?: string;
-			  operator?: string;
-			  value?: string;
-			  pivotTable?: any;
-			}) => void;
-		  };
 	  
 		  setEdges((eds) => addEdge(connection, eds));
 
@@ -973,15 +967,12 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
 	  
 		  if (modalKey && modalKey in openModals) {
 			const modalFunction = openModals[modalKey];
-			console.log("[modalKey]", modalKey);
-			console.log("openModals", openModals);
 			modalFunction({
 			  id: targetNode.id,
 			  position: targetNode.position,
 			  icon: targetNode.data.icon as IconNames,
 			  pivotTable: targetNode.data.pivotTable,
 			});
-			console.log("id", targetNode.id)
 		  } else {
 			console.error(`No modal function defined for key: ${modalKey}`);
 		  }
@@ -1066,14 +1057,14 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
       nodes,
       screenToFlowPosition,
       showModal,
-      showFilterModal,
-      showSortModal,
-      showPivotTableModal,
-      showConditionalModal,
-      showGroupByModal,
-      showStatisticalModal,
-      showScalingModal,
-      showArithmeticModal,
+    //   showFilterModal,
+    //   showSortModal,
+    //   showPivotTableModal,
+    //   showConditionalModal,
+    //   showGroupByModal,
+    //   showStatisticalModal,
+    //   showScalingModal,
+    //   showArithmeticModal,
       showStartModal,
       setNodes,
     ]
