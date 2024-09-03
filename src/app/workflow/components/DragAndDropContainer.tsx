@@ -68,6 +68,7 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
     icon: keyof typeof Icons | keyof typeof FaIcons;
     pivotTable?: any;
   } | null>(null);
+	  
   const [selectedTable, setSelectedTable] = useState<string | null>(null);
   const [isStartingNodeSaved, setIsStartingNodeSaved] = useState<boolean>(false);
 
@@ -497,37 +498,37 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
     [currentEditNodeData, selectedTable, setNodes, hideModal]
   );
 
-  const handleScalingModalOk = useCallback(
-    (values: any) => {
-      if (currentEditNodeData && selectedTable) {
-        const newNode: Node = {
-          id: currentEditNodeData.id,
-          data: {
-            table: selectedTable,
-            type: 'scaling',
-            scaling: {
-              column: values.column,
-              scalingFunction: values.scalingFunction,
-              minValue: values.minValue,
-              maxValue: values.maxValue,
-            },
-            label: createNodeLabel(
-              selectedTable,
-              'Scaling Node',
-              {
-                column: values.column,
-                scalingFunction: values.scalingFunction,
-                minValue: values.minValue,
-                maxValue: values.maxValue,
-              },
-              currentEditNodeData.id
-            ),
-          },
-          position: currentEditNodeData.position,
-          draggable: true,
-          sourcePosition: Position.Right,
-          targetPosition: Position.Left,
-        };
+	const handleScalingModalOk = useCallback(
+		(values: any) => {
+			if (currentEditNodeData && selectedTable) {
+				const newNode: Node = {
+					id: currentEditNodeData.id,
+					data: {
+						table: selectedTable,
+						type: 'scaling',
+						scaling: {
+							column: values.column,
+							scalingFunction: values.scalingFunction,
+							minValue: values.minValue,
+							maxValue: values.maxValue,
+						},
+						label: createNodeLabel(
+							selectedTable,
+							'Scaling Node',
+							{
+								column: values.column,
+								scalingFunction: values.scalingFunction,
+								minValue: values.minValue,
+								maxValue: values.maxValue,
+							},
+							currentEditNodeData.id
+						),
+					},
+					position: currentEditNodeData.position,
+					draggable: true,
+					sourcePosition: Position.Right,
+					targetPosition: Position.Left,
+				};
 
         setNodes((nds) => [...nds.filter(node => node.id !== currentEditNodeData.id), newNode]);
         setSelectedTable(null);
@@ -971,26 +972,26 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
         return;
       }
 
-      if (sourceNode.data.type !== 'output' && targetNode.data.type === 'output') {
-        setEdges((eds) => addEdge(connection, eds));
-      } else if (sourceNode.data.type !== 'output' && targetNode.data.type !== 'start') {
-        const sourceTables = (sourceNode.data.table || '').split(' & ').map((table: string) => table.trim());
-        const targetTables = (targetNode.data.table || '').split(' & ').map((table: string) => table.trim());
+	//   const isSourceInput = sourceNode.data.type === 'input';
+	//   const isTargetOutput = targetNode.data.type === 'output';
+	  
+	  const modalKey = targetNode?.data.table?.toString();
+	  if(modalKey && modalKey in modalKeyMap) {
+		setEdges((eds) => addEdge(connection, eds));
+		const modalFunction = modalKeyMap[modalKey]
+		showModal(modalFunction);
+        setCurrentEditNodeData({
+			id: targetNode.id,
+			position: targetNode.position,
+          icon: targetNode.data.icon as keyof typeof Icons | keyof typeof FaIcons,
+        });
 
-        const canConnect = sourceTables.some((table: string) => targetTables.includes(table));
-
-        if (canConnect) {
-          setEdges((eds) => addEdge(connection, eds));
-        } else {
-          message.error('Cannot connect nodes with different table or folder names.');
-        }
-      } else {
+	  }   else {
         message.error('Invalid connection: ensure nodes are connected in a proper sequence.');
-      }
+      }	
     },
     [nodes, setEdges]
   );
-
   const onEdgeClick = useCallback(
     (event: React.MouseEvent, edge: Edge) => {
       event.stopPropagation();
@@ -1027,8 +1028,7 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
         message.error('Please add a Starting Node first.');
         return;
       }
-
-      const newNode: Node = {
+	  const newNode: Node = {
         id,
         data: {
           table: itemData.title,
@@ -1044,7 +1044,7 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
       setNodes((nds) => [...nds, newNode]);
 
       const modalKey = modalKeyMap[itemData.title];
-      if (modalKey) {
+      if (modalKey == "isStartModalVisible") {
         showModal(modalKey);
         setCurrentEditNodeData({
           id,
