@@ -816,37 +816,37 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
     [currentEditNodeData, selectedTable, setNodes]
   );
 
-  const handleScalingModalOk = useCallback(
-    (values: any) => {
-      if (currentEditNodeData && selectedTable) {
-        const newNode: Node = {
-          id: currentEditNodeData.id,
-          data: {
-            table: selectedTable,
-            type: 'scaling',
-            scaling: {
-              column: values.column,
-              scalingFunction: values.scalingFunction,
-              minValue: values.minValue,
-              maxValue: values.maxValue,
-            },
-            label: createNodeLabel(
-              selectedTable,
-              'Scaling Node',
-              {
-                column: values.column,
-                scalingFunction: values.scalingFunction,
-                minValue: values.minValue,
-                maxValue: values.maxValue,
-              },
-              currentEditNodeData.id
-            ),
-          },
-          position: currentEditNodeData.position,
-          draggable: true,
-          sourcePosition: Position.Right,
-          targetPosition: Position.Left,
-        };
+	const handleScalingModalOk = useCallback(
+		(values: any) => {
+			if (currentEditNodeData && selectedTable) {
+				const newNode: Node = {
+					id: currentEditNodeData.id,
+					data: {
+						table: selectedTable,
+						type: 'scaling',
+						scaling: {
+							column: values.column,
+							scalingFunction: values.scalingFunction,
+							minValue: values.minValue,
+							maxValue: values.maxValue,
+						},
+						label: createNodeLabel(
+							selectedTable,
+							'Scaling Node',
+							{
+								column: values.column,
+								scalingFunction: values.scalingFunction,
+								minValue: values.minValue,
+								maxValue: values.maxValue,
+							},
+							currentEditNodeData.id
+						),
+					},
+					position: currentEditNodeData.position,
+					draggable: true,
+					sourcePosition: Position.Right,
+					targetPosition: Position.Left,
+				};
 
         setNodes((nds) => [...nds.filter(node => node.id !== currentEditNodeData.id), newNode]);
         setSelectedTable(null);
@@ -922,34 +922,72 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
     setIsStartModalVisible(false);
   }, [unconfirmedNodeId, setNodes]);
 
-  const onConnect = useCallback(
-    (connection: Connection) => {
-      const sourceNode = nodes.find((node) => node.id === connection.source);
-      const targetNode = nodes.find((node) => node.id === connection.target);
+	// testhandle(nodeId!)
+	const onConnect = useCallback(
+		(connection: Connection) => {
+			const sourceNode = nodes.find((node) => node.id === connection.source);
+			const targetNode = nodes.find((node) => node.id === connection.target);
+		
+			if (!sourceNode || !targetNode) {
+			  return;
+			}
+	  
+		  // source node is always 'input' and the target node is always 'output'
+		  if (sourceNode.data.type !== 'input') {
+			sourceNode.data.type = 'input';
+		  }
+		  if (targetNode.data.type !== 'output') {
+			targetNode.data.type = 'output';
+		  }
+	  
+		//   const sourceTables = (sourceNode.data.table || '').split(' & ').map((table: string) => table.trim());
+		//   const targetTables = (targetNode.data.table || '').split(' & ').map((table: string) => table.trim());
+	  
+		  type IconNames = keyof typeof Icons | keyof typeof FaIcons;
+		  type ModalFunctions = {
+			[key: string]: (nodeData: {
+			  id: string;
+			  position: XYPosition;
+			  icon: IconNames;
+			  column?: string;
+			  operator?: string;
+			  value?: string;
+			  pivotTable?: any;
+			}) => void;
+		  };
+	  
+		  setEdges((eds) => addEdge(connection, eds));
 
-      if (!sourceNode || !targetNode) {
-        return;
-      }
-
-      if (sourceNode.data.type !== 'output' && targetNode.data.type === 'output') {
-        setEdges((eds) => addEdge(connection, eds));
-      } else if (sourceNode.data.type !== 'output' && targetNode.data.type !== 'start') {
-        const sourceTables = (sourceNode.data.table || '').split(' & ').map((table: string) => table.trim());
-        const targetTables = (targetNode.data.table || '').split(' & ').map((table: string) => table.trim());
-
-        const canConnect = sourceTables.some((table: string) => targetTables.includes(table));
-
-        if (canConnect) {
-          setEdges((eds) => addEdge(connection, eds));
-        } else {
-          message.error('Cannot connect nodes with different table or folder names.');
-        }
-      } else {
-        message.error('Invalid connection: ensure nodes are connected in a proper sequence.');
-      }
-    },
-    [nodes, setEdges]
-  );
+		  const modalKey = targetNode?.data.table?.toString();
+		  const openModals: ModalFunctions = {
+			'Filter': showFilterModal,
+			'Output': showOutputModal,
+			'Sort': showSortModal,
+			'IF/Else/And/OR': showConditionalModal,
+			'Group By': showGroupByModal,
+			'Statistical': showStatisticalModal,
+			'Scaling': showScalingModal,
+			'Arithmetic': showArithmeticModal,
+			'Pivot': showPivotTableModal,
+		  };
+	  
+		  if (modalKey && modalKey in openModals) {
+			const modalFunction = openModals[modalKey];
+			console.log("[modalKey]", modalKey);
+			console.log("openModals", openModals);
+			modalFunction({
+			  id: targetNode.id,
+			  position: targetNode.position,
+			  icon: targetNode.data.icon as IconNames,
+			  pivotTable: targetNode.data.pivotTable,
+			});
+			console.log("id", targetNode.id)
+		  } else {
+			console.error(`No modal function defined for key: ${modalKey}`);
+		  }
+		},
+		[nodes, setEdges]
+	  );
 
   const onEdgeClick = useCallback(
     (event: React.MouseEvent, edge: Edge) => {
@@ -1001,25 +1039,26 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
 
       setNodes((nds) => [...nds, newNode]);
 
-      if (itemData.title === 'Filter') {
-        showFilterModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons });
-      } else if (itemData.title === 'Output') {
-        showOutputModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons });
-      } else if (itemData.title === 'Sort') {
-        showSortModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons });
-      } else if (itemData.title === 'IF/Else/And/OR') {
-        showConditionalModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons });
-      } else if (itemData.title === 'Group By') {
-        showGroupByModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons });
-      } else if (itemData.title === 'Statistical') {
-        showStatisticalModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons });
-      } else if (itemData.title === 'Scaling') {
-        showScalingModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons });
-      } else if (itemData.title === 'Arithmetic') {
-        showArithmeticModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons });
-      } else if (itemData.title === 'Pivot') {
-        showPivotTableModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons, pivotTable: itemData.pivotTable });
-      } else if (itemData.title === 'Starting Node') {
+    //   if (itemData.title === 'Filter') {
+    //     showFilterModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons });
+    //   } else if (itemData.title === 'Output') {
+    //     showOutputModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons });
+    //   } else if (itemData.title === 'Sort') {
+    //     showSortModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons });
+    //   } else if (itemData.title === 'IF/Else/And/OR') {
+    //     showConditionalModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons });
+    //   } else if (itemData.title === 'Group By') {
+    //     showGroupByModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons });
+    //   } else if (itemData.title === 'Statistical') {
+    //     showStatisticalModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons });
+    //   } else if (itemData.title === 'Scaling') {
+    //     showScalingModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons });
+    //   } else if (itemData.title === 'Arithmetic') {
+    //     showArithmeticModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons });
+    //   } else if (itemData.title === 'Pivot') {
+    //     showPivotTableModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons, pivotTable: itemData.pivotTable });
+    //   } else
+	   if (itemData.title === 'Starting Node') {
         showStartModal({ id, position, icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons });
       }
     },
