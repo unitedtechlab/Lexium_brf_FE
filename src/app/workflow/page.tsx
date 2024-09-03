@@ -44,7 +44,7 @@ const WorkFlow: React.FC = () => {
     const [workflowName, setWorkflowName] = useState<string>('Workflow Name');
     const [outputNodeIds, setOutputNodeIds] = useState<string[]>([]);
     const [workflowOutput, setWorkflowOutput] = useState<any>(null);
-    const [isRunClicked, setIsRunClicked] = useState<boolean>(false); // New state to manage the "Run" click
+    const [isRunClicked, setIsRunClicked] = useState<boolean>(false);
 
     useEffect(() => {
         const handleLoad = () => setLoading(false);
@@ -161,7 +161,7 @@ const WorkFlow: React.FC = () => {
                 const outputIds = response.data.data || [];
                 setOutputNodeIds(outputIds);
                 setWorkflowOutput(response.data.data);
-                setIsRunClicked(true); // Trigger state change to show details after run
+                setIsRunClicked(true);
 
                 message.success(response.data.message || 'Workflow saved successfully');
                 return true;
@@ -216,7 +216,7 @@ const WorkFlow: React.FC = () => {
                 setWorkflowName={setWorkflowName}
                 workspaceId={currentWorkspace || undefined}
                 setWorkflowOutput={setWorkflowOutput}
-                setIsRunClicked={setIsRunClicked} // Pass callback to manage the run state
+                setIsRunClicked={setIsRunClicked}
             />
 
             <div className={classes.workflowWrapper}>
@@ -242,7 +242,7 @@ const WorkFlow: React.FC = () => {
                             setOutputNodeIds={setOutputNodeIds}
                             workflowOutput={workflowOutput}
                             outputNodeIds={outputNodeIds}
-                            isRunClicked={isRunClicked} // Pass the state to DragAndDropContainer
+                            isRunClicked={isRunClicked}
                         />
                     </ReactFlowProvider>
                 </div>

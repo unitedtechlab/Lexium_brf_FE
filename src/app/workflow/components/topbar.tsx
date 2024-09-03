@@ -9,7 +9,7 @@ interface TopbarProps {
     setWorkflowName: (name: string) => void;
     workspaceId?: string | null;
     setWorkflowOutput: (output: any) => void;
-    setIsRunClicked: (isRun: boolean) => void; // Prop to trigger run action in the main container
+    setIsRunClicked: (isRun: boolean) => void;
 }
 
 const Topbar: React.FC<TopbarProps> = ({ onSaveClick, setWorkflowName, workspaceId, setWorkflowOutput, setIsRunClicked }) => {
@@ -74,8 +74,9 @@ const Topbar: React.FC<TopbarProps> = ({ onSaveClick, setWorkflowName, workspace
 
             if (workflowData) {
                 setWorkflowOutput(workflowData);
-                setIsRunClicked(true); // Trigger the state to show output details
+                setIsRunClicked(true);
                 message.success('Workflow run successfully!');
+                console.log("workflowData", workflowData)
             } else {
                 message.error('No output nodes found in the workflow.');
             }
