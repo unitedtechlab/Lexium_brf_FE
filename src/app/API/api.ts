@@ -33,7 +33,6 @@ export const fetchWorkspaces = async (email: string, setIsLoading: (isLoading: b
 
         if (response.status === 200) {
             const data = response.data.data;
-            console.log("data", data);
 
             if (Object.keys(data).length === 0) {
                 return [];

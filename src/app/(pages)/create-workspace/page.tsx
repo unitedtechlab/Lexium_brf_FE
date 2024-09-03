@@ -93,7 +93,7 @@ export default function CreateWorkSpace() {
             if (response.status === 200) {
                 message.success('Workspace created successfully!');
                 setIsCreateModalVisible(false);
-                loadWorkspaces(); // Refresh the list of workspaces
+                loadWorkspaces();
             } else {
                 message.error(response.data.message || 'Failed to create workspace.');
             }
@@ -105,17 +105,17 @@ export default function CreateWorkSpace() {
 
     const updateWorkspaceName = (workspaceId: string, newName: string) => {
         const updatedWorkspaces = workspaces.map((workspace) =>
-            workspace.id === workspaceId ? { ...workspace, name: newName } : workspace
+            workspace.workspaceID === workspaceId ? { ...workspace, name: newName } : workspace
         );
         setWorkspaces(updatedWorkspaces);
 
-        if (selectedWorkspace && selectedWorkspace.id === workspaceId) {
+        if (selectedWorkspace && selectedWorkspace.workspaceID === workspaceId) {
             setSelectedWorkspace({ ...selectedWorkspace, name: newName });
         }
     };
 
     const removeWorkspace = (workspaceId: string) => {
-        setWorkspaces(workspaces.filter((workspace) => workspace.id !== workspaceId));
+        setWorkspaces(workspaces.filter((workspace) => workspace.workspaceID !== workspaceId));
     };
 
     const deleteWorkspaceById = async (workspaceId: string) => {
@@ -128,13 +128,12 @@ export default function CreateWorkSpace() {
             const response = await axios.delete(`${BaseURL}/workspace`, {
                 params: {
                     userEmail: email,
-                    workSpaceID: workspaceId, // Correct parameter naming as per backend
+                    workSpaceID: workspaceId,
                 },
                 headers: {
                     'Authorization': `Bearer ${token}`,
                 },
             });
-            console.log(response.data.workSpaceID, "workSpaceID for delete")
 
             if (response.status === 200) {
                 message.success('Workspace deleted successfully!');
@@ -156,7 +155,7 @@ export default function CreateWorkSpace() {
         try {
             const response = await axios.put(`${BaseURL}/workspace`, {
                 userEmail: email,
-                workSpaceID: selectedWorkspace.id,
+                workSpaceID: selectedWorkspace.workspaceID,
                 Data: newName,
             }, {
                 headers: {
@@ -166,7 +165,7 @@ export default function CreateWorkSpace() {
             });
 
             if (response.status === 200) {
-                updateWorkspaceName(selectedWorkspace.id, newName);
+                updateWorkspaceName(selectedWorkspace.workspaceID, newName);
                 message.success('Workspace name updated successfully!');
                 setIsEditModalVisible(false);
             } else {
@@ -245,8 +244,8 @@ export default function CreateWorkSpace() {
                 <DeleteModal
                     open={isDeleteModalVisible}
                     entityName="Workspace"
-                    entityId={selectedWorkspace.id}
-                    onDelete={() => deleteWorkspaceById(selectedWorkspace.id)}
+                    entityId={selectedWorkspace.workspaceID}
+                    onDelete={() => deleteWorkspaceById(selectedWorkspace.workspaceID)}
                     onOk={() => {
                         setIsDeleteModalVisible(false);
                         setSelectedWorkspace(null);
@@ -264,9 +263,9 @@ export default function CreateWorkSpace() {
             ) : (
                 <div className={`${classes.workspaceCreate} flex gap-2`}>
                     {filteredWorkspaces.map((workspace) => (
-                        <div key={workspace.id} className={`${classes.workspacebox}`}>
+                        <div key={workspace.workspaceID} className={`${classes.workspacebox}`}>
                             <div className={`flex gap-1 alinc ${classes.link}`}>
-                                <Link href={`/create-folder/${encodeURIComponent(workspace.id)}`}>
+                                <Link href={`/create-folder/${encodeURIComponent(workspace.name)}`}>
                                     <div className={`${classes.workspaceName} flex gap-1`}>
                                         <Image src={folder} alt="Folder Icon" width={32} height={32} loading="lazy" />
                                         <p>

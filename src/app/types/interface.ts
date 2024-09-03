@@ -40,7 +40,7 @@ export interface Workspace {
   cleanFileSize: string;
   cleanLastUpdated: string;
   workFlowExist: boolean;
-  workspaceID: number;
+  workspaceID: string;
 }
 export interface FolderData {
   id: string;
