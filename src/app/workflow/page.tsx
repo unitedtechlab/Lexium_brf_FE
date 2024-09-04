@@ -214,6 +214,7 @@ const WorkFlow: React.FC = () => {
             <Topbar
                 onSaveClick={handleRunClick}
                 setWorkflowName={setWorkflowName}
+                workflowName={workflowName}
                 workspaceId={currentWorkspace || undefined}
                 setWorkflowOutput={setWorkflowOutput}
                 setIsRunClicked={setIsRunClicked}
@@ -243,6 +244,7 @@ const WorkFlow: React.FC = () => {
                             workflowOutput={workflowOutput}
                             outputNodeIds={outputNodeIds}
                             isRunClicked={isRunClicked}
+                            workflowName={workflowName}
                         />
                     </ReactFlowProvider>
                 </div>

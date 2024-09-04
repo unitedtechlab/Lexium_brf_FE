@@ -7,22 +7,21 @@ import { useEmail } from '@/app/context/emailContext';
 interface TopbarProps {
     onSaveClick: () => Promise<boolean>;
     setWorkflowName: (name: string) => void;
+    workflowName: string;
     workspaceId?: string | null;
     setWorkflowOutput: (output: any) => void;
     setIsRunClicked: (isRun: boolean) => void;
 }
 
-const Topbar: React.FC<TopbarProps> = ({ onSaveClick, setWorkflowName, workspaceId, setWorkflowOutput, setIsRunClicked }) => {
+const Topbar: React.FC<TopbarProps> = ({ onSaveClick, setWorkflowName, workflowName, workspaceId, setWorkflowOutput, setIsRunClicked }) => {
     const [isRunEnabled, setIsRunEnabled] = useState(false);
     const [isSaved, setIsSaved] = useState(false);
-    const [workflowName, setWorkflowNameLocal] = useState<string>('');
     const [isSaving, setIsSaving] = useState<boolean>(false);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const { email } = useEmail();
 
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (!isSaved) {
-            setWorkflowNameLocal(event.target.value);
             setWorkflowName(event.target.value);
         }
     };

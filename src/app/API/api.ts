@@ -19,7 +19,6 @@ interface FolderDataWithColumns extends FolderData {
     columns: Columns;
 }
 
-// Utility to set loading state only when needed
 const setLoadingState = (setIsLoading: (isLoading: boolean) => void, state: boolean) => {
     setIsLoading(state);
 };

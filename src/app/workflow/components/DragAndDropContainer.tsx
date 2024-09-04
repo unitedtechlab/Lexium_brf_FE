@@ -24,6 +24,7 @@ import {
   Filter, Sort, Conditional, GroupBy, Statistical, NodeData, Arithmetic, Scaling, CustomNode, Condition, Merge
 } from '../../types/workflowTypes';
 import WorkflowModals from './WorkflowModals';
+import PreviewOutputModal from '../modals/preview-output';
 
 type IconNames = keyof typeof Icons | keyof typeof FaIcons;
 
@@ -42,6 +43,7 @@ interface DragAndDropContainerProps {
   setOutputNodeIds: React.Dispatch<React.SetStateAction<string[]>>;
   workflowOutput: any;
   isRunClicked: boolean;
+  workflowName: string;
 }
 
 const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
@@ -59,6 +61,7 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
   workflowOutput,
   setOutputNodeIds,
   isRunClicked,
+  workflowName,
 }) => {
   const { email } = useEmail();
   const { screenToFlowPosition } = useReactFlow();
@@ -68,9 +71,12 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
     icon: keyof typeof Icons | keyof typeof FaIcons;
     pivotTable?: any;
   } | null>(null);
-	  
+
   const [selectedTable, setSelectedTable] = useState<string | null>(null);
   const [isStartingNodeSaved, setIsStartingNodeSaved] = useState<boolean>(false);
+  const [previewModalVisible, setPreviewModalVisible] = useState<boolean>(false);
+  const [currentWorkflowName, setCurrentWorkflowName] = useState<string>('');
+  const [selectedOutputId, setSelectedOutputId] = useState<string>('');
 
   const [modalVisibility, setModalVisibility] = useState({
     isStartModalVisible: false,
@@ -106,6 +112,15 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
     setModalVisibility(prev => ({ ...prev, [modalType]: false }));
   }, []);
 
+  const handlePreviewOutputClick = useCallback((outputId: string) => {
+    setCurrentWorkflowName(workflowName); // Set the current workflow name
+    setPreviewModalVisible(true); // Show the preview modal
+    setSelectedOutputId(outputId); // Set the output ID to show its data
+  }, [workflowName]);
+
+  const closePreviewModal = useCallback(() => {
+    setPreviewModalVisible(false);
+  }, []);
 
   // Modal handlers
   const handleStartModalOk = useCallback(
@@ -167,8 +182,6 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
     },
     [currentEditNodeData, setNodes, setSidebarItems, hideModal]
   );
-
-
 
   const handleOutputModalOk = useCallback(
     (values: any) => {
@@ -498,37 +511,37 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
     [currentEditNodeData, selectedTable, setNodes, hideModal]
   );
 
-	const handleScalingModalOk = useCallback(
-		(values: any) => {
-			if (currentEditNodeData && selectedTable) {
-				const newNode: Node = {
-					id: currentEditNodeData.id,
-					data: {
-						table: selectedTable,
-						type: 'scaling',
-						scaling: {
-							column: values.column,
-							scalingFunction: values.scalingFunction,
-							minValue: values.minValue,
-							maxValue: values.maxValue,
-						},
-						label: createNodeLabel(
-							selectedTable,
-							'Scaling Node',
-							{
-								column: values.column,
-								scalingFunction: values.scalingFunction,
-								minValue: values.minValue,
-								maxValue: values.maxValue,
-							},
-							currentEditNodeData.id
-						),
-					},
-					position: currentEditNodeData.position,
-					draggable: true,
-					sourcePosition: Position.Right,
-					targetPosition: Position.Left,
-				};
+  const handleScalingModalOk = useCallback(
+    (values: any) => {
+      if (currentEditNodeData && selectedTable) {
+        const newNode: Node = {
+          id: currentEditNodeData.id,
+          data: {
+            table: selectedTable,
+            type: 'scaling',
+            scaling: {
+              column: values.column,
+              scalingFunction: values.scalingFunction,
+              minValue: values.minValue,
+              maxValue: values.maxValue,
+            },
+            label: createNodeLabel(
+              selectedTable,
+              'Scaling Node',
+              {
+                column: values.column,
+                scalingFunction: values.scalingFunction,
+                minValue: values.minValue,
+                maxValue: values.maxValue,
+              },
+              currentEditNodeData.id
+            ),
+          },
+          position: currentEditNodeData.position,
+          draggable: true,
+          sourcePosition: Position.Right,
+          targetPosition: Position.Left,
+        };
 
         setNodes((nds) => [...nds.filter(node => node.id !== currentEditNodeData.id), newNode]);
         setSelectedTable(null);
@@ -757,11 +770,7 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
             ENDING POINT
           </div>
         )}
-        {hasOutput && (
-          <div className={styles['starting-output-label']}>
-            PREVIEW OUTPUT
-          </div>
-        )}
+
         <div className={styles['node-content']}>
           <div className={`flex gap-1 ${styles['node-main']}`}>
             <div className={`flex gap-1 ${styles['node']}`}>
@@ -777,7 +786,11 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
                   items: [
                     { label: 'Delete', key: '0', onClick: () => handleDelete(nodeId!) },
                     { label: 'Edit', key: '1', onClick: () => handleEdit(nodeId!) },
-                    ...(hasOutput ? [{ label: 'Preview Output', key: '2' }] : []),
+                    ...(hasOutput ? [{
+                      label: 'Preview Output',
+                      key: '2',
+                      onClick: () => handlePreviewOutputClick(nodeId!) // Pass the node ID
+                    }] : []),
                   ]
                 }}
                 trigger={['click']}
@@ -786,6 +799,7 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
                   <FiMoreHorizontal />
                 </a>
               </Dropdown>
+
             </div>
             {nodeType !== 'Else Node' && data && nodeType !== 'table' && (
               <div className={`${styles.filterStyle}`}>
@@ -971,24 +985,20 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
       if (!sourceNode || !targetNode) {
         return;
       }
-
-	//   const isSourceInput = sourceNode.data.type === 'input';
-	//   const isTargetOutput = targetNode.data.type === 'output';
-	  
-	  const modalKey = targetNode?.data.table?.toString();
-	  if(modalKey && modalKey in modalKeyMap) {
-		setEdges((eds) => addEdge(connection, eds));
-		const modalFunction = modalKeyMap[modalKey]
-		showModal(modalFunction);
+      const modalKey = targetNode?.data.table?.toString();
+      if (modalKey && modalKey in modalKeyMap) {
+        setEdges((eds) => addEdge(connection, eds));
+        const modalFunction = modalKeyMap[modalKey]
+        showModal(modalFunction);
         setCurrentEditNodeData({
-			id: targetNode.id,
-			position: targetNode.position,
+          id: targetNode.id,
+          position: targetNode.position,
           icon: targetNode.data.icon as keyof typeof Icons | keyof typeof FaIcons,
         });
 
-	  }   else {
+      } else {
         message.error('Invalid connection: ensure nodes are connected in a proper sequence.');
-      }	
+      }
     },
     [nodes, setEdges]
   );
@@ -1028,7 +1038,7 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
         message.error('Please add a Starting Node first.');
         return;
       }
-	  const newNode: Node = {
+      const newNode: Node = {
         id,
         data: {
           table: itemData.title,
@@ -1100,6 +1110,14 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
           <Background color="#5C5E64" gap={12} />
         </ReactFlow>
 
+        <PreviewOutputModal
+          visible={previewModalVisible}
+          onCancel={closePreviewModal}
+          workspaceId={selectedWorkspace || ''}
+          workflowName={currentWorkflowName} // Pass the current workflow name to the modal
+          outputId={selectedOutputId} // Pass the selected output ID to the modal
+        />
+
         <WorkflowModals
           currentEditNodeData={currentEditNodeData}
           modalVisibility={modalVisibility}
@@ -1123,3 +1141,11 @@ const DragAndDropContainerWithProvider: React.FC<DragAndDropContainerProps> = (p
 );
 
 export default DragAndDropContainerWithProvider;
+function setSelectedOutputId(outputId: any) {
+  throw new Error('Function not implemented.');
+}
+
+function setCurrentWorkflowName(workflowName: string) {
+  throw new Error('Function not implemented.');
+}
+
