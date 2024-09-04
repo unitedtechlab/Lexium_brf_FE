@@ -35,6 +35,44 @@ const PreviewOutput: React.FC<PreviewOutputModalProps> = ({ visible, onCancel, w
     const { email } = useEmail();
     const token = useMemo(() => getToken(), []);
 
+    const convertToCSV = (data: FolderData[], columns: TableColumn[]): string => {
+        const csvRows: string[] = [];
+
+        // Add the header row
+        const headers = columns.map(col => col.title).join(',');
+        csvRows.push(headers);
+
+        // Add the data rows
+        data.forEach(row => {
+            const values = columns.map(col => {
+                const value = row[col.dataIndex];
+                // Escape commas and new lines
+                return `"${(value || '').toString().replace(/"/g, '""')}"`;
+            });
+            csvRows.push(values.join(','));
+        });
+
+        return csvRows.join('\n');
+    };
+
+    const handleExportCSV = () => {
+        if (data.length === 0 || columns.length === 0) {
+            message.warning("No data available to export.");
+            return;
+        }
+
+        const csvData = convertToCSV(data, columns);
+        const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `workflow_output_${outputId}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     const fetchData = async () => {
         setIsLoading(true);
         try {
@@ -100,6 +138,7 @@ const PreviewOutput: React.FC<PreviewOutputModalProps> = ({ visible, onCancel, w
             fetchData();
         }
     }, [visible, workspaceId, workflowName, outputId]);
+
     return (
         <Modal
             title={`Preview Output File: `}
@@ -108,7 +147,9 @@ const PreviewOutput: React.FC<PreviewOutputModalProps> = ({ visible, onCancel, w
             centered
             onCancel={onCancel}
             footer={[
-                <Button className='btn'>Export File</Button>,
+                <Button key="export" className='btn' onClick={handleExportCSV}>
+                    Export File
+                </Button>,
                 <Button key="cancel" onClick={onCancel} className="btn btn-outline">
                     Cancel
                 </Button>,
