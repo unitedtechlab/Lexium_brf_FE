@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Button, Col, Row, Form, Input, Upload, message, Progress, Spin } from 'antd';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { Button, Col, Row, Form, Input, Upload, message, Progress } from 'antd';
 import classes from '@/app/assets/css/pages.module.css';
 import { IoMdCloseCircle } from 'react-icons/io';
 import { RiDeleteBin6Fill, RiLoader2Fill, RiCheckboxCircleFill } from 'react-icons/ri';
 import fileIcon from '@/app/assets/images/fileIcon.svg';
-import axios, { AxiosError } from 'axios';
+import axios from 'axios';
 import { BaseURL } from '@/app/constants/index';
 import Image from 'next/image';
 import DataSuccessfulModal from '../modals/data-upload-success/data-upload-success';
@@ -32,50 +32,49 @@ const ImportFilePage: React.FC = () => {
     const [loading, setLoading] = useState<boolean>(false);
     const [successfulFiles, setSuccessfulFiles] = useState<string[]>([]);
     const [unsuccessfulFiles, setUnsuccessfulFiles] = useState<{ name: string, message: string }[]>([]);
-    const token = getToken();
+    const token = useMemo(() => getToken(), []);
 
-    const handleRemove = (file: any) => {
-        const index = fileList.indexOf(file);
-        const newFileList = [...fileList];
-        newFileList.splice(index, 1);
-        setFileList(newFileList);
-    };
+    const handleRemove = useCallback((file: any) => {
+        setFileList((prevFileList) => prevFileList.filter(f => f.uid !== file.uid));
+    }, []);
 
-    const handleUpload = () => {
+    const handleUpload = useCallback(() => {
         setIsModalVisible(true);
-    };
+    }, []);
 
-    const fetchUserData = async () => {
-        setLoading(true);
-        try {
-            const response = await axios.get(`${BaseURL}/bucket_details/${email}`, {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-            });
+    const fetchUserData = useCallback(async () => {
+        if (!loading) {
+            setLoading(true);
+            try {
+                const response = await axios.get(`${BaseURL}/bucket_details/${email}`, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                });
 
-            if (response.status === 200) {
-                const { fileTypes = [], remainingBucketSize = 0, totalBucketSize = 0 } = response.data.data;
-                setFileTypes(fileTypes);
-                setRemainingFileSize(remainingBucketSize);
-                setTotalBucketSize(totalBucketSize);
-            } else {
-                message.error(response.data.message || 'Failed to fetch file space.');
+                if (response.status === 200) {
+                    const { fileTypes = [], remainingBucketSize = 0, totalBucketSize = 0 } = response.data.data;
+                    setFileTypes(fileTypes);
+                    setRemainingFileSize(remainingBucketSize);
+                    setTotalBucketSize(totalBucketSize);
+                } else {
+                    message.error(response.data.message || 'Failed to fetch file space.');
+                }
+            } catch (error) {
+                if (axios.isAxiosError(error)) {
+                    message.error(error.response?.data?.message || error.message);
+                } else {
+                    console.error('Unexpected error fetching user data:', error);
+                    message.error('Failed to fetch user data. Check console for details.');
+                }
+            } finally {
+                setLoading(false);
             }
-        } catch (error) {
-            if (error instanceof AxiosError) {
-                message.error(error.response?.data?.message || error.message);
-            } else {
-                console.error('Unexpected error fetching user data:', error);
-                message.error('Failed to fetch user data. Check console for details.');
-            }
-        } finally {
-            setLoading(false);
         }
-    };
+    }, [email, token, loading]);
 
-    const handleSubmitFile = async () => {
+    const handleSubmitFile = useCallback(async () => {
         const formData = new FormData();
 
         fileList.forEach(file => {
@@ -87,40 +86,26 @@ const ImportFilePage: React.FC = () => {
             formData.append('folderName', folderName);
         });
 
-        setLoading(true);
-        try {
-            const response = await axios.post(`${BaseURL}/file`, formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                    'Authorization': `Bearer ${token}`
-                },
-            });
+        if (!loading) {
+            setLoading(true);
+            try {
+                const response = await axios.post(`${BaseURL}/file`, formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                        'Authorization': `Bearer ${token}`
+                    },
+                });
 
-            if (response.status === 200) {
-                const successFiles = fileList.map(file => file.name);
-                setSuccessfulFiles(successFiles);
-                setUnsuccessfulFiles([]);
-                setIsModalVisible(false);
-                setFileList([]);
-                router.push(`/importdata/${id}?workspace=${id}&folder=${folderName}`);
-                message.success("File Uploaded successfully.");
-            } else {
-                const errorMessages = response.data.error;
-                const successFiles = fileList
-                    .filter(file => !errorMessages[file.name])
-                    .map(file => file.name);
-                const errorFiles = Object.keys(errorMessages).map(fileName => ({
-                    name: fileName,
-                    message: errorMessages[fileName],
-                }));
-                setSuccessfulFiles(successFiles);
-                setUnsuccessfulFiles(errorFiles);
-            }
-        } catch (error) {
-            if (error instanceof AxiosError) {
-                const errorResponse = error.response?.data;
-                if (errorResponse && errorResponse.error) {
-                    const errorMessages = errorResponse.error;
+                if (response.status === 200) {
+                    const successFiles = fileList.map(file => file.name);
+                    setSuccessfulFiles(successFiles);
+                    setUnsuccessfulFiles([]);
+                    setIsModalVisible(false);
+                    setFileList([]);
+                    await router.push(`/importdata/${id}?workspace=${id}&folder=${folderName}`);
+                    message.success("File uploaded successfully.");
+                } else {
+                    const errorMessages = response.data.error;
                     const successFiles = fileList
                         .filter(file => !errorMessages[file.name])
                         .map(file => file.name);
@@ -130,21 +115,37 @@ const ImportFilePage: React.FC = () => {
                     }));
                     setSuccessfulFiles(successFiles);
                     setUnsuccessfulFiles(errorFiles);
-                } else {
-                    message.error(error.message);
                 }
-            } else {
-                console.error('Unexpected error uploading file:', error);
-                message.error('Failed to upload file. Check console for details.');
+            } catch (error) {
+                if (axios.isAxiosError(error)) {
+                    const errorResponse = error.response?.data;
+                    if (errorResponse && errorResponse.error) {
+                        const errorMessages = errorResponse.error;
+                        const successFiles = fileList
+                            .filter(file => !errorMessages[file.name])
+                            .map(file => file.name);
+                        const errorFiles = Object.keys(errorMessages).map(fileName => ({
+                            name: fileName,
+                            message: errorMessages[fileName],
+                        }));
+                        setSuccessfulFiles(successFiles);
+                        setUnsuccessfulFiles(errorFiles);
+                    } else {
+                        message.error(error.message);
+                    }
+                } else {
+                    console.error('Unexpected error uploading file:', error);
+                    message.error('Failed to upload file. Check console for details.');
+                }
+            } finally {
+                setLoading(false);
             }
-        } finally {
-            setLoading(false);
         }
-    };
+    }, [email, fileList, folderName, id, loading, router, token, workspaceId]);
 
-    const handleCleanDataNow = () => {
+    const handleCleanDataNow = useCallback(() => {
         setIsModalVisible(false);
-    };
+    }, []);
 
     useEffect(() => {
         const workspace = searchParams.get('workspace');
@@ -160,8 +161,7 @@ const ImportFilePage: React.FC = () => {
         }
 
         fetchUserData();
-
-    }, [searchParams, form, fileList]);
+    }, [searchParams, form, fetchUserData]);
 
     const formatFileSize = (bytes: number) => {
         if (bytes === 0) return '0 Bytes';
@@ -246,8 +246,8 @@ const ImportFilePage: React.FC = () => {
                                 <p>To upload more, ensure your data is in CSV or XLS text file formats.</p>
                                 <p>Contact support@kainest.com for any assistance.</p>
                                 <p>
-                                    <b>Total bucket Size: {totalBucketSize}</b><br />
-                                    <b>Remaining Bucket size: {remainingBucketSize}</b>
+                                    <b>Total bucket Size: {formatFileSize(totalBucketSize)}</b><br />
+                                    <b>Remaining Bucket size: {formatFileSize(remainingBucketSize)}</b>
                                 </p>
                             </div>
                             <div className={classes.fileuploaded}>

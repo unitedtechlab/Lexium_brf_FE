@@ -1,28 +1,27 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useParams } from "next/navigation";
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { Button, message, Empty, Dropdown } from 'antd';
+import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import { fetchWorkflows } from "@/app/API/api";
-import Searchbar from "@/app/components/Searchbar/search";
-import View from "@/app/components/GridListView/view";
-import classes from "@/app/assets/css/pages.module.css";
-import { Button, Dropdown, message, Empty } from "antd";
-import type { MenuProps } from "antd";
-import Image from "next/image";
+import Image from 'next/image';
+import { useEmail } from '@/app/context/emailContext';
+import classes from '@/app/assets/css/pages.module.css';
 import wireFrameIcon from "@/app/assets/images/wireframe.svg";
-import { BiDotsVerticalRounded } from "react-icons/bi";
+import { BiDotsVerticalRounded } from 'react-icons/bi';
 import BreadCrumb from "@/app/components/Breadcrumbs/breadcrumb";
-import { useEmail } from "@/app/context/emailContext";
-import Link from "next/link";
+import { useParams } from "next/navigation";
 import axios from 'axios';
 import { BaseURL } from '@/app/constants/index';
 import { getToken } from '@/utils/auth';
-import EditableModal from "@/app/modals/edit-modal/edit-modal";
-import { editWorkflow } from "@/app/API/api"; // Import the new API function
+import { fetchWorkflows, editWorkflow } from "@/app/API/api";
+import type { MenuProps } from 'antd'; // Import MenuProps type from antd
 
+const Searchbar = dynamic(() => import('@/app/components/Searchbar/search'), { ssr: false });
+const View = dynamic(() => import('@/app/components/GridListView/view'), { ssr: false });
 const Loader = dynamic(() => import('@/app/loading'), { ssr: false });
 const DeleteModal = dynamic(() => import('@/app/modals/delete-modal/delete-modal'), { ssr: false });
+const EditableModal = dynamic(() => import('@/app/modals/edit-modal/edit-modal'), { ssr: false });
 
 interface Workflow {
     id: string;
@@ -42,41 +41,76 @@ const WorkflowsList = () => {
     const [selectedWorkflow, setSelectedWorkflow] = useState<Workflow | null>(null);
     const [editWorkflowName, setEditWorkflowName] = useState("");
     const { email } = useEmail();
-    const token = getToken();
+    const token = useMemo(() => getToken(), []);
 
-    const handleDeleteWorkflow = async (workflowId: string) => {
-        if (!email || !workflowId || !id) return;
-        await axios.delete(`${BaseURL}/workflow`, {
-            params: {
-                userEmail: email,
-                workSpace: id,
-                workflowName: workflowId,
-            },
-            headers: {
-                'Authorization': `Bearer ${token}`,
-            },
-        });
-    };
+    const fetchWorkflowsData = useCallback(async () => {
+        if (!id || !email) return;
 
-    const handleEditWorkflow = async (newName: string) => {
+        setIsLoading(true);
+        try {
+            const fetchedWorkflows = await fetchWorkflows(email, id, setIsLoading);
+            setWorkflows(fetchedWorkflows);
+        } catch (error) {
+            message.error('Failed to fetch workflows.');
+            console.error("Unexpected error:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [id, email]);
+
+    useEffect(() => {
+        setBreadcrumbs([{ href: `/workflows-list`, label: `${id?.replace(/-/g, " ")} Workflow` }]);
+        fetchWorkflowsData();
+    }, [fetchWorkflowsData, id]);
+
+    const handleDeleteWorkflow = useCallback(async () => {
         if (!email || !selectedWorkflow || !id) return;
+        setIsLoading(true);
+        try {
+            await axios.delete(`${BaseURL}/workflow`, {
+                params: {
+                    userEmail: email,
+                    workSpace: id,
+                    workflowName: selectedWorkflow.id,
+                },
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+            message.success('Workflow deleted successfully.');
+            fetchWorkflowsData();
+        } catch (error) {
+            if (error instanceof Error) {
+                message.error(error.message || 'Failed to delete workflow.');
+                console.error("Error deleting workflow:", error);
+            } else {
+                message.error('Failed to delete workflow.');
+                console.error("Unexpected error:", error);
+            }
+        } finally {
+            setIsLoading(false);
+        }
+    }, [email, id, selectedWorkflow, fetchWorkflowsData, token]);
 
+    const handleEditWorkflow = useCallback(async (newName: string) => {
+        if (!email || !selectedWorkflow || !id) return;
+        setIsLoading(true);
         try {
             await editWorkflow(email, id, selectedWorkflow.id, newName);
             message.success('Workflow updated successfully.');
-
-            setEditModalVisible(false);
-            setEditWorkflowName("");
-
-            const fetchedWorkflows = await fetchWorkflows(email, id, setIsLoading);
-            setWorkflows(fetchedWorkflows);
-
+            fetchWorkflowsData();
         } catch (error) {
-            message.error('Failed to update workflow.');
-            console.error('Error:', error);
+            if (error instanceof Error) {
+                message.error(error.message || 'Failed to update workflow.');
+                console.error('Error:', error);
+            } else {
+                message.error('Failed to update workflow.');
+                console.error("Unexpected error:", error);
+            }
+        } finally {
+            setIsLoading(false);
         }
-    };
-
+    }, [email, id, selectedWorkflow, fetchWorkflowsData]);
 
     const handleMenuClick = useCallback((key: string, workflow: Workflow) => {
         if (key === 'delete') {
@@ -89,7 +123,7 @@ const WorkflowsList = () => {
         }
     }, []);
 
-    const menuItems: MenuProps["items"] = [
+    const menuItems: MenuProps["items"] = useMemo(() => [
         {
             label: "Edit Workflow",
             key: "edit",
@@ -98,33 +132,17 @@ const WorkflowsList = () => {
             label: "Delete Workflow",
             key: "delete",
         }
-    ];
+    ], []);
 
     const handleSearchInputChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
         setSearchInput(event.target.value);
     }, []);
 
-    useEffect(() => {
-        if (id && email) {
-            if (typeof id === "string" && email) {
-                setBreadcrumbs([{ href: `/workflows-list`, label: `${id.replace(/-/g, " ")} Workflow Workspace` }]);
-                fetchWorkflows(email, id, setIsLoading)
-                    .then(fetchedWorkflows => {
-                        setWorkflows(fetchedWorkflows);
-                    })
-                    .catch(error => {
-                        message.error(error.message || 'Failed to fetch workflows.');
-                    });
-            } else {
-                console.error("Invalid id type or email is null:", typeof id, email);
-                message.error("Invalid id type or email is null.");
-            }
-        }
-    }, [id, email]);
-
-    const filteredWorkflows = workflows.filter(workflow =>
-        workflow.name.toLowerCase().includes(searchInput.toLowerCase())
-    );
+    const filteredWorkflows = useMemo(() => {
+        return workflows.filter(workflow =>
+            workflow.name.toLowerCase().includes(searchInput.toLowerCase())
+        );
+    }, [searchInput, workflows]);
 
     return (
         <div className={`${classes.dashboardWrapper} ${classes.prevalidatebtn}`}>
@@ -171,10 +189,7 @@ const WorkflowsList = () => {
                                             menu={{ items: menuItems, onClick: ({ key }) => handleMenuClick(key, workflow) }}
                                             trigger={["click"]}
                                         >
-                                            <Button
-                                                className={classes.btnBlank}
-                                                data-workflow-id={workflow.id}
-                                            >
+                                            <Button className={classes.btnBlank}>
                                                 <BiDotsVerticalRounded />
                                             </Button>
                                         </Dropdown>
@@ -192,14 +207,7 @@ const WorkflowsList = () => {
                     entityName="Workflow"
                     entityId={selectedWorkflow.id}
                     onDelete={handleDeleteWorkflow}
-                    onOk={() => {
-                        setDeleteModalVisible(false);
-                        if (email) {
-                            fetchWorkflows(email, id, setIsLoading)
-                                .then(fetchedWorkflows => setWorkflows(fetchedWorkflows))
-                                .catch(error => message.error(error.message || 'Failed to fetch workflows.'));
-                        }
-                    }}
+                    onOk={() => setDeleteModalVisible(false)}
                     onCancel={() => setDeleteModalVisible(false)}
                 />
             )}

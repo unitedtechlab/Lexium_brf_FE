@@ -38,71 +38,70 @@ const DataPrevalidation: React.FC = () => {
     const [form] = Form.useForm();
     const workspace = searchParams.get('workspace');
     const folder = searchParams.get('folder');
-    const [breadcrumbs, setBreadcrumbs] = useState<{ href: string; label: string }[]>([]);
 
+    const [breadcrumbs, setBreadcrumbs] = useState([{ href: `/create-workspace`, label: `Workspace Management` }]);
     const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
-    const [selectedWorkspace, setSelectedWorkspace] = useState<string>(workspace || '');
     const [folders, setFolders] = useState<FolderData[]>([]);
-    const [selectedFolder, setSelectedFolder] = useState<string>(folder || '');
     const [tableData, setTableData] = useState<TableDataType[]>([]);
     const [totalRowCount, setTotalRowCount] = useState<number>(0);
     const [loading, setLoading] = useState<boolean>(false);
     const [missingValueOperations, setMissingValueOperations] = useState<{ [column: string]: string }>({});
     const [customFillValues, setCustomFillValues] = useState<{ [column: string]: string }>({});
-    const [token, setToken] = useState<string | null>(null); // Use state to store token
-
     const [customFillModalVisible, setCustomFillModalVisible] = useState(false);
     const [customFillValue, setCustomFillValue] = useState('');
     const [currentColumnKey, setCurrentColumnKey] = useState<string>('');
     const [highlightedKeys, setHighlightedKeys] = useState<string[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
     const [isCompositeKeyModalOpen, setIsCompositeKeyModalOpen] = useState(false);
     const [showInfoText, setShowInfoText] = useState(true);
     const [selectedKeys, setSelectedKeys] = useState<{ [key: string]: boolean }>({});
     const [cleanDataExist, setCleanDataExist] = useState<boolean>(false);
+    const [selectedWorkspace, setSelectedWorkspace] = useState<string>(workspace || '');
+    const [selectedFolder, setSelectedFolder] = useState<string>(folder || '');
+
+    // Memoized token to prevent recalculating it on every render
+    const token = useMemo(() => (isBrowser() ? getToken() : null), []);
 
     useEffect(() => {
-        loadWorkspaces();
-        if (selectedWorkspace) {
-            loadFolders(selectedWorkspace);
-        }
-        if (selectedFolder) {
-            fetchFolderData(selectedFolder);
-        }
+        const initializeData = async () => {
+            await loadWorkspaces();
+            if (selectedWorkspace) {
+                await loadFolders(selectedWorkspace);
+            }
+            if (selectedFolder) {
+                await fetchFolderData(selectedFolder);
+            }
+        };
 
-        if (isBrowser()) {
-            setToken(getToken());
-        }
-
-        setBreadcrumbs([
-            { href: `/create-workspace`, label: `Workspace Management` }
-        ]);
+        initializeData();
     }, [selectedWorkspace, selectedFolder]);
 
-    const loadWorkspaces = async () => {
+    const loadWorkspaces = useCallback(async () => {
         if (email) {
             try {
-                const workspacesData = await fetchWorkspaces(email, setIsLoading);
+                const workspacesData = await fetchWorkspaces(email, setLoading);
                 setWorkspaces(workspacesData);
             } catch (error) {
                 console.error("Failed to fetch workspaces.");
+                message.error("Failed to fetch workspaces.");
             }
         } else {
             message.error('Email is required to fetch workspaces.');
         }
-    };
+    }, [email]);
 
-    const loadFolders = async (workspaceId: string) => {
+    const loadFolders = useCallback(async (workspaceId: string) => {
         try {
-            const fetchedFolders = await fetchFolders(email!, workspaceId, setIsLoading);
+            const fetchedFolders = await fetchFolders(email!, workspaceId, setLoading);
             setFolders(fetchedFolders);
         } catch (error) {
             console.error("Failed to fetch folders.");
             message.error("Failed to fetch folders.");
         }
-    };
+    }, [email]);
 
-    const fetchFolderData = async (folderId: string) => {
+    const fetchFolderData = useCallback(async (folderId: string) => {
+        if (!email || !selectedWorkspace || !folderId || !token) return;
+
         setLoading(true);
         try {
             const response = await axios.get(`${BaseURL}/specific_folder`, {
@@ -120,15 +119,13 @@ const DataPrevalidation: React.FC = () => {
             const data = response.data.data;
             const columns = Object.keys(data.nullRowCount);
 
-            const formattedData = columns.map((col: string, index: number) => ({
+            const formattedData = columns.map((col, index) => ({
                 key: (index + 1).toString(),
                 column: col || 'Unknown',
                 confirmedDataType: data.confirmedDataType[col] || 'Text',
                 missingOperation: data.nullRowCount[col] || 0,
                 duplicatevalue: data.uniqueValuesCount[col] === data.totalRowCount ? 'No' : 'Yes',
                 primarykey: data.primarykey.includes(col) || false,
-                totalRowCount: data.totalRowCount || 0,
-                cleanDataExist: data.cleanDataExist,
             }));
 
             setTableData(formattedData);
@@ -140,7 +137,7 @@ const DataPrevalidation: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [email, selectedWorkspace, token]);
 
     const handleChangeWorkspace = (value: string) => {
         setSelectedWorkspace(value);
@@ -155,16 +152,12 @@ const DataPrevalidation: React.FC = () => {
         fetchFolderData(value);
     };
 
-    const handleCheckboxChange = (e: CheckboxChangeEvent, key: string) => {
+    const handleCheckboxChange = useCallback((e: CheckboxChangeEvent, key: string) => {
         const checked = e.target.checked;
-        const updatedData = tableData.map(item => {
-            if (item.key === key) {
-                return { ...item, duplicatevalue: checked ? 'Yes' : 'No' };
-            }
-            return item;
-        });
-        setTableData(updatedData);
-    };
+        setTableData(prevTableData =>
+            prevTableData.map(item => item.key === key ? { ...item, duplicatevalue: checked ? 'Yes' : 'No' } : item)
+        );
+    }, []);
 
     const handleMenuClick = (columnKey: string, actionKey: string) => {
         if (actionKey === 'customfill') {
@@ -192,19 +185,16 @@ const DataPrevalidation: React.FC = () => {
                 label: "Forward Fill",
                 key: "forwardfill",
                 onClick: () => handleMenuClick(recordKey, "forwardfill"),
-                disabled: false,
             },
             {
                 label: "Backward Fill",
                 key: "backwardfill",
                 onClick: () => handleMenuClick(recordKey, "backwardfill"),
-                disabled: false,
             },
             {
                 label: "Custom Fill",
                 key: "customfill",
                 onClick: () => handleMenuClick(recordKey, "customfill"),
-                disabled: false,
             },
             {
                 label: "Mean",
@@ -228,43 +218,41 @@ const DataPrevalidation: React.FC = () => {
                 label: "Blank",
                 key: "blank",
                 onClick: () => handleMenuClick(recordKey, "blank"),
-                disabled: false,
             },
         ];
     };
 
     const handleDataTypeChange = (value: string, key: string) => {
-        const updatedData = tableData.map(item => {
-            if (item.key === key) {
-                return { ...item, confirmedDataType: value };
-            }
-            return item;
-        });
-        setTableData(updatedData);
+        setTableData(prevTableData =>
+            prevTableData.map(item => item.key === key ? { ...item, confirmedDataType: value } : item)
+        );
     };
 
     const handleCustomFillSave = (customValue: string) => {
         if (currentColumnKey) {
-            const customName = `${currentColumnKey}_customfill`;
+            setCustomFillValues(prevValues => ({
+                ...prevValues,
+                [currentColumnKey]: customValue,
+            }));
             setMissingValueOperations(prevState => ({
                 ...prevState,
                 [currentColumnKey]: "customfill",
-                [customName]: customValue,
             }));
             setCustomFillModalVisible(false);
             setCustomFillValue('');
         }
     };
 
-    const handlePrimaryKeyAssignment = (column: string) => {
-        const updatedData = tableData.map(item => ({
-            ...item,
-            primarykey: item.column === column,
-        }));
-        setTableData(updatedData);
-    };
+    const handlePrimaryKeyAssignment = useCallback((column: string) => {
+        setTableData(prevTableData =>
+            prevTableData.map(item => ({
+                ...item,
+                primarykey: item.column === column,
+            }))
+        );
+    }, []);
 
-    const columns: TableProps<TableDataType>['columns'] = [
+    const columns: TableProps<TableDataType>['columns'] = useMemo(() => [
         {
             title: 'Column Name',
             dataIndex: 'column',
@@ -305,7 +293,7 @@ const DataPrevalidation: React.FC = () => {
                 <div className={`${classes.tableBody} ${highlightedKeys.includes(record.key) ? classes.missingValueHighlight : ''}`}>
                     <div className={classes.valueSelect}>
                         <span>{text}</span>
-                        {text > 0 && (
+                        {typeof text === 'number' && text > 0 && (
                             <Dropdown
                                 menu={{ items: getMenuItems(record.column, record.confirmedDataType) }}
                                 trigger={["click"]}
@@ -332,50 +320,43 @@ const DataPrevalidation: React.FC = () => {
             title: 'Duplicate Value Assigned',
             key: 'duplicatevalue',
             dataIndex: 'duplicatevalue',
-            render: (text, record) => {
-                return record.key !== 'fix-composite' ? (
+            render: (text, record) => (
+                record.key !== 'fix-composite' ? (
                     <Checkbox
                         checked={text === 'Yes'}
-                        onChange={(e: CheckboxChangeEvent) => handleCheckboxChange(e, record.key)}
+                        onChange={(e) => handleCheckboxChange(e, record.key)}
                     >
                         {text}
                     </Checkbox>
-                ) : null;
-            },
+                ) : null
+            ),
         },
         {
             title: 'Primary Key',
             key: 'primarykey',
-            render: (text, record) => {
-                if (record.key === "fix-composite") {
-                    return (
-                        <Row gutter={[16, 16]}>
-                            <Col span={24}>
-                                <Button className='btn fontsm' type="primary" onClick={() => setIsCompositeKeyModalOpen(true)}>
-                                    Assign Composite Key
-                                </Button>
-                            </Col>
-                        </Row>
-                    );
-                } else {
-                    return (
-                        <Button
-                            className='btn fontsm'
-                            disabled={
-                                record.duplicatevalue === 'Yes' ||
-                                typeof record.missingOperation === 'number' && record.missingOperation > 0
-                            }
-                            onClick={() => handlePrimaryKeyAssignment(record.column)}
-                        >
-                            {record.primarykey ? 'Primary Key Assigned' : 'Assign Primary Key'}
-                        </Button>
-                    );
-                }
-            },
+            render: (text, record) => (
+                record.key === "fix-composite" ? (
+                    <Row gutter={[16, 16]}>
+                        <Col span={24}>
+                            <Button className='btn fontsm' type="primary" onClick={() => setIsCompositeKeyModalOpen(true)}>
+                                Assign Composite Key
+                            </Button>
+                        </Col>
+                    </Row>
+                ) : (
+                    <Button
+                        className='btn fontsm'
+                        disabled={record.duplicatevalue === 'Yes' || (typeof record.missingOperation === 'number' && record.missingOperation > 0)}
+                        onClick={() => handlePrimaryKeyAssignment(record.column)}
+                    >
+                        {record.primarykey ? 'Primary Key Assigned' : 'Assign Primary Key'}
+                    </Button>
+                )
+            ),
         },
-    ];
+    ], [highlightedKeys, missingValueOperations, handlePrimaryKeyAssignment, handleDataTypeChange, getMenuItems]);
 
-    const tableDataWithFooter: TableDataType[] = [
+    const tableDataWithFooter: TableDataType[] = useMemo(() => [
         ...tableData,
         {
             key: 'fix-composite',
@@ -385,7 +366,7 @@ const DataPrevalidation: React.FC = () => {
             duplicatevalue: '',
             primarykey: false,
         },
-    ];
+    ], [tableData]);
 
     const rowClassName = (record: TableDataType) => {
         return record.primarykey ? `${classes.primary_key}` : record.key === 'fix-composite' ? classes.footerRow : '';
@@ -413,6 +394,8 @@ const DataPrevalidation: React.FC = () => {
             return;
         }
 
+        setLoading(true);
+
         try {
             const dataType: { [key: string]: string } = {};
             const missingValue: { [key: string]: string } = {};
@@ -421,9 +404,10 @@ const DataPrevalidation: React.FC = () => {
                 dataType[row.column] = row.confirmedDataType;
             });
 
-            for (const key in customFillValues) {
+            Object.keys(customFillValues).forEach(key => {
                 missingValue[key] = customFillValues[key];
-            }
+            });
+
             Object.keys(missingValueOperations).forEach(key => {
                 missingValue[key] = missingValueOperations[key];
             });
@@ -459,6 +443,8 @@ const DataPrevalidation: React.FC = () => {
             } else {
                 message.error('An unexpected error occurred.');
             }
+        } finally {
+            setLoading(false);
         }
     };
 

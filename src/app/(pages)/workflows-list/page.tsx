@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Button, message, Empty } from 'antd';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
@@ -23,38 +23,41 @@ export default function WorkflowsWorkspaces() {
     const [isLoading, setIsLoading] = useState(false);
     const [breadcrumbs, setBreadcrumbs] = useState<{ href: string; label: string }[]>([]);
 
-    const handleSearchInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleSearchInputChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
         setSearchInput(event.target.value);
-    };
+    }, []);
 
-    const loadWorkspaces = async () => {
-        if (email) {
-            setIsLoading(true);
-            try {
-                const workspacesData = await fetchWorkspaces(email, setIsLoading);
-                const workflowWorkspaces = workspacesData.filter(workspace => workspace.workFlowExist);
-                setWorkspaces(workflowWorkspaces);
-            } catch (error) {
-                message.error('Failed to fetch workspaces.');
-                console.error("Failed to fetch workspaces:", error);
-            } finally {
-                setIsLoading(false);
-            }
-        } else {
+    const loadWorkspaces = useCallback(async () => {
+        if (!email) {
             message.error('Email is required to fetch workspaces.');
+            return;
         }
-    };
+
+        setIsLoading(true);
+        try {
+            const workspacesData = await fetchWorkspaces(email, setIsLoading);
+            const workflowWorkspaces = workspacesData.filter(workspace => workspace.workFlowExist);
+            setWorkspaces(workflowWorkspaces);
+        } catch (error) {
+            message.error('Failed to fetch workspaces.');
+            console.error("Failed to fetch workspaces:", error);
+        } finally {
+            if (isLoading) setIsLoading(false);  // Ensure setIsLoading is called only if necessary
+        }
+    }, [email, isLoading]);
 
     useEffect(() => {
         loadWorkspaces();
         setBreadcrumbs([
             { href: `/data-storage`, label: `Data Storage` }
         ]);
-    }, [email]);
+    }, [email, loadWorkspaces]);
 
-    const filteredWorkspaces = workspaces.filter(workspace =>
-        workspace.name.toLowerCase().includes(searchInput.toLowerCase())
-    );
+    const filteredWorkspaces = useMemo(() => {
+        return workspaces.filter(workspace =>
+            workspace.name.toLowerCase().includes(searchInput.toLowerCase())
+        );
+    }, [searchInput, workspaces]);
 
     return (
         <div className={classes.dashboardWrapper}>

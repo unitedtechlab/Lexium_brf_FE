@@ -93,7 +93,7 @@ export default function CreateWorkSpace() {
             if (response.status === 200) {
                 message.success('Workspace created successfully!');
                 setIsCreateModalVisible(false);
-                loadWorkspaces();
+                await loadWorkspaces();
             } else {
                 message.error(response.data.message || 'Failed to create workspace.');
             }
@@ -178,19 +178,25 @@ export default function CreateWorkSpace() {
     };
 
     const loadWorkspaces = async () => {
-        if (email) {
-            setIsLoading(true);
-            try {
-                const workspacesData = await fetchWorkspaces(email, setIsLoading);
-                setWorkspaces(workspacesData);
-            } catch (error) {
-                message.error('Failed to fetch workspaces.');
-                console.error("Failed to fetch workspaces.", error);
-            } finally {
-                setIsLoading(false);
-            }
-        } else {
+        if (!email) {
             message.error('Email is required to fetch workspaces.');
+            return;
+        }
+
+        // Check before setting loading state
+        if (!isLoading) {
+            setIsLoading(true);
+        }
+
+        try {
+            const workspacesData = await fetchWorkspaces(email, setIsLoading);
+            setWorkspaces(workspacesData);
+        } catch (error) {
+            message.error('Failed to fetch workspaces.');
+            console.error("Failed to fetch workspaces.", error);
+        } finally {
+            // Only update loading state if it was set to true earlier
+            setIsLoading((prevLoading) => prevLoading && false);
         }
     };
 

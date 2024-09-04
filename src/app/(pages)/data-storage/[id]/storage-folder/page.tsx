@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams } from "next/navigation";
 import dynamic from 'next/dynamic';
 import { fetchFolders } from "@/app/API/api";
@@ -63,9 +63,10 @@ const DataStorageFolder = () => {
         setSelectedFolder(null);
     }, []);
 
-    const deleteFolder = async (folderId: string) => {
+    const deleteFolder = useCallback(async (folderId: string) => {
         if (!email || !id) return;
         const token = getToken();
+        setIsLoading(true);
         try {
             await axios.delete(`${BaseURL}/cleaned_folder`, {
                 params: {
@@ -82,14 +83,16 @@ const DataStorageFolder = () => {
             message.error("Failed to delete folder");
             console.error("Error deleting folder:", error);
             return false;
+        } finally {
+            setIsLoading(false); // Ensure this is only called once
         }
-    };
+    }, [email, id]);
 
     const updateFolderListAfterDelete = useCallback((folderId: string) => {
         setFolders(prevFolders => prevFolders.filter(folder => folder.id !== folderId));
     }, []);
 
-    const menuItems: MenuProps["items"] = [
+    const menuItems = useMemo<MenuProps["items"]>(() => [
         {
             label: "Preview File",
             key: "preview",
@@ -112,35 +115,45 @@ const DataStorageFolder = () => {
                 }
             },
         },
-    ];
+    ], [selectedFolder, handlePreviewModal, handleDeleteModal]);
 
     const handleSearchInputChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
         setSearchInput(event.target.value);
     }, []);
 
     useEffect(() => {
-        if (id && email) {
-            if (typeof id === "string") {
-                setBreadcrumbs([{ href: `/data-storage`, label: `${id.replace(/-/g, " ")} Workspace` }]);
-                fetchFolders(email, id, setIsLoading)
-                    .then(fetchedFolders => {
+        const fetchData = async () => {
+            if (id && email) {
+                if (typeof id === "string") {
+                    setBreadcrumbs([{ href: `/data-storage`, label: `${id.replace(/-/g, " ")} Workspace` }]);
+                    setIsLoading(true);
+                    try {
+                        // Pass setIsLoading to fetchFolders to handle the loading state
+                        const fetchedFolders = await fetchFolders(email, id, setIsLoading);
                         const filteredFolders = fetchedFolders.filter(folder => folder.cleanDataExist);
                         setFolders(filteredFolders);
                         setHasCleanData(filteredFolders.length > 0);
-                    })
-                    .catch(error => {
-                        message.error(error.message || 'Failed to fetch folders.');
-                    });
-            } else {
-                console.error("Invalid id type:", typeof id);
-                message.error("Invalid id type.");
+                    } catch (error) {
+                        message.error('Failed to fetch folders.');
+                        console.error('Failed to fetch folders:', error);
+                    } finally {
+                        setIsLoading(false); // Ensure this is only called once
+                    }
+                } else {
+                    console.error("Invalid id type:", typeof id);
+                    message.error("Invalid id type.");
+                }
             }
-        }
+        };
+
+        fetchData();
     }, [id, email]);
 
-    const filteredFolders = folders.filter(folder =>
-        folder.name.toLowerCase().includes(searchInput.toLowerCase())
-    );
+    const filteredFolders = useMemo(() => {
+        return folders.filter(folder =>
+            folder.name.toLowerCase().includes(searchInput.toLowerCase())
+        );
+    }, [searchInput, folders]);
 
     return (
         <div className={`${classes.dashboardWrapper} ${classes.prevalidatebtn}`}>
@@ -221,12 +234,13 @@ const DataStorageFolder = () => {
                         const success = await deleteFolder(folderId);
                         if (success) {
                             message.success('Folder deleted successfully!');
+                            updateFolderListAfterDelete(folderId);
+                            handleDeleteModalCancel();
                         }
                     }}
                     onOk={() => {
                         updateFolderListAfterDelete(selectedFolder.id);
-                        setIsDeleteModalVisible(false);
-                        setSelectedFolder(null);
+                        handleDeleteModalCancel();
                     }}
                     onCancel={handleDeleteModalCancel}
                 />

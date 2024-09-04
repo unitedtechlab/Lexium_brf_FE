@@ -1,11 +1,9 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useSearchParams, useParams, useRouter } from "next/navigation";
 import dynamic from 'next/dynamic';
 import axios from "axios";
-import Searchbar from "@/app/components/Searchbar/search";
-import View from "@/app/components/GridListView/view";
 import classes from "@/app/assets/css/pages.module.css";
 import { Button, Dropdown, message, Empty, Tooltip } from "antd";
 import type { MenuProps } from "antd";
@@ -20,10 +18,12 @@ import { fetchFiles, fetchFolders } from '@/app/API/api';
 import { BaseURL } from '@/app/constants/index';
 import { getToken } from '@/utils/auth';
 
-const EditFileModal = dynamic(() => import('./modals/edit-file/editfile'));
-const EstablishmentColumnModal = dynamic(() => import('@/app/modals/establishment-column/establishcolumn'));
+const EditableModal = dynamic(() => import('@/app/modals/edit-modal/edit-modal'), { ssr: false });
+const EstablishmentColumnModal = dynamic(() => import('@/app/modals/establishment-column/establishcolumn'), { ssr: false });
 const Loader = dynamic(() => import('@/app/loading'), { ssr: false });
 const DeleteModal = dynamic(() => import('@/app/modals/delete-modal/delete-modal'), { ssr: false });
+const Searchbar = dynamic(() => import('@/app/components/Searchbar/search'), { ssr: false });
+const View = dynamic(() => import('@/app/components/GridListView/view'), { ssr: false });
 
 export default function ImportData() {
     const { id } = useParams();
@@ -39,7 +39,7 @@ export default function ImportData() {
     const [selectedFile, setSelectedFile] = useState<FileData | null>(null);
     const [isEditModalVisible, setIsEditModalVisible] = useState(false);
     const [editingFile, setEditingFile] = useState<FileData | null>(null);
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const [isEstablishmentModalVisible, setIsEstablishmentModalVisible] = useState(false);
     const [isFolderEstablished, setIsFolderEstablished] = useState(false);
     const token = useMemo(() => getToken(), []);
@@ -48,23 +48,27 @@ export default function ImportData() {
         setSearchInput(event.target.value);
     };
 
-    const loadFiles = async () => {
+    const loadFiles = useCallback(async () => {
         if (email && workspace && folder) {
+            setIsLoading(true);
             try {
-                const fetchedFiles = await fetchFiles(email, workspace, folder, setIsLoading);
+                const fetchedFiles = await fetchFiles(email, workspace, folder, () => { });
                 setFiles(fetchedFiles);
             } catch (error) {
                 message.error("Failed to fetch files.");
+            } finally {
+                setIsLoading(false);
             }
         } else {
             message.error("Email, workspace, and folder are required to fetch files.");
         }
-    };
+    }, [email, workspace, folder]);
 
-    const loadFolderData = async () => {
+    const loadFolderData = useCallback(async () => {
         if (email && workspace) {
+            setIsLoading(true);
             try {
-                const fetchedFolders = await fetchFolders(email, workspace, setIsLoading);
+                const fetchedFolders = await fetchFolders(email, workspace, () => { });
                 const currentFolder = fetchedFolders.find(f => f.id.toUpperCase() === folder?.toUpperCase());
                 if (currentFolder) {
                     setIsFolderEstablished(currentFolder.columnsEstablised);
@@ -74,9 +78,11 @@ export default function ImportData() {
             } catch (error) {
                 console.error("Error fetching folder data:", error);
                 message.error("Failed to fetch folder data.");
+            } finally {
+                setIsLoading(false);
             }
         }
-    };
+    }, [email, workspace, folder]);
 
     useEffect(() => {
         loadFiles();
@@ -87,9 +93,9 @@ export default function ImportData() {
                 { href: `/create-folder/${id}`, label: `${folder.replace(/-/g, ' ')} Folder` },
             ]);
         }
-    }, [workspace, folder, email, id]);
+    }, [workspace, folder, email, id, loadFiles, loadFolderData]);
 
-    const items = (file: FileData, index: number): MenuProps["items"] => {
+    const items = (file: FileData): MenuProps["items"] => {
         const menuItems: MenuProps["items"] = [
             {
                 label: "Edit File",
@@ -155,6 +161,7 @@ export default function ImportData() {
 
     const deleteFile = async (fileId: string) => {
         if (!email || !workspace || !folder) return;
+        setIsLoading(true);
         try {
             await axios.delete(`${BaseURL}/file`, {
                 params: {
@@ -172,6 +179,8 @@ export default function ImportData() {
         } catch (error) {
             message.error('Failed to delete file');
             console.error("Error deleting file:", error);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -179,16 +188,45 @@ export default function ImportData() {
         setFiles(files.filter((file) => file.id !== fileId));
     };
 
-    const updateFileName = (fileId: string, newName: string) => {
-        const updatedFiles = files.map((file) =>
-            file.id === fileId ? { ...file, name: newName } : file
-        );
-        setFiles(updatedFiles);
+    const updateFileName = async (fileId: string, newName: string) => {
+        if (!email || !workspace || !folder) return;
+        setIsLoading(true);
+        try {
+            const requestData = {
+                userEmail: email,
+                workSpace: workspace.toUpperCase(),
+                folderName: folder.toUpperCase(),
+                fileName: fileId,
+                data: newName,
+            };
+
+            const response = await axios.put(`${BaseURL}/file`, requestData, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+            });
+
+            if (response.status === 200) {
+                setFiles(files.map(file => file.id === fileId ? { ...file, name: newName } : file));
+                message.success('File name updated successfully');
+                setIsEditModalVisible(false);
+                loadFiles();
+            } else {
+                console.error('Failed to update file name - status:', response.status, response.data);
+                message.error('Failed to update file name.');
+            }
+        } catch (error) {
+            console.error('Error updating file name:', error);
+            message.error('Failed to update file name.');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleEstablishColumns = async (columnsData: { [key: string]: string }) => {
         if (!selectedFile) return;
-
+        setIsLoading(true);
         try {
             await axios.post(`${BaseURL}/establish_file_columns`, {
                 userEmail: email,
@@ -214,12 +252,14 @@ export default function ImportData() {
         } catch (error) {
             console.error("Error establishing columns:", error);
             message.error("Failed to establish columns.");
+        } finally {
+            setIsLoading(false);
         }
     };
 
     const handleEstablishFolderColumns = async (columnsData: { [key: string]: string }) => {
         if (!workspace || !folder) return;
-
+        setIsLoading(true);
         try {
             await axios.post(`${BaseURL}/establish_folder_columns`, {
                 userEmail: email,
@@ -244,6 +284,8 @@ export default function ImportData() {
         } catch (error) {
             console.error("Error establishing folder columns:", error);
             message.error("Failed to establish folder columns.");
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -283,7 +325,9 @@ export default function ImportData() {
                 </div>
             </div>
 
-            {filteredFiles.length > 0 ? (
+            {isLoading ? (
+                <Loader />
+            ) : filteredFiles.length > 0 ? (
                 <div className={`${classes.workspaceCreate} flex gap-2`}>
                     {filteredFiles.map((file, index) => (
                         <Tooltip key={index} title={!file.established ? "Establish columns for this data source" : ""}>
@@ -302,7 +346,7 @@ export default function ImportData() {
                                             {file.lastUpdated}
                                         </p>
                                         <div className={classes.dropdownWorkspace}>
-                                            <Dropdown menu={{ items: items(file, index) }} trigger={["click"]}>
+                                            <Dropdown menu={{ items: items(file) }} trigger={["click"]}>
                                                 <Button
                                                     onClick={(e) => {
                                                         e.preventDefault();
@@ -320,8 +364,6 @@ export default function ImportData() {
                         </Tooltip>
                     ))}
                 </div>
-            ) : isLoading ? (
-                <Loader />
             ) : (
                 <div className={classes.noFoldersMessage}>
                     <Empty description="No Files Found" />
@@ -339,18 +381,18 @@ export default function ImportData() {
                 />
             )}
 
-            <EditFileModal
-                visible={isEditModalVisible}
-                workspace={workspace || ''}
-                folderName={folder || ''}
-                fileName={editingFile?.name || ''}
-                onCancel={cancelEditFile}
-                onOk={(newName: string) => {
-                    setIsEditModalVisible(false);
-                    updateFileName(selectedFile?.id || '', newName);
-                    setSelectedFile(null);
-                    loadFiles();
+            <EditableModal
+                open={isEditModalVisible}
+                title="Edit File Name"
+                initialValue={editingFile?.name || ''}
+                fieldLabel="New File Name"
+                onSubmit={async (newName: string) => {
+                    if (editingFile) {
+                        await updateFileName(editingFile.id, newName);
+                    }
                 }}
+                onCancel={cancelEditFile}
+                isLoading={isLoading}
             />
 
             <EstablishmentColumnModal

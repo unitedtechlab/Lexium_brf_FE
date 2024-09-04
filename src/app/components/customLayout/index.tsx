@@ -9,7 +9,7 @@ import { BiCode, BiCollapseHorizontal } from "react-icons/bi";
 import dynamic from 'next/dynamic';
 
 const { Header, Content } = Layout;
-const Sidebar = dynamic(() => import('@/app/components/Sidebar/sidebar'), { ssr: false });
+const Sidebar = dynamic(() => import('@/app/components/Sidebar/sidebar'));
 
 type LayoutProps = {
     children: ReactNode;

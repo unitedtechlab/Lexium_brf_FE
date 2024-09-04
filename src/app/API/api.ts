@@ -19,9 +19,14 @@ interface FolderDataWithColumns extends FolderData {
     columns: Columns;
 }
 
+// Utility to set loading state only when needed
+const setLoadingState = (setIsLoading: (isLoading: boolean) => void, state: boolean) => {
+    setIsLoading(state);
+};
+
 // Workspace fetch API
 export const fetchWorkspaces = async (email: string, setIsLoading: (isLoading: boolean) => void): Promise<Workspace[]> => {
-    setIsLoading(true);
+    setLoadingState(setIsLoading, true);
     try {
         if (!email) {
             throw new Error('Email is required to fetch workspaces.');
@@ -62,14 +67,13 @@ export const fetchWorkspaces = async (email: string, setIsLoading: (isLoading: b
             throw new Error('Failed to fetch workspaces.');
         }
     } finally {
-        setIsLoading(false);
+        setLoadingState(setIsLoading, false);
     }
 };
 
-
 // Folder fetch API
 export const fetchFolders = async (email: string, workspaceId: string, setIsLoading: (isLoading: boolean) => void): Promise<FolderDataWithColumns[]> => {
-    setIsLoading(true);
+    setLoadingState(setIsLoading, true);
     try {
         const response = await axios.get(`${BaseURL}/folder`, {
             params: {
@@ -110,13 +114,13 @@ export const fetchFolders = async (email: string, workspaceId: string, setIsLoad
             throw new Error('Failed to fetch folders.');
         }
     } finally {
-        setIsLoading(false);
+        setLoadingState(setIsLoading, false);
     }
 };
 
 // File fetch API
 export const fetchFiles = async (email: string, workspaceId: string, folderName: string, setIsLoading: (isLoading: boolean) => void): Promise<FileData[]> => {
-    setIsLoading(true);
+    setLoadingState(setIsLoading, true);
     try {
         const response = await axios.get(`${BaseURL}/file`, {
             params: {
@@ -149,7 +153,7 @@ export const fetchFiles = async (email: string, workspaceId: string, folderName:
             throw new Error('Failed to fetch files.');
         }
     } finally {
-        setIsLoading(false);
+        setLoadingState(setIsLoading, false);
     }
 };
 
@@ -296,7 +300,7 @@ export const runWorkflow = async (email: string, workspaceId: string, workflowNa
         });
 
         if (response.status === 200) {
-            return response.data.data; // Adjust based on your API response structure
+            return response.data.data;
         } else {
             throw new Error(response.data.error || 'Failed to run workflow.');
         }

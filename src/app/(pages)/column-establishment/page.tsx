@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Button, message } from 'antd';
 import { useSearchParams, useParams, useRouter } from 'next/navigation';
 import axios from 'axios';
@@ -36,45 +36,40 @@ interface DragItem {
 
 const ItemType = 'COLUMN';
 
-const DraggableColumn: React.FC<DraggableColumnProps> = ({ column, index, moveColumn, onSelectColumn }) => {
+const DraggableColumn: React.FC<DraggableColumnProps> = React.memo(({ column, index, moveColumn, onSelectColumn }) => {
     const ref = useRef<HTMLLIElement>(null);
+
     const [, drop] = useDrop<DragItem>({
         accept: ItemType,
-        hover(item: DragItem, monitor: DropTargetMonitor) {
-            if (!ref.current) {
-                return;
-            }
+        hover(item: DragItem) {
+            if (!ref.current) return;
             const dragIndex = item.index;
             const hoverIndex = index;
-            if (dragIndex === hoverIndex) {
-                return;
-            }
+            if (dragIndex === hoverIndex) return;
+
             moveColumn(dragIndex, hoverIndex);
             item.index = hoverIndex;
         },
     });
 
-    const [{ isDragging }, drag] = useDrag({
+    const [, drag] = useDrag({
         type: ItemType,
         item: { type: ItemType, index },
-        collect: (monitor) => ({
-            isDragging: monitor.isDragging(),
-        }),
     });
 
     drag(drop(ref));
 
     return (
         <li
-            ref={ref as unknown as React.LegacyRef<HTMLLIElement>}
-            className={`${classes.draggableItem} ${isDragging ? classes.dragging : ''}`}
+            ref={ref}
+            className={classes.draggableItem}
             id={`newColumn-${index}`}
             onClick={() => onSelectColumn(`newColumn-${index}`, false)}
         >
             {column.columnName}
         </li>
     );
-};
+});
 
 const CustomArrow: React.FC<{ start: string; end: string; color: string; strokeWidth: number; onClick: () => void }> = ({ start, end, color, strokeWidth, onClick }) => {
     return (
@@ -83,7 +78,6 @@ const CustomArrow: React.FC<{ start: string; end: string; color: string; strokeW
         </div>
     );
 };
-
 
 const ColumnEstablishmentPage: React.FC = () => {
     const { id } = useParams();
@@ -101,21 +95,10 @@ const ColumnEstablishmentPage: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [firstFileName, setFirstFileName] = useState<string>('');
     const [establishedFileName, setEstablishedFileName] = useState<string>(file || '');
-
     const [selectedExistingColumn, setSelectedExistingColumn] = useState<string | null>(null);
     const [relations, setRelations] = useState<{ start: string; end: string }[]>([]);
 
-    useEffect(() => {
-        if (workspace && folder && file) {
-            setBreadcrumbs([
-                { href: `/create-workspace`, label: `${workspace.replace(/-/g, ' ')} Workspace` },
-                { href: `/create-folder/${id}`, label: `${folder.replace(/-/g, ' ')} Folder` },
-                { href: `/importdata/${id}?workspace=${workspace}&folder=${folder}&filename=${file}`, label: `${file}` }
-            ]);
-        }
-    }, [workspace, folder, file, id]);
-
-    const fetchFileColumns = async (fileName: string) => {
+    const fetchFileColumns = useCallback(async (fileName: string) => {
         setIsLoading(true);
         const params = {
             userEmail: email,
@@ -127,10 +110,7 @@ const ColumnEstablishmentPage: React.FC = () => {
         try {
             const response = await axios.get(`${BaseURL}/get_file_columns`, {
                 params,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             });
 
             if (response.status === 200 && response.data) {
@@ -150,22 +130,17 @@ const ColumnEstablishmentPage: React.FC = () => {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [email, workspace, folder, token]);
 
-    const fetchFolderColumns = async () => {
+    const fetchFolderColumns = useCallback(async () => {
         if (!workspace || !folder) return;
-        const params = {
-            userEmail: email,
-            workSpace: workspace,
-        };
+        setIsLoading(true);
+        const params = { userEmail: email, workSpace: workspace };
 
         try {
             const response = await axios.get(`${BaseURL}/folder`, {
                 params,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             });
 
             if (response.status === 200 && response.data) {
@@ -187,8 +162,20 @@ const ColumnEstablishmentPage: React.FC = () => {
         } catch (error) {
             console.error("Error fetching folder columns:", error);
             message.error("Failed to fetch folder columns due to an error.");
+        } finally {
+            setIsLoading(false);
         }
-    };
+    }, [workspace, folder, email, token]);
+
+    useEffect(() => {
+        if (workspace && folder && file) {
+            setBreadcrumbs([
+                { href: `/create-workspace`, label: `${workspace.replace(/-/g, ' ')} Workspace` },
+                { href: `/create-folder/${id}`, label: `${folder.replace(/-/g, ' ')} Folder` },
+                { href: `/importdata/${id}?workspace=${workspace}&folder=${folder}&filename=${file}`, label: `${file}` }
+            ]);
+        }
+    }, [workspace, folder, file, id]);
 
     useEffect(() => {
         fetchFolderColumns();
@@ -197,7 +184,7 @@ const ColumnEstablishmentPage: React.FC = () => {
                 setCurrentFileColumns(columns);
             });
         }
-    }, [file, searchParams]);
+    }, [file, fetchFolderColumns, fetchFileColumns]);
 
     useEffect(() => {
         const initialRelations = firstFileColumns.flatMap(firstColumn => {
@@ -230,6 +217,7 @@ const ColumnEstablishmentPage: React.FC = () => {
         }, {});
 
         try {
+            setIsLoading(true);
             await axios.post(`${BaseURL}/establish_file_columns`, {
                 userEmail: email,
                 workSpace: workspace,
@@ -237,10 +225,7 @@ const ColumnEstablishmentPage: React.FC = () => {
                 fileName: file,
                 data: columnsData,
             }, {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                }
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
             });
 
             message.success("Columns established successfully.");
@@ -248,17 +233,21 @@ const ColumnEstablishmentPage: React.FC = () => {
         } catch (error) {
             console.error("Error establishing columns:", error);
             message.error("Failed to establish columns.");
+        } finally {
+            setIsLoading(false);
         }
     };
 
-    const moveColumn = (fromIndex: number, toIndex: number) => {
-        const updatedColumns = [...currentFileColumns];
-        const [movedColumn] = updatedColumns.splice(fromIndex, 1);
-        updatedColumns.splice(toIndex, 0, movedColumn);
-        setCurrentFileColumns(updatedColumns);
-    };
+    const moveColumn = useCallback((fromIndex: number, toIndex: number) => {
+        setCurrentFileColumns(prevColumns => {
+            const updatedColumns = [...prevColumns];
+            const [movedColumn] = updatedColumns.splice(fromIndex, 1);
+            updatedColumns.splice(toIndex, 0, movedColumn);
+            return updatedColumns;
+        });
+    }, []);
 
-    const handleSelectColumn = (columnId: string, isExisting: boolean) => {
+    const handleSelectColumn = useCallback((columnId: string, isExisting: boolean) => {
         if (isExisting) {
             setSelectedExistingColumn(columnId);
         } else {
@@ -270,11 +259,11 @@ const ColumnEstablishmentPage: React.FC = () => {
                 setSelectedExistingColumn(null);
             }
         }
-    };
+    }, [selectedExistingColumn]);
 
-    const handleRemoveLine = (startId: string, endId: string) => {
+    const handleRemoveLine = useCallback((startId: string, endId: string) => {
         setRelations(prev => prev.filter(relation => !(relation.start === startId && relation.end === endId)));
-    };
+    }, []);
 
     return (
         <DndProvider backend={HTML5Backend}>
@@ -290,7 +279,7 @@ const ColumnEstablishmentPage: React.FC = () => {
                         <Button className='btn btn-outline' onClick={() => router.back()}>
                             Discard
                         </Button>
-                        <Button className='btn' onClick={handleSave}>
+                        <Button className='btn' onClick={handleSave} disabled={isLoading}>
                             Save
                         </Button>
                     </div>
