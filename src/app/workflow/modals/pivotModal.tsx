@@ -1,23 +1,22 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Modal, Select, Button, Form, Row, Col, Tabs, Input, Checkbox, message } from 'antd';
+import { Modal, Button, Form, Row, Col, Tabs, Input, Checkbox, message } from 'antd';
 import Classes from '../workflow.module.css';
 import { BiSearch } from "react-icons/bi";
 import { CloseOutlined } from '@ant-design/icons';
-import { fetchFolders, fetchFolderData } from '@/app/API/api';
+import { fetchFolderData } from '@/app/API/api';
 
 interface PivotTableProps {
     isModalVisible: boolean;
     handleOk: (values: any) => void;
     handleCancel: () => void;
     setSelectedTable: (value: string | null) => void;
-    workspaces: any[];
     folders: any[];
     selectedWorkspace: string | null;
     email: string;
-    initialValues?: any;
+    connectedTable: string | null;
 }
 
-const PivotTableContent: React.FC<PivotTableProps> = ({
+const PivotTableModal: React.FC<PivotTableProps> = ({
     isModalVisible,
     handleOk,
     handleCancel,
@@ -25,7 +24,7 @@ const PivotTableContent: React.FC<PivotTableProps> = ({
     folders,
     selectedWorkspace,
     email,
-    initialValues,
+    connectedTable
 }) => {
     const [form] = Form.useForm();
     const [columns, setColumns] = useState<string[]>([]);
@@ -36,19 +35,16 @@ const PivotTableContent: React.FC<PivotTableProps> = ({
         column: [],
         value: []
     });
-
     const [checkedColumns, setCheckedColumns] = useState<string[]>([]);
     const [functionCheckboxes, setFunctionCheckboxes] = useState<{ [key: string]: string[] }>({});
     const [columnDataTypes, setColumnDataTypes] = useState<{ [key: string]: string }>({});
 
     useEffect(() => {
-        if (initialValues && initialValues.table) {
-            handleTableChange(initialValues.table);
-            setPivotColumns(initialValues.pivotColumns || { index: [], column: [], value: [] });
-            setFunctionCheckboxes(initialValues.functionCheckboxes || {});
-            form.setFieldsValue(initialValues);
+        if (isModalVisible && connectedTable) {
+            handleTableChange(connectedTable);
         }
-    }, [initialValues]);
+    }, [connectedTable, isModalVisible]);
+
 
     const handleTableChange = async (tableId: string) => {
         setSelectedTable(tableId);
@@ -82,34 +78,34 @@ const PivotTableContent: React.FC<PivotTableProps> = ({
     }, [searchTerm, columns]);
 
     const moveColumn = useCallback((column: string, target: string) => {
-        setPivotColumns((prevState) => ({
+        setPivotColumns(prevState => ({
             ...prevState,
-            index: prevState.index.filter((col) => col !== column),
-            column: prevState.column.filter((col) => col !== column),
-            value: prevState.value.filter((col) => col !== column),
-            [target]: [...prevState[target], column],
+            index: prevState.index.filter(col => col !== column),
+            column: prevState.column.filter(col => col !== column),
+            value: prevState.value.filter(col => col !== column),
+            [target]: [...prevState[target], column]
         }));
 
-        setCheckedColumns((prevChecked) => Array.from(new Set([...prevChecked, column])));
+        setCheckedColumns(prevChecked => Array.from(new Set([...prevChecked, column])));
 
         if (target === 'value') {
-            setFunctionCheckboxes((prev) => ({
+            setFunctionCheckboxes(prev => ({
                 ...prev,
-                [column]: [],
+                [column]: []
             }));
         }
     }, []);
 
     const removeColumn = (column: string, target: string) => {
-        setPivotColumns((prevState) => ({
+        setPivotColumns(prevState => ({
             ...prevState,
-            [target]: prevState[target].filter(item => item !== column),
+            [target]: prevState[target].filter(item => item !== column)
         }));
 
-        setCheckedColumns((prevChecked) => prevChecked.filter(item => item !== column));
+        setCheckedColumns(prevChecked => prevChecked.filter(item => item !== column));
 
         if (target === 'value') {
-            setFunctionCheckboxes((prev) => {
+            setFunctionCheckboxes(prev => {
                 const updated = { ...prev };
                 delete updated[column];
                 return updated;
@@ -139,21 +135,21 @@ const PivotTableContent: React.FC<PivotTableProps> = ({
         if (checked) {
             moveColumn(column, 'index');
         } else {
-            setPivotColumns((prevState) => ({
+            setPivotColumns(prevState => ({
                 index: prevState.index.filter(item => item !== column),
                 column: prevState.column.filter(item => item !== column),
-                value: prevState.value.filter(item => item !== column),
+                value: prevState.value.filter(item => item !== column)
             }));
-            setCheckedColumns((prevChecked) => prevChecked.filter(item => item !== column));
+            setCheckedColumns(prevChecked => prevChecked.filter(item => item !== column));
         }
     };
 
     const handleFunctionCheckboxChange = (column: string, checkedValue: string, checked: boolean) => {
-        setFunctionCheckboxes((prevState) => ({
+        setFunctionCheckboxes(prevState => ({
             ...prevState,
             [column]: checked
                 ? [...prevState[column], checkedValue]
-                : prevState[column].filter(item => item !== checkedValue),
+                : prevState[column].filter(item => item !== checkedValue)
         }));
     };
 
@@ -161,13 +157,13 @@ const PivotTableContent: React.FC<PivotTableProps> = ({
         <div
             key={column}
             draggable
-            onDragStart={(event) => handleDragStart(event, column, source)}
+            onDragStart={event => handleDragStart(event, column, source)}
             className={Classes.columnItem}
         >
             <Checkbox
                 value={column}
                 checked={checkedColumns.includes(column)}
-                onChange={(e) => handleCheckboxChange(column, e.target.checked)}
+                onChange={e => handleCheckboxChange(column, e.target.checked)}
                 className='checkbox_columns'
             >
                 {column}
@@ -179,7 +175,7 @@ const PivotTableContent: React.FC<PivotTableProps> = ({
         <div
             key={column}
             draggable
-            onDragStart={(event) => handleDragStart(event, column, target)}
+            onDragStart={event => handleDragStart(event, column, target)}
             className={`${Classes.columnItem} ${Classes.droppedItem}`}
         >
             {column}
@@ -203,44 +199,37 @@ const PivotTableContent: React.FC<PivotTableProps> = ({
                             <Checkbox
                                 value="sum"
                                 checked={functionCheckboxes[column]?.includes('sum')}
-                                onChange={(e) => handleFunctionCheckboxChange(column, 'sum', e.target.checked)}
+                                onChange={e => handleFunctionCheckboxChange(column, 'sum', e.target.checked)}
                             >
                                 Sum
                             </Checkbox>
                             <Checkbox
                                 value="mean"
                                 checked={functionCheckboxes[column]?.includes('mean')}
-                                onChange={(e) => handleFunctionCheckboxChange(column, 'mean', e.target.checked)}
+                                onChange={e => handleFunctionCheckboxChange(column, 'mean', e.target.checked)}
                             >
                                 Mean
                             </Checkbox>
                             <Checkbox
                                 value="std"
                                 checked={functionCheckboxes[column]?.includes('std')}
-                                onChange={(e) => handleFunctionCheckboxChange(column, 'std', e.target.checked)}
+                                onChange={e => handleFunctionCheckboxChange(column, 'std', e.target.checked)}
                             >
                                 Std
-                            </Checkbox>
-                            <Checkbox
-                                value="var"
-                                checked={functionCheckboxes[column]?.includes('var')}
-                                onChange={(e) => handleFunctionCheckboxChange(column, 'var', e.target.checked)}
-                            >
-                                Var
                             </Checkbox>
                         </>
                     )}
                     <Checkbox
                         value="unique_count"
                         checked={functionCheckboxes[column]?.includes('unique_count')}
-                        onChange={(e) => handleFunctionCheckboxChange(column, 'unique_count', e.target.checked)}
+                        onChange={e => handleFunctionCheckboxChange(column, 'unique_count', e.target.checked)}
                     >
                         Unique Count
                     </Checkbox>
                     <Checkbox
                         value="count"
                         checked={functionCheckboxes[column]?.includes('count')}
-                        onChange={(e) => handleFunctionCheckboxChange(column, 'count', e.target.checked)}
+                        onChange={e => handleFunctionCheckboxChange(column, 'count', e.target.checked)}
                     >
                         Count
                     </Checkbox>
@@ -257,36 +246,36 @@ const PivotTableContent: React.FC<PivotTableProps> = ({
                 <div className={Classes.pivotArea}>
                     <div
                         className={Classes.dropArea}
-                        onDrop={(event) => handleDrop(event, 'index')}
+                        onDrop={event => handleDrop(event, 'index')}
                         onDragOver={handleDragOver}
                     >
                         <h6>Index</h6>
                         <div className={Classes.dropAreaData}>
-                            {pivotColumns.index.map((column) => renderDroppedColumn(column, 'index'))}
+                            {pivotColumns.index.map(column => renderDroppedColumn(column, 'index'))}
                         </div>
                     </div>
                     <div
                         className={Classes.dropArea}
-                        onDrop={(event) => handleDrop(event, 'column')}
+                        onDrop={event => handleDrop(event, 'column')}
                         onDragOver={handleDragOver}
                     >
                         <h6>Column</h6>
                         <div className={Classes.dropAreaData}>
-                            {pivotColumns.column.map((column) => renderDroppedColumn(column, 'column'))}
+                            {pivotColumns.column.map(column => renderDroppedColumn(column, 'column'))}
                         </div>
                     </div>
                     <div
                         className={Classes.dropArea}
-                        onDrop={(event) => handleDrop(event, 'value')}
+                        onDrop={event => handleDrop(event, 'value')}
                         onDragOver={handleDragOver}
                     >
                         <h6>Value</h6>
                         <div className={Classes.dropAreaData}>
-                            {pivotColumns.value.map((column) => renderDroppedColumn(column, 'value'))}
+                            {pivotColumns.value.map(column => renderDroppedColumn(column, 'value'))}
                         </div>
                     </div>
                 </div>
-            ),
+            )
         },
         {
             key: '2',
@@ -298,12 +287,12 @@ const PivotTableContent: React.FC<PivotTableProps> = ({
                         {pivotColumns.value.length === 0 ? (
                             <p>No Value columns selected</p>
                         ) : (
-                            pivotColumns.value.map((column) => renderFunctionCheckboxes(column))
+                            pivotColumns.value.map(column => renderFunctionCheckboxes(column))
                         )}
                     </div>
                 </>
-            ),
-        },
+            )
+        }
     ];
 
     const onOk = () => {
@@ -325,7 +314,7 @@ const PivotTableContent: React.FC<PivotTableProps> = ({
                 const data = {
                     ...values,
                     pivotColumns,
-                    functionCheckboxes,
+                    functionCheckboxes
                 };
                 handleOk(data);
                 form.resetFields();
@@ -362,30 +351,10 @@ const PivotTableContent: React.FC<PivotTableProps> = ({
                 form={form}
                 name="folderselect"
                 layout="vertical"
-                initialValues={initialValues}
             >
                 <Row>
                     <Col md={6} sm={24}>
                         <div className={Classes.pivotSidebar}>
-                            <Form.Item
-                                name="table"
-                                label="Select Table"
-                                rules={[{ required: true, message: 'Please select a table' }]}
-                            >
-                                <Select
-                                    placeholder="Select a table"
-                                    onChange={handleTableChange}
-                                    disabled={!selectedWorkspace}
-                                >
-                                    {folders
-                                        .filter(folder => folder.workspaceId === selectedWorkspace)
-                                        .map((folder) => (
-                                            <Select.Option key={folder.id} value={folder.id}>
-                                                {folder.name}
-                                            </Select.Option>
-                                        ))}
-                                </Select>
-                            </Form.Item>
                             <Form.Item
                                 name="search"
                                 label="Select / Drag & Drop the Columns"
@@ -396,11 +365,11 @@ const PivotTableContent: React.FC<PivotTableProps> = ({
                                     placeholder="Search..."
                                     className={Classes.searchwrapper}
                                     value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    onChange={e => setSearchTerm(e.target.value)}
                                 />
                             </Form.Item>
                             <div className={Classes.columnList}>
-                                {filteredColumns.map((column) => renderDraggableColumn(column, 'list'))}
+                                {filteredColumns.map(column => renderDraggableColumn(column, 'list'))}
                             </div>
                         </div>
                     </Col>
@@ -415,4 +384,4 @@ const PivotTableContent: React.FC<PivotTableProps> = ({
     );
 };
 
-export default PivotTableContent;
+export default PivotTableModal;

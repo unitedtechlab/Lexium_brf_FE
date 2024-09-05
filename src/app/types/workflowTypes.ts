@@ -1,13 +1,3 @@
-const operationSymbols: { [key: string]: string } = {
-    Addition: '+',
-    Subtraction: '-',
-    Multiplication: '*',
-    Division: '/',
-    Modulus: '%',
-    Exponential: '^',
-    Absolute: '|x|',
-};
-
 export interface Condition {
     id: string;
     type: string;

@@ -39,12 +39,14 @@ const ConditionRow: React.FC<ConditionRowProps> = ({
                             placeholder="Select Column"
                             onChange={handleColumnSelection}
                         >
-                            {columns.map((column) => (
-                                <Select.Option key={column} value={column}>
+                            {columns.map((column, index) => (
+                                <Select.Option key={`${column}_${index}`} value={column}>
                                     {column}
                                 </Select.Option>
                             ))}
                         </Select>
+
+
                     </Form.Item>
                 </Col>
                 <Col md={12} sm={24}>

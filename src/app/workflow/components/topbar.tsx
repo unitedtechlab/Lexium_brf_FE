@@ -94,13 +94,15 @@ const Topbar: React.FC<TopbarProps> = ({
             } else {
                 message.error('No output nodes found in the workflow.');
             }
-        } catch (error) {
-            message.error('Failed to run workflow.');
+        } catch (error: any) {
+            const errorMessage = error?.response?.data?.message || error.message || 'Failed to run workflow.';
+            message.error(errorMessage);
             console.error('Error running workflow:', error);
         } finally {
             setIsLoading(false);
         }
     };
+
 
     return (
         <div className={styles.topbarWrapper}>

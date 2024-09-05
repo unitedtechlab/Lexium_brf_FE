@@ -85,6 +85,7 @@ const WorkflowModals: React.FC<WorkflowModalsProps> = ({
             <OutputModal
                 isModalVisible={modalVisibility.isOutputModalVisible}
                 handleOkay={(values) => handleModalOk(values, 'OutputModal')}
+                connectedTable={connectedTable}
                 {...commonProps}
             />
             <FilterModal
@@ -102,11 +103,13 @@ const WorkflowModals: React.FC<WorkflowModalsProps> = ({
             <ConditionalModal
                 isModalVisible={modalVisibility.isConditionalModalVisible}
                 handleOkay={(values) => handleModalOk(values, 'ConditionalModal')}
+                connectedTable={connectedTable}
                 {...commonProps}
             />
             <GroupByModal
                 isModalVisible={modalVisibility.isGroupByModalVisible}
                 handleOk={(values) => handleModalOk(values, 'GroupByModal')}
+                connectedTable={connectedTable}
                 {...commonProps}
             />
             <StatisticalModal
@@ -124,12 +127,13 @@ const WorkflowModals: React.FC<WorkflowModalsProps> = ({
             <ArithmeticModal
                 isModalVisible={modalVisibility.isArithmeticModalVisible}
                 handleOkay={(values) => handleModalOk(values, 'ArithmeticModal')}
+                connectedTable={connectedTable}
                 {...commonProps}
             />
             <PivotTable
                 isModalVisible={modalVisibility.isPivotTableModalVisible}
                 handleOk={(values) => handleModalOk(values, 'PivotTableModal')}
-                initialValues={currentEditNodeData?.pivotTable}
+                connectedTable={connectedTable}
                 {...commonProps}
             />
         </>

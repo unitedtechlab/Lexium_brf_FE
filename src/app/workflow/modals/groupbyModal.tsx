@@ -10,10 +10,10 @@ interface GroupByProps {
     handleOk: (values: any) => void;
     handleCancel: () => void;
     setSelectedTable: (value: string | null) => void;
-    workspaces: any[];
     folders: any[];
     selectedWorkspace: string | null;
     email: string;
+    connectedTable: string | null;
 }
 
 type GroupByKeys = 'index' | 'value';
@@ -25,7 +25,8 @@ const GroupByModal: React.FC<GroupByProps> = ({
     setSelectedTable,
     folders,
     selectedWorkspace,
-    email
+    email,
+    connectedTable
 }) => {
     const [form] = Form.useForm();
     const [columns, setColumns] = useState<string[]>([]);
@@ -38,6 +39,13 @@ const GroupByModal: React.FC<GroupByProps> = ({
     const [checkedColumns, setCheckedColumns] = useState<Set<string>>(new Set());
     const [functionCheckboxes, setFunctionCheckboxes] = useState<{ [key: string]: string[] }>({});
     const [columnDataTypes, setColumnDataTypes] = useState<{ [key: string]: string }>({});
+
+    useEffect(() => {
+        if (connectedTable && isModalVisible) {
+            handleTableChange(connectedTable);
+        }
+    }, [connectedTable, isModalVisible]);
+
 
     const handleTableChange = async (tableId: string) => {
         setSelectedTable(tableId);
@@ -280,31 +288,27 @@ const GroupByModal: React.FC<GroupByProps> = ({
 
     const onOk = () => {
         const hasGroupByColumns = groupbyColumn.index.length > 0;
-        const hasFunctionColumns = Object.keys(functionCheckboxes).length > 0 && Object.values(functionCheckboxes).some(arr => arr.length > 0);
+        const hasFunctionColumns = Object.keys(functionCheckboxes).length > 0 && Object.values(functionCheckboxes).some((arr) => arr.length > 0);
 
         if (!hasGroupByColumns || !hasFunctionColumns) {
             message.error('Please fill in both Group By and Function sections.');
             return;
         }
 
-        form.validateFields()
-            .then(values => {
-                const data = {
-                    ...values,
-                    groupbyColumn,
-                    functionCheckboxes,
-                };
-                handleOk(data);
-                form.resetFields();
-                setColumns([]);
-                setFilteredColumns([]);
-                setGroupByColumns({ index: [], value: [] });
-                setCheckedColumns(new Set());
-                setFunctionCheckboxes({});
-            })
-            .catch(info => {
-                console.log('Validate Failed:', info);
-            });
+        form.validateFields().then((values) => {
+            const data = {
+                ...values,
+                groupbyColumn,
+                functionCheckboxes,
+            };
+            handleOk(data);
+            form.resetFields();
+            setColumns([]);
+            setFilteredColumns([]);
+            setGroupByColumns({ index: [], value: [] });
+            setCheckedColumns(new Set());
+            setFunctionCheckboxes({});
+        });
     };
 
     return (
@@ -333,25 +337,6 @@ const GroupByModal: React.FC<GroupByProps> = ({
                 <Row>
                     <Col md={6} sm={24}>
                         <div className={Classes.pivotSidebar}>
-                            <Form.Item
-                                name="table"
-                                label="Select Table"
-                                rules={[{ required: true, message: 'Please select a table' }]}
-                            >
-                                <Select
-                                    placeholder="Select a table"
-                                    onChange={handleTableChange}
-                                    disabled={!selectedWorkspace}
-                                >
-                                    {folders
-                                        .filter(folder => folder.workspaceId === selectedWorkspace)
-                                        .map(folder => (
-                                            <Select.Option key={folder.id} value={folder.id}>
-                                                {folder.name}
-                                            </Select.Option>
-                                        ))}
-                                </Select>
-                            </Form.Item>
                             <Form.Item
                                 name="search"
                                 label="Select / Drag & Drop the Columns"

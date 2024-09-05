@@ -1,22 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Select, Button, Form, Row, Col, message } from 'antd';
+import { Modal, Button, Form, Row, Col, message, Select } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import classes from '../workflow.module.css';
 import ConditionRow from '../components/ConditionNode/conditionBox';
 import SubConditionRow from '../components/ConditionNode/subConditionalBox';
-import { fetchFolders, fetchFolderData } from '@/app/API/api';
+import { fetchFolderData } from '@/app/API/api';
 import { RxDragHandleDots2 } from "react-icons/rx";
 
 interface ConditionalProps {
     isModalVisible: boolean;
     handleOkay: (values: any) => void;
     handleCancel: () => void;
-    setSelectedTable: (value: string | null) => void;
-    workspaces: any[];
-    folders: any[];
+    connectedTable: string | null;
     selectedWorkspace: string | null;
     email: string;
-    initialValues?: any;
 }
 
 interface ConditionField {
@@ -32,47 +29,42 @@ const ConditionalModal: React.FC<ConditionalProps> = ({
     isModalVisible,
     handleOkay,
     handleCancel,
-    setSelectedTable,
-    folders,
+    connectedTable,
     selectedWorkspace,
     email,
-    initialValues
 }) => {
     const [form] = Form.useForm();
     const [columns, setColumns] = useState<{ key: string, name: string }[]>([]);
     const [columnDataTypes, setColumnDataTypes] = useState<{ [key: string]: string }>({});
-    const [isLoading, setIsLoading] = useState<boolean>(false);
     const [conditionType, setConditionType] = useState<string>('');
     const [conditionNodes, setConditionNodes] = useState<ConditionField[]>([
         { id: Date.now(), type: 'if', conditions: [], outsideConditions: [], selectedDataType: 'text' }
     ]);
 
-    const handleTableChange = async (value: string) => {
-        setSelectedTable(value);
-        setIsLoading(true);
+    useEffect(() => {
+        if (connectedTable && selectedWorkspace) {
+            fetchColumnsForTable(connectedTable);
+        }
+    }, [connectedTable, selectedWorkspace]);
 
+    const fetchColumnsForTable = async (tableId: string) => {
         try {
-            const folders = await fetchFolders(email, selectedWorkspace!, setIsLoading);
-            const selectedFolder = folders.find(folder => folder.id === value);
-            if (selectedFolder) {
-                const columnsArray = selectedFolder.columns
-                    ? Object.entries(selectedFolder.columns).map(([key, name]) => ({ key, name }))
-                    : [];
-                setColumns(columnsArray);
+            const confirmedDataTypes = await fetchFolderData(email, selectedWorkspace!, tableId);
 
-                const confirmedDataTypes = await fetchFolderData(email, selectedWorkspace!, value);
-                setColumnDataTypes(confirmedDataTypes);
-            }
+            const columnsArray = Object.entries(confirmedDataTypes).map(([key], index) => ({
+                key: `${key}_${index}`,
+                name: key,
+            }));
+
+            setColumns(columnsArray);
+            setColumnDataTypes(confirmedDataTypes);
         } catch (error) {
             message.error('Failed to fetch columns.');
-        } finally {
-            setIsLoading(false);
         }
     };
 
-    const handleConditionTypeChange = (value: string) => {
-        setConditionType(value);
 
+    const handleConditionTypeChange = (value: string) => {
         let newConditionNodes: ConditionField[] = [];
 
         if (value === 'if') {
@@ -91,6 +83,7 @@ const ConditionalModal: React.FC<ConditionalProps> = ({
         }
 
         setConditionNodes(newConditionNodes);
+        setConditionType(value);
     };
 
     const renderOperators = (dataType: string | undefined): JSX.Element => {
@@ -98,16 +91,6 @@ const ConditionalModal: React.FC<ConditionalProps> = ({
 
         switch (dataType) {
             case 'number':
-                return (
-                    <>
-                        <Select.Option value="=">{'='}</Select.Option>
-                        <Select.Option value="!=">{'!='}</Select.Option>
-                        <Select.Option value=">">{'>'}</Select.Option>
-                        <Select.Option value="<">{'<'}</Select.Option>
-                        <Select.Option value=">=">{'>='}</Select.Option>
-                        <Select.Option value="<=">{'<='}</Select.Option>
-                    </>
-                );
             case 'date':
                 return (
                     <>
@@ -120,13 +103,6 @@ const ConditionalModal: React.FC<ConditionalProps> = ({
                     </>
                 );
             case 'text':
-                return (
-                    <>
-                        <Select.Option value="=">{'='}</Select.Option>
-                        <Select.Option value="!=">{'!='}</Select.Option>
-                        <Select.Option value="string_match">String Match</Select.Option>
-                    </>
-                );
             default:
                 return (
                     <>
@@ -297,31 +273,9 @@ const ConditionalModal: React.FC<ConditionalProps> = ({
                 form={form}
                 name="conditionalForm"
                 layout="vertical"
-                initialValues={initialValues}
             >
                 <div className="padding-16">
                     <Row gutter={16}>
-                        <Col md={12} sm={24}>
-                            <Form.Item
-                                name="table"
-                                label="Select Table"
-                                rules={[{ required: true, message: 'Please select a table' }]}
-                            >
-                                <Select
-                                    placeholder="Select Table"
-                                    disabled={!selectedWorkspace}
-                                    onChange={handleTableChange}
-                                >
-                                    {folders
-                                        .filter(folder => folder.workspaceId === selectedWorkspace)
-                                        .map((folder) => (
-                                            <Select.Option key={folder.id} value={folder.id}>
-                                                {folder.name}
-                                            </Select.Option>
-                                        ))}
-                                </Select>
-                            </Form.Item>
-                        </Col>
                         <Col md={12} sm={24}>
                             <Form.Item
                                 name="conditionType"

@@ -9,7 +9,6 @@ interface StatisticalModalProps {
     connectedTable: string | null;
     email: string;
     selectedWorkspace: string | null;
-    initialValues?: any;
 }
 
 const StatisticalModal: React.FC<StatisticalModalProps> = ({
@@ -19,7 +18,6 @@ const StatisticalModal: React.FC<StatisticalModalProps> = ({
     connectedTable,
     selectedWorkspace,
     email,
-    initialValues,
 }) => {
     const [form] = Form.useForm();
     const [columns, setColumns] = useState<{ key: string; name: string }[]>([]);
@@ -113,7 +111,6 @@ const StatisticalModal: React.FC<StatisticalModalProps> = ({
                 form={form}
                 name="statisticalForm"
                 layout="vertical"
-                initialValues={initialValues}
             >
                 <div className="padding-16">
                     <Row gutter={16}>

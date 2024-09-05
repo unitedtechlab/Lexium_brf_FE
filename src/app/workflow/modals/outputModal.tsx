@@ -7,6 +7,7 @@ interface OutputModalProps {
     handleCancel: () => void;
     selectedWorkspace: string | null;
     email: string;
+    connectedTable: string | null;  // Add connectedTable to props
     initialValues?: any;
 }
 
@@ -16,6 +17,7 @@ const OutputModal: React.FC<OutputModalProps> = ({
     handleCancel,
     selectedWorkspace,
     email,
+    connectedTable,  // Add connectedTable to destructure
     initialValues = { outputName: 'rule_' } // Default value if not provided
 }) => {
     const [form] = Form.useForm();
@@ -61,6 +63,7 @@ const OutputModal: React.FC<OutputModalProps> = ({
                 <div className="padding-16">
                     <Row gutter={16}>
                         <Col md={24} sm={24}>
+                            <h6>Connected Table Name: {connectedTable || 'No table connected'}</h6>
                             <Form.Item
                                 name="outputName"
                                 label="Output Name"

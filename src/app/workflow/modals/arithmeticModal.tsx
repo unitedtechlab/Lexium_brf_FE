@@ -1,19 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal, Select, Button, Form, Row, Col, message, Input } from 'antd';
 import { CloseOutlined } from '@ant-design/icons';
 import classes from '../workflow.module.css';
-import { fetchFolders } from '@/app/API/api';
 
 interface ArithmeticModalProps {
     isModalVisible: boolean;
     handleOkay: (values: any) => void;
     handleCancel: () => void;
     setSelectedTable: (value: string | null) => void;
-    workspaces: any[];
     folders: any[];
-    selectedWorkspace: string | null;
-    email: string;
-    initialValues?: any;
+    connectedTable: string | null;
 }
 
 const operationSymbols: { [key: string]: string } = {
@@ -32,9 +28,7 @@ const ArithmeticModal: React.FC<ArithmeticModalProps> = ({
     handleCancel,
     setSelectedTable,
     folders,
-    selectedWorkspace,
-    email,
-    initialValues,
+    connectedTable,
 }) => {
     const [form] = Form.useForm();
     const [columns, setColumns] = useState<string[]>([]);
@@ -45,15 +39,20 @@ const ArithmeticModal: React.FC<ArithmeticModalProps> = ({
     const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
     const [droppedItems, setDroppedItems] = useState<{ id: string, content: string }[]>([]);
 
-    const handleTableChange = async (value: string) => {
-        setSelectedTable(value);
+    useEffect(() => {
+        if (connectedTable) {
+            handleTableChange(connectedTable);
+        }
+    }, [connectedTable]);
+
+    const handleTableChange = async (tableId: string) => {
+        setSelectedTable(tableId);
         setIsLoading(true);
 
         try {
-            const folders = await fetchFolders(email, selectedWorkspace!, setIsLoading);
-            const selectedFolder = folders.find(folder => folder.id === value);
+            const selectedFolder = folders.find(folder => folder.id === tableId);
             if (selectedFolder) {
-                const columns = selectedFolder.columns ? Object.values(selectedFolder.columns) : [];
+                const columns = (selectedFolder.columns ? Object.values(selectedFolder.columns) : []) as string[];
                 setColumns(columns);
             }
         } catch (error) {
@@ -62,6 +61,7 @@ const ArithmeticModal: React.FC<ArithmeticModalProps> = ({
             setIsLoading(false);
         }
     };
+
 
     const handleColumnChange = (values: string[]) => {
         setSelectedColumns(values);
@@ -146,30 +146,10 @@ const ArithmeticModal: React.FC<ArithmeticModalProps> = ({
                 form={form}
                 name="arithmeticForm"
                 layout="vertical"
-                initialValues={initialValues}
             >
                 <Row>
                     <Col md={6} sm={24}>
                         <div className={classes.pivotSidebar}>
-                            <Form.Item
-                                name="table"
-                                label="Select Table"
-                                rules={[{ required: true, message: 'Please select a table' }]}
-                            >
-                                <Select
-                                    placeholder="Select Table"
-                                    disabled={!selectedWorkspace}
-                                    onChange={handleTableChange}
-                                >
-                                    {folders
-                                        .filter(folder => folder.workspaceId === selectedWorkspace)
-                                        .map((folder) => (
-                                            <Select.Option key={folder.id} value={folder.id}>
-                                                {folder.name}
-                                            </Select.Option>
-                                        ))}
-                                </Select>
-                            </Form.Item>
                             <Form.Item
                                 name="sourceColumns"
                                 label="Select Columns"

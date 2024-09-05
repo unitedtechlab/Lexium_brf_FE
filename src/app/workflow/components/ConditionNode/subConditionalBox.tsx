@@ -55,12 +55,13 @@ const SubConditionRow: React.FC<SubConditionRowProps> = ({
                                 placeholder="Select Column"
                                 onChange={onColumnChange}
                             >
-                                {columns.map((column) => (
-                                    <Select.Option key={column} value={column}>
+                                {columns.map((column, index) => (
+                                    <Select.Option key={`${column}_${index}`} value={column}>
                                         {column}
                                     </Select.Option>
                                 ))}
                             </Select>
+
                         </Form.Item>
                     </Col>
                     <Col md={12} sm={24}>

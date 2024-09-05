@@ -98,9 +98,9 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
     filter: 'isFilterModalVisible',
     output: 'isOutputModalVisible',
     sort: 'isSortModalVisible',
-    'if/else/and/or': 'isConditionalModalVisible',
+    'conditional': 'isConditionalModalVisible',
     'groupby': 'isGroupByModalVisible',
-    'pivotTable': 'isPivotTableModalVisible',
+    'pivottable': 'isPivotTableModalVisible',
     'scaling': 'isScalingModalVisible',
     'arithmetic': 'isArithmeticModalVisible',
     'statistical': 'isStatisticalModalVisible',
@@ -190,7 +190,7 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
 
   const handleOutputModalOk = useCallback(
     (values: any) => {
-      if (currentEditNodeData) {
+      if (currentEditNodeData && connectedTable) {
         const newNode: Node = {
           id: currentEditNodeData.id,
           data: {
@@ -198,7 +198,14 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
             output: {
               outputName: values.outputName,
             },
-            label: createNodeLabel(values.outputName, 'Output Node', undefined, currentEditNodeData.id, false, true),
+            label: createNodeLabel(
+              values.outputName,
+              `Output Node`,
+              undefined,
+              currentEditNodeData.id,
+              false,
+              true
+            ),
           },
           position: currentEditNodeData.position,
           draggable: true,
@@ -206,29 +213,30 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
           targetPosition: Position.Left,
         };
 
-        setNodes((nds) => [...nds.filter(node => node.id !== currentEditNodeData.id), newNode]);
+        setNodes((nds) => [...nds.filter((node) => node.id !== currentEditNodeData.id), newNode]);
         setSelectedTable(null);
         hideModal('isOutputModalVisible');
       }
     },
-    [currentEditNodeData, setNodes, hideModal]
+    [currentEditNodeData, setNodes, connectedTable, hideModal]
   );
+
 
   const handlePivotTableModalOk = useCallback(
     (values: any) => {
-      if (currentEditNodeData && selectedTable) {
+      if (currentEditNodeData && connectedTable) {
         const newNode: Node = {
           id: currentEditNodeData.id,
           data: {
-            table: selectedTable,
+            table: connectedTable,
             type: 'pivotTable',
             pivotTable: {
               pivotColumns: values.pivotColumns,
               functionCheckboxes: values.functionCheckboxes,
             },
             label: createNodeLabel(
-              selectedTable,
-              'Pivot Node',
+              connectedTable,
+              'Pivot Table Node',
               {
                 type: 'pivotTable',
                 pivotTable: {
@@ -245,22 +253,23 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
           targetPosition: Position.Left,
         };
 
-        setNodes((nds) => [...nds.filter(node => node.id !== currentEditNodeData.id), newNode]);
+        setNodes((nds) => nds.map(node => (node.id === currentEditNodeData.id ? newNode : node)));
+        setSelectedTable(null);
         hideModal('isPivotTableModalVisible');
       } else {
-        console.error('Selected table is null');
+        console.error('Selected table or current node data is null');
       }
     },
-    [currentEditNodeData, selectedTable, setNodes, hideModal]
+    [currentEditNodeData, connectedTable, setNodes, hideModal]
   );
 
   const handleGroupByModalOk = useCallback(
     (values: any) => {
-      if (currentEditNodeData && selectedTable) {
+      if (currentEditNodeData && connectedTable) {
         const newNode: Node = {
           id: currentEditNodeData.id,
           data: {
-            table: selectedTable,
+            table: connectedTable,
             type: 'groupby',
             groupby: {
               groupByColumns: values.groupbyColumn.index,
@@ -268,7 +277,7 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
               functionCheckboxes: values.functionCheckboxes,
             },
             label: createNodeLabel(
-              selectedTable,
+              connectedTable,
               'Group By Node',
               {
                 groupByColumns: values.groupbyColumn.index,
@@ -285,18 +294,18 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
         };
 
         setNodes((nds) => [...nds.filter(node => node.id !== currentEditNodeData.id), newNode]);
-        setSelectedTable(null);
+        setConnectedTable(null);
         hideModal('isGroupByModalVisible');
       } else {
-        console.error('Selected table is null');
+        console.error('Connected table is null');
       }
     },
-    [currentEditNodeData, selectedTable, setNodes, hideModal]
+    [currentEditNodeData, connectedTable, setNodes, hideModal]
   );
 
   const handleConditionalModalOk = useCallback(
     (values: any) => {
-      if (currentEditNodeData && selectedTable) {
+      if (currentEditNodeData && connectedTable) {
         const basePosition = currentEditNodeData.position;
         const offsetX = 250;
         const offsetY = 100;
@@ -320,25 +329,27 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
           return {
             id: `${currentEditNodeData.id}-${index}`,
             conditionType: conditionTypeLabel,
-            conditions: isElseCondition ? [] : [{
-              column: condition.column,
-              condition: condition.condition,
-              value: condition.value,
-              subConditions: condition.subConditions || [],
-              outsideConditions: condition.outsideConditions || [],
-            }]
+            conditions: isElseCondition
+              ? []
+              : [{
+                column: condition.column,
+                condition: condition.condition,
+                value: condition.value,
+                subConditions: condition.subConditions || [],
+                outsideConditions: condition.outsideConditions || [],
+              }],
           };
         });
 
         const mainNode: Node = {
           id: currentEditNodeData.id,
           data: {
-            table: selectedTable,
+            table: connectedTable,
             type: 'conditional',
             isParentNode: true,
             conditional: conditionsData,
             label: createNodeLabel(
-              selectedTable,
+              connectedTable,
               'Conditional Node',
               {
                 conditionType: values.conditionType,
@@ -357,12 +368,12 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
         const newNodes: Node[] = conditionsData.map((conditionData: any, index: number) => ({
           id: conditionData.id,
           data: {
-            table: selectedTable,
+            table: connectedTable,
             type: conditionData.conditionType.toLowerCase(),
             parentId: currentEditNodeData.id,
             conditional: conditionData,
             label: createNodeLabel(
-              selectedTable,
+              connectedTable,
               `${conditionData.conditionType} Node`,
               conditionData,
               conditionData.id
@@ -381,7 +392,7 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
         setEdges((eds) =>
           eds.concat(
             newNodes.map((node: Node, index: number) => ({
-              id: `edge-${currentEditNodeData.id}-${node.id}`,
+              id: `edge-${currentEditNodeData.id}-${node.id}-${Date.now()}`,
               source: currentEditNodeData.id,
               target: node.id,
               type: 'smoothstep',
@@ -391,14 +402,16 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
           )
         );
 
+
         setSelectedTable(null);
         hideModal('isConditionalModalVisible');
       } else {
-        console.error('Selected table is null');
+        console.error('Connected table is null');
       }
     },
-    [currentEditNodeData, selectedTable, setNodes, setEdges, hideModal]
+    [currentEditNodeData, connectedTable, setNodes, setEdges, hideModal]
   );
+
 
   const handleSortModalOk = useCallback(
     (values: any) => {
@@ -507,7 +520,7 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
         };
 
         setNodes((nds) => [...nds.filter(node => node.id !== currentEditNodeData.id), newNode]);
-        setConnectedTable(null);
+        setSelectedTable(null);
         hideModal('isStatisticalModalVisible');
       } else {
         console.error('Selected table is null');
@@ -515,7 +528,6 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
     },
     [currentEditNodeData, connectedTable, setNodes, hideModal]
   );
-
 
   const handleScalingModalOk = useCallback(
     (values: any) => {
@@ -561,13 +573,13 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
 
   const handleArithmeticModalOk = useCallback(
     (values: any) => {
-      if (currentEditNodeData && selectedTable) {
+      if (currentEditNodeData && connectedTable) {
         const labelContent = values.operation;
 
         const newNode: Node = {
           id: currentEditNodeData.id,
           data: {
-            table: selectedTable,
+            table: connectedTable,
             type: 'arithmetic',
             arithmetic: {
               sourceColumn: values.sourceColumns,
@@ -575,7 +587,7 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
               operation: labelContent,
             },
             label: createNodeLabel(
-              selectedTable,
+              connectedTable,
               'Arithmetic Node',
               {
                 sourceColumn: values.sourceColumns,
@@ -598,7 +610,7 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
         console.error('Selected table is null');
       }
     },
-    [currentEditNodeData, selectedTable, setNodes, hideModal]
+    [currentEditNodeData, connectedTable, setNodes, hideModal]
   );
 
   const handleModalOk = useCallback(
@@ -671,7 +683,7 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
           case 'sort':
             showModal('isSortModalVisible');
             break;
-          case 'if/else/and/or':
+          case 'conditional':
             showModal('isConditionalModalVisible');
             break;
           case 'groupby':
@@ -686,7 +698,7 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
           case 'arithmetic':
             showModal('isArithmeticModalVisible');
             break;
-          case 'pivot':
+          case 'pivottable':
             showModal('isPivotTableModalVisible');
             break;
           case 'output':
@@ -707,6 +719,10 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
 
   const handleDelete = useCallback(
     (nodeId: string) => {
+      if (!nodeId) {
+        console.error('Cannot delete node: nodeId is undefined');
+        return;
+      }
       setNodes((nds) => {
         const nodeToDelete = nds.find((node) => node.id === nodeId);
         if (nodeToDelete) {
@@ -714,17 +730,19 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
             const childNodeIds = nds
               .filter((node) => node.data?.parentId === nodeId)
               .map((node) => node.id);
-
             return nds.filter((node) => ![nodeId, ...childNodeIds].includes(node.id));
           }
           return nds.filter((node) => node.id !== nodeId);
         }
         return nds;
       });
+
       setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId));
     },
     [setNodes, setEdges]
   );
+
+
 
   const createNodeLabel = (table: string, nodeType: string, data?: NodeData, nodeId?: string, isStartingPoint?: boolean, isEndingPoint?: boolean, hasOutput?: boolean) => {
     return (
@@ -875,7 +893,7 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
                     <p>Operation: <b>{(data as Arithmetic).operation}</b></p>
                   </>
                 )}
-                {nodeType === 'Pivot Node' && data && (data as CustomNode).pivotTable && (
+                {nodeType === 'Pivot Table Node' && data && (data as CustomNode).pivotTable && (
                   <div className={styles.pivotNodeData}>
                     <p>Index Columns: <b>{(data as CustomNode).pivotTable!.pivotColumns.index.join(', ')}</b></p>
                     <p>Column Columns: <b>{(data as CustomNode).pivotTable!.pivotColumns.column.join(', ')}</b></p>
@@ -927,8 +945,8 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
         return;
       }
 
-      const validSourceTypes = ['startingnode', 'table', 'mergeTable'];
-      const validTargetTypes = ['filter', 'sort', 'output', 'groupby', 'pivotTable', 'conditional', 'scaling', 'arithmetic', 'statistical'];
+      const validSourceTypes = ['startingnode', 'table', 'mergeTable', 'filter', 'sort', 'output', 'groupby', 'pivottable', 'conditional', 'scaling', 'arithmetic', 'statistical', 'if', 'else'];
+      const validTargetTypes = ['filter', 'sort', 'output', 'groupby', 'pivottable', 'conditional', 'scaling', 'arithmetic', 'statistical'];
 
       if (validSourceTypes.includes(sourceNode.data.type) && validTargetTypes.includes(targetNode.data.type)) {
         setEdges((eds) => addEdge(connection, eds));
@@ -993,7 +1011,7 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
           data: {
             table: itemData.title,
             type: itemData.title.toLowerCase().replace(' ', ''),
-            label: createNodeLabel(itemData.title, itemData.title.toLowerCase().replace(' ', '')),
+            label: createNodeLabel(itemData.title, itemData.title.toLowerCase().replace(' ', ''), undefined, id),
           },
           position,
           draggable: true,
