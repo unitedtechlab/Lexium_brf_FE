@@ -6,8 +6,7 @@ interface SortModalProps {
     isModalVisible: boolean;
     handleOkay: (values: any) => void;
     handleCancel: () => void;
-    setSelectedTable: (value: string | null) => void;
-    workspaces: any[];
+    connectedTable: string | null;
     folders: any[];
     selectedWorkspace: string | null;
     email: string;
@@ -18,7 +17,7 @@ const SortModal: React.FC<SortModalProps> = ({
     isModalVisible,
     handleOkay,
     handleCancel,
-    setSelectedTable,
+    connectedTable,
     folders,
     selectedWorkspace,
     email,
@@ -28,13 +27,17 @@ const SortModal: React.FC<SortModalProps> = ({
     const [columns, setColumns] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
-    const handleTableChange = async (value: string) => {
-        setSelectedTable(value);
-        setIsLoading(true);
+    useEffect(() => {
+        if (connectedTable) {
+            setIsLoading(true);
+            fetchColumnsForTable(connectedTable);
+        }
+    }, [connectedTable]);
 
+    const fetchColumnsForTable = async (table: string) => {
         try {
             const folders = await fetchFolders(email, selectedWorkspace!, setIsLoading);
-            const selectedFolder = folders.find(folder => folder.id === value);
+            const selectedFolder = folders.find(folder => folder.id === table);
             if (selectedFolder) {
                 const columns = selectedFolder.columns ? Object.values(selectedFolder.columns) : [];
                 setColumns(columns);
@@ -83,33 +86,13 @@ const SortModal: React.FC<SortModalProps> = ({
                     <Row gutter={16}>
                         <Col md={24} sm={24}>
                             <Form.Item
-                                name="table"
-                                label="Select Table"
-                                rules={[{ required: true, message: 'Please select a table' }]}
-                            >
-                                <Select
-                                    placeholder="Select Table"
-                                    disabled={!selectedWorkspace}
-                                    onChange={handleTableChange}
-                                >
-                                    {folders
-                                        .filter(folder => folder.workspaceId === selectedWorkspace)
-                                        .map((folder) => (
-                                            <Select.Option key={folder.id} value={folder.id}>
-                                                {folder.name}
-                                            </Select.Option>
-                                        ))}
-                                </Select>
-                            </Form.Item>
-                        </Col>
-                        <Col md={24} sm={24}>
-                            <Form.Item
                                 name="column"
                                 label="Select Column for Sorting"
                                 rules={[{ required: true, message: 'Please select a column' }]}
                             >
                                 <Select
                                     placeholder="Select Column"
+                                    loading={isLoading}
                                 >
                                     {columns.map((column) => (
                                         <Select.Option key={column} value={column}>

@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Select, Button, Form, Row, Col, message, Radio, Input } from 'antd';
-import { fetchFolders, fetchFolderData } from '@/app/API/api';
+import { fetchFolderData } from '@/app/API/api';
 import type { RadioChangeEvent } from 'antd';
 
 interface ScalingModalProps {
     isModalVisible: boolean;
     handleOkay: (values: any) => void;
     handleCancel: () => void;
-    setSelectedTable: (value: string | null) => void;
-    workspaces: any[];
+    connectedTable: string | null;
     folders: any[];
     selectedWorkspace: string | null;
     email: string;
@@ -19,11 +18,10 @@ const ScalingModal: React.FC<ScalingModalProps> = ({
     isModalVisible,
     handleOkay,
     handleCancel,
-    setSelectedTable,
+    connectedTable,
     folders,
     selectedWorkspace,
     email,
-    workspaces,
     initialValues,
 }) => {
     const [form] = Form.useForm();
@@ -35,26 +33,26 @@ const ScalingModal: React.FC<ScalingModalProps> = ({
 
     useEffect(() => {
         setSelectedScalingFunction(null);
-    }, [isModalVisible]);
+        if (connectedTable) {
+            handleTableChange(connectedTable);
+        }
+        if (initialValues) {
+            form.setFieldsValue(initialValues);
+        }
+    }, [connectedTable, initialValues]);
 
-    const handleScalingFunctionChange = (e: RadioChangeEvent) => {
-        setSelectedScalingFunction(e.target.value);
-    };
-
-    const handleTableChange = async (value: string) => {
-        setSelectedTable(value);
+    const handleTableChange = async (tableId: string) => {
         setIsLoading(true);
 
         try {
-            const fetchedFolders = await fetchFolders(email, selectedWorkspace!, setIsLoading);
-            const selectedFolder = fetchedFolders.find(folder => folder.id === value);
+            const selectedFolder = folders.find(folder => folder.id === tableId);
             if (selectedFolder) {
-                const columns = selectedFolder.columns
-                    ? Object.entries(selectedFolder.columns).map(([key, name]) => ({ key, name }))
+                const columnsArray = selectedFolder.columns
+                    ? Object.entries(selectedFolder.columns).map(([key, name]) => ({ key, name: name as string }))
                     : [];
-                setColumns(columns);
+                setColumns(columnsArray);
 
-                const confirmedDataTypes = await fetchFolderData(email, selectedWorkspace!, value);
+                const confirmedDataTypes = await fetchFolderData(email, selectedWorkspace!, tableId);
                 setColumnDataTypes(confirmedDataTypes);
             }
         } catch (error) {
@@ -90,6 +88,10 @@ const ScalingModal: React.FC<ScalingModalProps> = ({
             });
     };
 
+    const handleScalingFunctionChange = (e: RadioChangeEvent) => {
+        setSelectedScalingFunction(e.target.value);
+    };
+
     return (
         <Modal
             title="Scaling Functions"
@@ -116,27 +118,6 @@ const ScalingModal: React.FC<ScalingModalProps> = ({
             >
                 <div className="padding-16">
                     <Row gutter={16}>
-                        <Col md={24} sm={24}>
-                            <Form.Item
-                                name="table"
-                                label="Select Table"
-                                rules={[{ required: true, message: 'Please select a table' }]}
-                            >
-                                <Select
-                                    placeholder="Select Table"
-                                    disabled={!selectedWorkspace}
-                                    onChange={handleTableChange}
-                                >
-                                    {folders
-                                        .filter(folder => folder.workspaceId === selectedWorkspace)
-                                        .map((folder) => (
-                                            <Select.Option key={folder.id} value={folder.id}>
-                                                {folder.name}
-                                            </Select.Option>
-                                        ))}
-                                </Select>
-                            </Form.Item>
-                        </Col>
                         <Col md={24} sm={24}>
                             <Form.Item
                                 name="column"

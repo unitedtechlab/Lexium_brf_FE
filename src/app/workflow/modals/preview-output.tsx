@@ -15,6 +15,8 @@ interface PreviewOutputModalProps {
     workspaceId: string;
     workflowName: string;
     outputId: string;
+    nodeType: string;
+    outputName: string; // Add outputName prop
 }
 
 interface TableColumn {
@@ -28,7 +30,7 @@ interface FolderData {
     id: string;
 }
 
-const PreviewOutput: React.FC<PreviewOutputModalProps> = ({ visible, onCancel, workspaceId, workflowName, outputId }) => {
+const PreviewOutput: React.FC<PreviewOutputModalProps> = ({ visible, onCancel, workspaceId, workflowName, outputId, nodeType, outputName }) => {
     const [data, setData] = useState<FolderData[]>([]);
     const [columns, setColumns] = useState<TableColumn[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -38,15 +40,12 @@ const PreviewOutput: React.FC<PreviewOutputModalProps> = ({ visible, onCancel, w
     const convertToCSV = (data: FolderData[], columns: TableColumn[]): string => {
         const csvRows: string[] = [];
 
-        // Add the header row
         const headers = columns.map(col => col.title).join(',');
         csvRows.push(headers);
 
-        // Add the data rows
         data.forEach(row => {
             const values = columns.map(col => {
                 const value = row[col.dataIndex];
-                // Escape commas and new lines
                 return `"${(value || '').toString().replace(/"/g, '""')}"`;
             });
             csvRows.push(values.join(','));
@@ -141,15 +140,17 @@ const PreviewOutput: React.FC<PreviewOutputModalProps> = ({ visible, onCancel, w
 
     return (
         <Modal
-            title={`Preview Output File: `}
+            title={`Preview Output File: ${outputName}`}
             width={'90%'}
             open={visible}
             centered
             onCancel={onCancel}
             footer={[
-                <Button key="export" className='btn' onClick={handleExportCSV}>
-                    Export File
-                </Button>,
+                ...(nodeType === 'output' ? [
+                    <Button key="export" className='btn' onClick={handleExportCSV}>
+                        Export File
+                    </Button>
+                ] : []),
                 <Button key="cancel" onClick={onCancel} className="btn btn-outline">
                     Cancel
                 </Button>,
@@ -157,7 +158,7 @@ const PreviewOutput: React.FC<PreviewOutputModalProps> = ({ visible, onCancel, w
         >
             <div className="clean_data_table">
                 <div className="heading">
-                    <h6>{outputId}</h6>
+                    <h6>{`${nodeType} Node`}</h6>
                 </div>
                 {isLoading ? (
                     <Loader />

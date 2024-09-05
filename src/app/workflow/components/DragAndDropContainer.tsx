@@ -77,6 +77,9 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
   const [previewModalVisible, setPreviewModalVisible] = useState<boolean>(false);
   const [currentWorkflowName, setCurrentWorkflowName] = useState<string>('');
   const [selectedOutputId, setSelectedOutputId] = useState<string>('');
+  const [selectedNodeType, setSelectedNodeType] = useState<string>('');
+  const [selectedOutputName, setSelectedOutputName] = useState<string>('');
+  const [connectedTable, setConnectedTable] = useState<string | null>(null);
 
   const [modalVisibility, setModalVisibility] = useState({
     isStartModalVisible: false,
@@ -92,15 +95,15 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
   });
 
   const modalKeyMap: { [key: string]: keyof typeof modalVisibility } = {
-    Filter: 'isFilterModalVisible',
-    Output: 'isOutputModalVisible',
-    Sort: 'isSortModalVisible',
-    'IF/Else/And/OR': 'isConditionalModalVisible',
-    'Group By': 'isGroupByModalVisible',
-    Statistical: 'isStatisticalModalVisible',
-    Scaling: 'isScalingModalVisible',
-    Arithmetic: 'isArithmeticModalVisible',
-    Pivot: 'isPivotTableModalVisible',
+    filter: 'isFilterModalVisible',
+    output: 'isOutputModalVisible',
+    sort: 'isSortModalVisible',
+    'if/else/and/or': 'isConditionalModalVisible',
+    'groupby': 'isGroupByModalVisible',
+    'pivotTable': 'isPivotTableModalVisible',
+    'scaling': 'isScalingModalVisible',
+    'arithmetic': 'isArithmeticModalVisible',
+    'statistical': 'isStatisticalModalVisible',
     'Starting Node': 'isStartModalVisible',
   };
 
@@ -112,10 +115,12 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
     setModalVisibility(prev => ({ ...prev, [modalType]: false }));
   }, []);
 
-  const handlePreviewOutputClick = useCallback((outputId: string) => {
-    setCurrentWorkflowName(workflowName); // Set the current workflow name
-    setPreviewModalVisible(true); // Show the preview modal
-    setSelectedOutputId(outputId); // Set the output ID to show its data
+  const handlePreviewOutputClick = useCallback((outputId: string, nodeType: string, outputName: string) => {
+    setCurrentWorkflowName(workflowName);
+    setPreviewModalVisible(true);
+    setSelectedOutputId(outputId);
+    setSelectedNodeType(nodeType);
+    setSelectedOutputName(outputName);
   }, [workflowName]);
 
   const closePreviewModal = useCallback(() => {
@@ -397,18 +402,18 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
 
   const handleSortModalOk = useCallback(
     (values: any) => {
-      if (currentEditNodeData && selectedTable) {
+      if (currentEditNodeData && connectedTable) {
         const newNode: Node = {
           id: currentEditNodeData.id,
           data: {
-            table: selectedTable,
+            table: connectedTable,
             type: 'sort',
             sort: {
               column: values.column,
               sortType: values.sortType,
             },
             label: createNodeLabel(
-              selectedTable,
+              connectedTable,
               'Sort Node',
               {
                 column: values.column,
@@ -427,19 +432,19 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
         setSelectedTable(null);
         hideModal('isSortModalVisible');
       } else {
-        console.error('Selected table is null');
+        console.error('Connected table is null');
       }
     },
-    [currentEditNodeData, selectedTable, setNodes, hideModal]
+    [currentEditNodeData, connectedTable, setNodes, hideModal]
   );
 
   const handleFilterModalOk = useCallback(
     (values: any) => {
-      if (currentEditNodeData && selectedTable) {
+      if (currentEditNodeData && connectedTable) {
         const newNode: Node = {
           id: currentEditNodeData.id,
           data: {
-            table: selectedTable,
+            table: connectedTable,
             type: 'filter',
             filter: {
               column: values.column,
@@ -447,7 +452,7 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
               value: values.value,
             },
             label: createNodeLabel(
-              selectedTable,
+              connectedTable,
               'Filter Node',
               {
                 column: values.column,
@@ -467,26 +472,26 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
         setSelectedTable(null);
         hideModal('isFilterModalVisible');
       } else {
-        console.error('Selected table is null');
+        console.error('Connected table is null');
       }
     },
-    [currentEditNodeData, selectedTable, setNodes, hideModal]
+    [currentEditNodeData, connectedTable, setNodes, hideModal]
   );
 
   const handleStatisticalModalOk = useCallback(
     (values: any) => {
-      if (currentEditNodeData && selectedTable) {
+      if (currentEditNodeData && connectedTable) {
         const newNode: Node = {
           id: currentEditNodeData.id,
           data: {
-            table: selectedTable,
+            table: connectedTable,
             type: 'statistical',
             statistical: {
               column: values.column,
               statisticalFunction: values.statisticalfunction,
             },
             label: createNodeLabel(
-              selectedTable,
+              connectedTable,
               'Statistical Node',
               {
                 column: values.column,
@@ -502,22 +507,23 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
         };
 
         setNodes((nds) => [...nds.filter(node => node.id !== currentEditNodeData.id), newNode]);
-        setSelectedTable(null);
+        setConnectedTable(null);
         hideModal('isStatisticalModalVisible');
       } else {
         console.error('Selected table is null');
       }
     },
-    [currentEditNodeData, selectedTable, setNodes, hideModal]
+    [currentEditNodeData, connectedTable, setNodes, hideModal]
   );
+
 
   const handleScalingModalOk = useCallback(
     (values: any) => {
-      if (currentEditNodeData && selectedTable) {
+      if (currentEditNodeData && connectedTable) {
         const newNode: Node = {
           id: currentEditNodeData.id,
           data: {
-            table: selectedTable,
+            table: connectedTable,
             type: 'scaling',
             scaling: {
               column: values.column,
@@ -526,7 +532,7 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
               maxValue: values.maxValue,
             },
             label: createNodeLabel(
-              selectedTable,
+              connectedTable,
               'Scaling Node',
               {
                 column: values.column,
@@ -547,10 +553,10 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
         setSelectedTable(null);
         hideModal('isScalingModalVisible');
       } else {
-        console.error('Selected table is null');
+        console.error('Connected table is null');
       }
     },
-    [currentEditNodeData, selectedTable, setNodes, hideModal]
+    [currentEditNodeData, connectedTable, setNodes, hideModal]
   );
 
   const handleArithmeticModalOk = useCallback(
@@ -721,43 +727,6 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
   );
 
   const createNodeLabel = (table: string, nodeType: string, data?: NodeData, nodeId?: string, isStartingPoint?: boolean, isEndingPoint?: boolean, hasOutput?: boolean) => {
-    const renderData = (key: string, value: unknown) => {
-      if (typeof value === 'object' && value !== null) {
-        if (Array.isArray(value)) {
-          return value.map((v, index) => (
-            <div key={`${key}-${index}`}>
-              {renderData(key, v)}
-            </div>
-          ));
-        } else {
-          return (
-            <>
-              {Object.entries(value).map(([subKey, subValue]) => (
-                <p key={subKey} className={styles['subkeyvalue']}>
-                  {subKey}: <b>{renderData(subKey, subValue)}</b>
-                </p>
-              ))}
-            </>
-          );
-        }
-      }
-      return String(value);
-    };
-
-    const details = Object.entries(data || {})
-      .filter(([key, value]) => {
-        if (!value) return false;
-        if (['table', 'type', 'label', 'hasOutput'].includes(key)) return false;
-        if (nodeType === 'mergeTable' && ['mergeType', 'table1', 'column1', 'table2', 'column2'].includes(key)) return false;
-        return true;
-      })
-      .map(([key, value]) => (
-        <span key={key}>
-          {renderData(key, value)}
-        </span>
-      ));
-
-
     return (
       <>
         {(isStartingPoint || nodeType === 'startingnode') && (
@@ -789,7 +758,12 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
                     ...(hasOutput ? [{
                       label: 'Preview Output',
                       key: '2',
-                      onClick: () => handlePreviewOutputClick(nodeId!) // Pass the node ID
+                      onClick: () => {
+                        const node = nodes.find(node => node.id === nodeId);
+                        const nodeType = node?.data?.type || '';
+                        const outputName = node?.data?.output?.outputName || '';
+                        handlePreviewOutputClick(nodeId!, nodeType, outputName);
+                      }
                     }] : []),
                   ]
                 }}
@@ -803,8 +777,6 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
             </div>
             {nodeType !== 'Else Node' && data && nodeType !== 'table' && (
               <div className={`${styles.filterStyle}`}>
-
-                {isRunClicked && nodeType !== 'mergeTable' && details}
 
                 {nodeType === 'Filter Node' && 'column' in data && (
                   <>
@@ -942,66 +914,52 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
     );
   };
 
-
-  useEffect(() => {
-    if (workflowOutput && typeof workflowOutput === 'object') {
-      const allOutputIds = Object.keys(workflowOutput).flatMap(ruleKey =>
-        Object.keys(workflowOutput[ruleKey] || {})
-      );
-      const uniqueOutputIds = Array.from(new Set(allOutputIds));
-      setOutputNodeIds(uniqueOutputIds);
-
-      setNodes((currentNodes) => {
-        return currentNodes.map((node) => {
-          const nodeData = node.data;
-          const hasOutput = uniqueOutputIds.includes(node.id);
-
-          return {
-            ...node,
-            data: {
-              ...nodeData,
-              hasOutput,
-              label: createNodeLabel(
-                nodeData.table || '',
-                nodeData.type || 'Unknown',
-                nodeData,
-                node.id,
-                nodeData.type === 'startingnode',
-                nodeData.type === 'output',
-                hasOutput
-              ),
-            },
-          };
-        });
-      });
-    }
-  }, [workflowOutput, setNodes, setOutputNodeIds]);
-
   const onConnect = useCallback(
     (connection: Connection) => {
       const sourceNode = nodes.find((node) => node.id === connection.source);
       const targetNode = nodes.find((node) => node.id === connection.target);
 
+      console.log('Source Node:', sourceNode);
+      console.log('Target Node:', targetNode);
+
       if (!sourceNode || !targetNode) {
+        console.log('Connection is missing source or target node.');
         return;
       }
-      const modalKey = targetNode?.data.table?.toString();
-      if (modalKey && modalKey in modalKeyMap) {
-        setEdges((eds) => addEdge(connection, eds));
-        const modalFunction = modalKeyMap[modalKey]
-        showModal(modalFunction);
-        setCurrentEditNodeData({
-          id: targetNode.id,
-          position: targetNode.position,
-          icon: targetNode.data.icon as keyof typeof Icons | keyof typeof FaIcons,
-        });
 
+      const validSourceTypes = ['startingnode', 'table', 'mergeTable'];
+      const validTargetTypes = ['filter', 'sort', 'output', 'groupby', 'pivotTable', 'conditional', 'scaling', 'arithmetic', 'statistical'];
+
+      if (validSourceTypes.includes(sourceNode.data.type) && validTargetTypes.includes(targetNode.data.type)) {
+        setEdges((eds) => addEdge(connection, eds));
+        console.log('Connection added:', connection);
+
+        const sourceTable = sourceNode.data.table;
+        setConnectedTable(sourceTable);
+        console.log('Source Table Set:', sourceTable);
+
+        const modalKey = modalKeyMap[targetNode.data.type];
+        console.log('Modal Key to Open:', modalKey);
+
+        if (modalKey) {
+          showModal(modalKey);
+          setCurrentEditNodeData({
+            id: targetNode.id,
+            position: targetNode.position,
+            icon: targetNode.data.icon as keyof typeof Icons | keyof typeof FaIcons,
+          });
+          console.log('Modal opened with node data:', targetNode);
+        } else {
+          console.error('No modal key found for target node type:', targetNode.data.type);
+        }
       } else {
         message.error('Invalid connection: ensure nodes are connected in a proper sequence.');
+        console.log('Invalid connection attempted.');
       }
     },
-    [nodes, setEdges]
+    [nodes, setEdges, showModal, setConnectedTable]
   );
+
   const onEdgeClick = useCallback(
     (event: React.MouseEvent, edge: Edge) => {
       event.stopPropagation();
@@ -1015,58 +973,54 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
       event.preventDefault();
       const jsonData = event.dataTransfer.getData('application/json');
 
-      let itemData;
+      if (!jsonData) {
+        console.error('No data to parse. Dragged item might not have data.');
+        return;
+      }
+
       try {
-        if (jsonData) {
-          itemData = JSON.parse(jsonData);
+        const itemData = JSON.parse(jsonData);
+        console.log("Dropped item data:", itemData);
+
+        const id = `dropped-item-${nodes.length}`;
+        const position: XYPosition = screenToFlowPosition({
+          x: event.clientX,
+          y: event.clientY,
+        });
+
+        const newNode: Node = {
+          id,
+          data: {
+            table: itemData.title,
+            type: itemData.title.toLowerCase().replace(' ', ''),
+            label: createNodeLabel(itemData.title, itemData.title.toLowerCase().replace(' ', '')),
+          },
+          position,
+          draggable: true,
+          targetPosition: Position.Left,
+          sourcePosition: Position.Right,
+        };
+
+        setNodes((nds) => [...nds, newNode]);
+
+        const modalKey = modalKeyMap[itemData.title];
+        if (modalKey == "isStartModalVisible") {
+          showModal(modalKey);
+          setCurrentEditNodeData({
+            id,
+            position,
+            icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons,
+          });
         } else {
-          console.error('No data to parse.');
-          return;
+          console.error('Unknown modal type for item title:', itemData.title);
         }
       } catch (error) {
         console.error('Failed to parse JSON data:', error);
-        return;
-      }
-
-      const id = `dropped-item-${nodes.length}`;
-      const position: XYPosition = screenToFlowPosition({
-        x: event.clientX,
-        y: event.clientY,
-      });
-
-      if (!isStartingNodeSaved && itemData.title !== 'Starting Node') {
-        message.error('Please add a Starting Node first.');
-        return;
-      }
-      const newNode: Node = {
-        id,
-        data: {
-          table: itemData.title,
-          type: itemData.title.toLowerCase().replace(' ', ''),
-          label: createNodeLabel(itemData.title, itemData.title.toLowerCase().replace(' ', '')),
-        },
-        position,
-        draggable: true,
-        targetPosition: Position.Left,
-        sourcePosition: Position.Right,
-      };
-
-      setNodes((nds) => [...nds, newNode]);
-
-      const modalKey = modalKeyMap[itemData.title];
-      if (modalKey == "isStartModalVisible") {
-        showModal(modalKey);
-        setCurrentEditNodeData({
-          id,
-          position,
-          icon: itemData.icon as keyof typeof Icons | keyof typeof FaIcons,
-        });
-      } else {
-        console.error('Unknown modal type for item title:', itemData.title);
       }
     },
-    [nodes, screenToFlowPosition, setNodes, showModal, isStartingNodeSaved]
+    [nodes, screenToFlowPosition, setNodes, showModal]
   );
+
 
   const handleDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
@@ -1114,8 +1068,10 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
           visible={previewModalVisible}
           onCancel={closePreviewModal}
           workspaceId={selectedWorkspace || ''}
-          workflowName={currentWorkflowName} // Pass the current workflow name to the modal
-          outputId={selectedOutputId} // Pass the selected output ID to the modal
+          workflowName={currentWorkflowName}
+          outputId={selectedOutputId}
+          nodeType={selectedNodeType}
+          outputName={selectedOutputName}
         />
 
         <WorkflowModals
@@ -1128,7 +1084,9 @@ const DragAndDropContainer: React.FC<DragAndDropContainerProps> = ({
           folders={folders}
           selectedWorkspace={selectedWorkspace}
           email={email}
+          connectedTable={connectedTable}
         />
+
       </div>
     </>
   );
@@ -1141,11 +1099,3 @@ const DragAndDropContainerWithProvider: React.FC<DragAndDropContainerProps> = (p
 );
 
 export default DragAndDropContainerWithProvider;
-function setSelectedOutputId(outputId: any) {
-  throw new Error('Function not implemented.');
-}
-
-function setCurrentWorkflowName(workflowName: string) {
-  throw new Error('Function not implemented.');
-}
-

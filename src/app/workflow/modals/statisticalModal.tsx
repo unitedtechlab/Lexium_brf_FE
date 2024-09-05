@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Select, Button, Form, Row, Col, message } from 'antd';
-import { fetchFolders, fetchFolderData } from '@/app/API/api';
+import { fetchFolderData } from '@/app/API/api';
 
 interface StatisticalModalProps {
     isModalVisible: boolean;
     handleOkay: (values: any) => void;
     handleCancel: () => void;
-    setSelectedTable: (value: string | null) => void;
-    workspaces: any[];
-    folders: any[];
-    selectedWorkspace: string | null;
+    connectedTable: string | null;
     email: string;
+    selectedWorkspace: string | null;
     initialValues?: any;
 }
 
@@ -18,43 +16,53 @@ const StatisticalModal: React.FC<StatisticalModalProps> = ({
     isModalVisible,
     handleOkay,
     handleCancel,
-    setSelectedTable,
-    folders,
+    connectedTable,
     selectedWorkspace,
     email,
     initialValues,
-    workspaces,
 }) => {
     const [form] = Form.useForm();
-    const [columns, setColumns] = useState<{ key: string, name: string }[]>([]);
+    const [columns, setColumns] = useState<{ key: string; name: string }[]>([]);
     const [columnDataTypes, setColumnDataTypes] = useState<{ [key: string]: string }>({});
     const [confirmedDataType, setConfirmedDataType] = useState<string | null>(null);
     const [selectedColumnName, setSelectedColumnName] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
     useEffect(() => {
-        setConfirmedDataType(null);
-        setSelectedColumnName(null);
-    }, [isModalVisible]);
+        if (connectedTable) {
+            fetchTableColumns(connectedTable);
+        } else {
+            setColumns([]);
+            setConfirmedDataType(null);
+            setSelectedColumnName(null);
+        }
+    }, [isModalVisible, connectedTable]);
 
-    const handleTableChange = async (value: string) => {
-        setSelectedTable(value);
+    const fetchTableColumns = async (tableId: string) => {
+        if (!selectedWorkspace || !tableId) return;
         setIsLoading(true);
 
         try {
-            const fetchedFolders = await fetchFolders(email, selectedWorkspace!, setIsLoading);
-            const selectedFolder = fetchedFolders.find(folder => folder.id === value);
-            if (selectedFolder) {
-                const columns = selectedFolder.columns
-                    ? Object.entries(selectedFolder.columns).map(([key, name]) => ({ key, name }))
-                    : [];
-                setColumns(columns);
+            const folderData = await fetchFolderData(email, selectedWorkspace, tableId);
 
-                const confirmedDataTypes = await fetchFolderData(email, selectedWorkspace!, value);
-                setColumnDataTypes(confirmedDataTypes);
+            if (folderData) {
+                const columnsData = Object.entries(folderData).map(([key, dataType]) => ({
+                    key,
+                    name: key,
+                }));
+
+                if (columnsData.length > 0) {
+                    setColumns(columnsData);
+                    setColumnDataTypes(folderData);
+                } else {
+                    message.error('No columns found for the selected table.');
+                }
+            } else {
+                message.error('No folder data found for the selected table.');
             }
         } catch (error) {
-            message.error('Failed to fetch columns or data type.');
+            message.error('Failed to fetch columns or data types.');
+            console.error('Error fetching folder data:', error);
         } finally {
             setIsLoading(false);
         }
@@ -67,7 +75,7 @@ const StatisticalModal: React.FC<StatisticalModalProps> = ({
             setConfirmedDataType(dataType);
             setSelectedColumnName(column.name);
         } else {
-            console.log("Column not found for key:", value);
+            console.error('Column not found for key:', value);
         }
     };
 
@@ -103,33 +111,12 @@ const StatisticalModal: React.FC<StatisticalModalProps> = ({
         >
             <Form
                 form={form}
-                name="sortForm"
+                name="statisticalForm"
                 layout="vertical"
                 initialValues={initialValues}
             >
                 <div className="padding-16">
                     <Row gutter={16}>
-                        <Col md={24} sm={24}>
-                            <Form.Item
-                                name="table"
-                                label="Select Table"
-                                rules={[{ required: true, message: 'Please select a table' }]}
-                            >
-                                <Select
-                                    placeholder="Select Table"
-                                    disabled={!selectedWorkspace}
-                                    onChange={handleTableChange}
-                                >
-                                    {folders
-                                        .filter(folder => folder.workspaceId === selectedWorkspace)
-                                        .map((folder) => (
-                                            <Select.Option key={folder.id} value={folder.id}>
-                                                {folder.name}
-                                            </Select.Option>
-                                        ))}
-                                </Select>
-                            </Form.Item>
-                        </Col>
                         <Col md={12} sm={24}>
                             <Form.Item
                                 name="column"
@@ -139,6 +126,7 @@ const StatisticalModal: React.FC<StatisticalModalProps> = ({
                                 <Select
                                     placeholder="Select Column"
                                     onChange={handleColumnChange}
+                                    disabled={columns.length === 0}
                                 >
                                     {columns.map(({ key, name }) => (
                                         <Select.Option key={key} value={key}>
@@ -160,8 +148,8 @@ const StatisticalModal: React.FC<StatisticalModalProps> = ({
                                             <Select.Option value="mean">Mean</Select.Option>
                                             <Select.Option value="mode">Mode</Select.Option>
                                             <Select.Option value="median">Median</Select.Option>
-                                            <Select.Option value="std">Std</Select.Option>
-                                            <Select.Option value="var">Var</Select.Option>
+                                            <Select.Option value="std">Standard Deviation</Select.Option>
+                                            <Select.Option value="var">Variance</Select.Option>
                                         </>
                                     )}
                                     {confirmedDataType !== 'number' && (

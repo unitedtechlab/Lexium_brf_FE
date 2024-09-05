@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Select, Button, Form, Row, Col, Input, message } from 'antd';
-import { fetchFolders, fetchFolderData } from '@/app/API/api';
+import { fetchFolderData } from '@/app/API/api';
 
 interface FilterModalProps {
     isModalVisible: boolean;
@@ -12,6 +12,7 @@ interface FilterModalProps {
     selectedWorkspace: string | null;
     email: string;
     initialValues?: any;
+    connectedTable: string | null;
 }
 
 const FilterModal: React.FC<FilterModalProps> = ({
@@ -22,7 +23,8 @@ const FilterModal: React.FC<FilterModalProps> = ({
     folders,
     selectedWorkspace,
     email,
-    initialValues
+    initialValues,
+    connectedTable
 }) => {
     const [form] = Form.useForm();
     const [columns, setColumns] = useState<{ key: string, name: string }[]>([]);
@@ -31,26 +33,27 @@ const FilterModal: React.FC<FilterModalProps> = ({
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
     useEffect(() => {
-        if (initialValues && initialValues.table) {
-            handleTableChange(initialValues.table);
+        if (connectedTable) {
+            fetchColumnsForTable(connectedTable);
+        }
+        if (initialValues) {
             form.setFieldsValue(initialValues);
         }
-    }, [initialValues]);
+    }, [connectedTable, initialValues]);
 
-    const handleTableChange = async (value: string) => {
-        setSelectedTable(value);
+    const fetchColumnsForTable = async (tableId: string) => {
+        setSelectedTable(tableId);
         setIsLoading(true);
 
         try {
-            const folders = await fetchFolders(email, selectedWorkspace!, setIsLoading);
-            const selectedFolder = folders.find(folder => folder.id === value);
+            const selectedFolder = folders.find(folder => folder.id === tableId);
             if (selectedFolder) {
                 const columnsArray = selectedFolder.columns
-                    ? Object.entries(selectedFolder.columns).map(([key, name]) => ({ key, name }))
+                    ? Object.entries(selectedFolder.columns).map(([key, name]) => ({ key, name: name as string }))
                     : [];
                 setColumns(columnsArray);
 
-                const confirmedDataTypes = await fetchFolderData(email, selectedWorkspace!, value);
+                const confirmedDataTypes = await fetchFolderData(email, selectedWorkspace!, tableId);
                 setColumnDataTypes(confirmedDataTypes);
 
                 if (initialValues && initialValues.column) {
@@ -64,6 +67,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
             setIsLoading(false);
         }
     };
+
 
     const handleColumnChange = (value: string) => {
         const column = columns.find(col => col.key === value);
@@ -160,27 +164,6 @@ const FilterModal: React.FC<FilterModalProps> = ({
             >
                 <div className="padding-16">
                     <Row gutter={16}>
-                        <Col md={24} sm={24}>
-                            <Form.Item
-                                name="table"
-                                label="Select Table"
-                                rules={[{ required: true, message: 'Please select a table' }]}
-                            >
-                                <Select
-                                    placeholder="Select Table"
-                                    disabled={!selectedWorkspace}
-                                    onChange={handleTableChange}
-                                >
-                                    {folders
-                                        .filter(folder => folder.workspaceId === selectedWorkspace)
-                                        .map((folder) => (
-                                            <Select.Option key={folder.id} value={folder.id}>
-                                                {folder.name}
-                                            </Select.Option>
-                                        ))}
-                                </Select>
-                            </Form.Item>
-                        </Col>
                         <Col md={12} sm={24}>
                             <Form.Item
                                 name="column"
@@ -190,6 +173,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
                                 <Select
                                     placeholder="Select Column"
                                     onChange={handleColumnChange}
+                                    loading={isLoading}
                                 >
                                     {columns.map(({ key, name }) => (
                                         <Select.Option key={key} value={key}>

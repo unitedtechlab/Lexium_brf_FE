@@ -1,23 +1,18 @@
 import React from 'react';
 import dynamic from 'next/dynamic';
 import { XYPosition } from 'reactflow';
+import * as Icons from 'react-icons/sl';
+import * as FaIcons from 'react-icons/fa';
 import {
-    Condition,
-    Conditional,
     Filter,
     Sort,
     GroupBy,
     Statistical,
     Scaling,
     Arithmetic,
-    Merge,
-    CustomNode,
     NodeData,
     PivotTableData,
-    RuleData,
 } from '../../types/workflowTypes';
-import * as Icons from 'react-icons/sl';
-import * as FaIcons from 'react-icons/fa';
 
 const FilterModal = dynamic(() => import('../modals/filtermodal'));
 const SortModal = dynamic(() => import('../modals/sortmodal'));
@@ -56,6 +51,7 @@ interface WorkflowModalsProps {
     folders: any[];
     selectedWorkspace: string | null;
     email: string | null;
+    connectedTable: string | null;
 }
 
 const WorkflowModals: React.FC<WorkflowModalsProps> = ({
@@ -68,6 +64,7 @@ const WorkflowModals: React.FC<WorkflowModalsProps> = ({
     folders,
     selectedWorkspace,
     email,
+    connectedTable,
 }) => {
     const commonProps = {
         handleCancel,
@@ -75,7 +72,7 @@ const WorkflowModals: React.FC<WorkflowModalsProps> = ({
         workspaces,
         folders,
         selectedWorkspace,
-        email: email || '', // Default to an empty string if email is null
+        email: email || '',
     };
 
     return (
@@ -93,12 +90,13 @@ const WorkflowModals: React.FC<WorkflowModalsProps> = ({
             <FilterModal
                 isModalVisible={modalVisibility.isFilterModalVisible}
                 handleOkay={(values) => handleModalOk(values, 'FilterModal')}
-                initialValues={currentEditNodeData}
+                connectedTable={connectedTable}
                 {...commonProps}
             />
             <SortModal
                 isModalVisible={modalVisibility.isSortModalVisible}
                 handleOkay={(values) => handleModalOk(values, 'SortModal')}
+                connectedTable={connectedTable}
                 {...commonProps}
             />
             <ConditionalModal
@@ -114,11 +112,13 @@ const WorkflowModals: React.FC<WorkflowModalsProps> = ({
             <StatisticalModal
                 isModalVisible={modalVisibility.isStatisticalModalVisible}
                 handleOkay={(values) => handleModalOk(values, 'StatisticalModal')}
+                connectedTable={connectedTable}
                 {...commonProps}
             />
             <ScalingModal
                 isModalVisible={modalVisibility.isScalingModalVisible}
                 handleOkay={(values) => handleModalOk(values, 'ScalingModal')}
+                connectedTable={connectedTable}
                 {...commonProps}
             />
             <ArithmeticModal

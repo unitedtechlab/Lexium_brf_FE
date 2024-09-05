@@ -13,16 +13,30 @@ interface TopbarProps {
     setIsRunClicked: (isRun: boolean) => void;
 }
 
-const Topbar: React.FC<TopbarProps> = ({ onSaveClick, setWorkflowName, workflowName, workspaceId, setWorkflowOutput, setIsRunClicked }) => {
+const Topbar: React.FC<TopbarProps> = ({
+    onSaveClick,
+    setWorkflowName,
+    workflowName,
+    workspaceId,
+    setWorkflowOutput,
+    setIsRunClicked
+}) => {
     const [isRunEnabled, setIsRunEnabled] = useState(false);
     const [isSaved, setIsSaved] = useState(false);
     const [isSaving, setIsSaving] = useState<boolean>(false);
     const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [isWorkflowNameEmpty, setIsWorkflowNameEmpty] = useState<boolean>(true);
     const { email } = useEmail();
 
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        if (!isSaved) {
-            setWorkflowName(event.target.value);
+        const name = event.target.value.trim();
+        setWorkflowName(name);
+
+        setIsWorkflowNameEmpty(name === '');
+
+        if (name === '') {
+            setIsSaved(false);
+            setIsRunEnabled(false);
         }
     };
 
@@ -41,13 +55,14 @@ const Topbar: React.FC<TopbarProps> = ({ onSaveClick, setWorkflowName, workflowN
             if (success) {
                 setIsSaved(true);
                 setIsRunEnabled(true);
+                // message.success('Workflow saved successfully!');
             } else {
                 setIsRunEnabled(false);
                 message.error('Failed to save workflow.');
             }
         } catch (error) {
             setIsRunEnabled(false);
-            message.error('An error occurred while saving the workflow.');
+            // message.error('An error occurred while saving the workflow.');
         } finally {
             setIsSaving(false);
         }
@@ -75,7 +90,7 @@ const Topbar: React.FC<TopbarProps> = ({ onSaveClick, setWorkflowName, workflowN
                 setWorkflowOutput(workflowData);
                 setIsRunClicked(true);
                 message.success('Workflow run successfully!');
-                console.log("workflowData", workflowData)
+                console.log("workflowData", workflowData);
             } else {
                 message.error('No output nodes found in the workflow.');
             }
@@ -99,7 +114,6 @@ const Topbar: React.FC<TopbarProps> = ({ onSaveClick, setWorkflowName, workflowN
                         type="text"
                         placeholder='Workflow Name'
                         onChange={handleInputChange}
-                        value={workflowName}
                         readOnly={isSaved}
                     />
                 </div>
@@ -107,9 +121,9 @@ const Topbar: React.FC<TopbarProps> = ({ onSaveClick, setWorkflowName, workflowN
                     <Button
                         className='btn'
                         onClick={handleSaveClick}
-                        disabled={isSaving}
+                        disabled={isSaving || isWorkflowNameEmpty}
                     >
-                        Save
+                        {isSaving ? 'Saving...' : 'Save'}
                     </Button>
                     <Button
                         className='btn'
