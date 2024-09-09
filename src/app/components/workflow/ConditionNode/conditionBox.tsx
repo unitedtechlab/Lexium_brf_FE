@@ -1,7 +1,7 @@
 import React from 'react';
 import { Row, Col, Select, Input, Form, Button } from 'antd';
 import { AiOutlineDelete } from "react-icons/ai";
-import classes from '../../workflow.module.css';
+import classes from '@/app/assets/css/workflow.module.css';
 
 interface ConditionRowProps {
     nodeId: number;

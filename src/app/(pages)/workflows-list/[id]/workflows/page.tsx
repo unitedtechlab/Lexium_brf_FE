@@ -172,7 +172,7 @@ const WorkflowsList = () => {
                     {filteredWorkflows.map((workflow) => (
                         <div key={workflow.id} className={`${classes.workspacebox}`}>
                             <div className={`flex gap-1 alinc ${classes.link}`}>
-                                <Link href={`/workflow/${workflow.id}?workspaceId=${id}`}>
+                                <Link href={`/view_workflow/${workflow.id}?workspaceId=${id}`}>
                                     <div className={`${classes.workspaceName} flex gap-1`}>
                                         <Image src={wireFrameIcon} alt="Workflow Icon" width={32} height={32} />
                                         <p>

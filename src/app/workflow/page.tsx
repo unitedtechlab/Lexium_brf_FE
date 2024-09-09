@@ -2,15 +2,15 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
-import classes from './workflow.module.css';
+import classes from '@/app/assets/css/workflow.module.css';
 import { useNodesState, useEdgesState, ReactFlowProvider } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { fetchWorkspaces, fetchFolders } from '@/app/API/api';
+import { fetchWorkspaces, fetchFolders, runWorkflow } from '@/app/API/api';
 import { useEmail } from '@/app/context/emailContext';
 import { message } from 'antd';
 import { CustomNode } from '../types/workflowTypes';
-import Sidebar from './components/sidebar';
-import Topbar from './components/topbar';
+import Sidebar from '@/app/components/workflow/sidebar';
+import Topbar from '@/app/components/workflow/topbar';
 import { Node, Edge } from 'reactflow';
 import axios from 'axios';
 import { BaseURL } from "@/app/constants/index";
@@ -45,6 +45,7 @@ const WorkFlow: React.FC = () => {
     const [outputNodeIds, setOutputNodeIds] = useState<string[]>([]);
     const [workflowOutput, setWorkflowOutput] = useState<any>(null);
     const [isRunClicked, setIsRunClicked] = useState<boolean>(false);
+    const [isRunLoading, setIsRunLoading] = useState<boolean>(false);
 
     useEffect(() => {
         const handleLoad = () => setLoading(false);
@@ -115,7 +116,7 @@ const WorkFlow: React.FC = () => {
         return rule;
     };
 
-    const handleRunClick = async (): Promise<boolean> => {
+    const handleSaveClick = async (): Promise<boolean> => {
         const rules: { [key: string]: any[] } = {};
         let ruleCounter = 1;
 
@@ -176,6 +177,47 @@ const WorkFlow: React.FC = () => {
         }
     };
 
+    const handleRunClick = async () => {
+        if (!email) {
+            message.error('User email is missing.');
+            return;
+        }
+        if (!currentWorkspace) {
+            message.error('Workspace ID is missing.');
+            return;
+        }
+        if (!workflowName.trim()) {
+            message.error('Workflow name is missing.');
+            return;
+        }
+
+        setIsRunLoading(true);
+        try {
+            const workflowData = await runWorkflow(email, currentWorkspace, workflowName);
+
+            if (workflowData) {
+                const outputNodeIds = Object.keys(workflowData)
+                    .map(ruleKey => Object.keys(workflowData[ruleKey]))
+                    .flat();
+
+                setWorkflowOutput(workflowData);
+                setOutputNodeIds(outputNodeIds);
+                setIsRunClicked(true);
+
+                console.log("output nodes id", outputNodeIds)
+
+                message.success('Workflow run successfully!');
+            } else {
+                message.error('No output nodes found in the workflow.');
+            }
+        } catch (error: any) {
+            message.error(error?.response?.data?.message || error.message || 'Failed to run workflow.');
+            console.error('Error running workflow:', error);
+        } finally {
+            setIsRunLoading(false);
+        }
+    };
+
     useEffect(() => {
         if (email) {
             fetchWorkspaces(email, setLoading)
@@ -188,9 +230,6 @@ const WorkFlow: React.FC = () => {
                     message.error('Failed to fetch workspaces.');
                 });
         }
-    }, [email]);
-
-    useEffect(() => {
         if (currentWorkspace && email) {
             fetchFolders(email, currentWorkspace, setLoading)
                 .then((folders) => {
@@ -212,12 +251,14 @@ const WorkFlow: React.FC = () => {
         <div className={classes.workflowPage}>
             {loading && <Preloader />}
             <Topbar
-                onSaveClick={handleRunClick}
+                onSaveClick={handleSaveClick}
                 setWorkflowName={setWorkflowName}
                 workflowName={workflowName}
                 workspaceId={currentWorkspace || undefined}
                 setWorkflowOutput={setWorkflowOutput}
                 setIsRunClicked={setIsRunClicked}
+                onRunClick={handleRunClick}
+                isRunLoading={isRunLoading}
             />
 
             <div className={classes.workflowWrapper}>
