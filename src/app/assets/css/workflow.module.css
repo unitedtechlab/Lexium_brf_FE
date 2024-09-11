@@ -426,3 +426,22 @@
 .subkeyvalue {
     width: 100%;
 }
+
+/* /operations */
+.operations {
+    padding: 10px 20px;
+}
+
+.operations .sidebardragDrop {
+    padding: 10px 10px 10px 15px;
+    gap: 12px;
+}
+
+.operations .sidebardragDrop h6 {
+    font-size: var(--font-sm);
+}
+
+.operations .sidebardragDrop svg {
+    width: 22px;
+    height: 100%;
+}
