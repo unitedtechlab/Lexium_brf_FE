@@ -3,22 +3,22 @@ import { Handle, Position, NodeProps, useReactFlow, Connection, Edge } from 'rea
 import { Select } from 'antd';
 import 'reactflow/dist/style.css';
 
-const AdditionSubNode = ({ id, data }: NodeProps<any>) => {
+const DivisionMultiplicationNode = ({ id }: NodeProps<any>) => {
     const { getEdges, getNode, setNodes } = useReactFlow();
-    const [result, setResult] = useState(0);
-    const [operation, setOperation] = useState<string>('addition');
-    const [firstValue, setFirstValue] = useState<number>(0);
-    const [secondValue, setSecondValue] = useState<number>(0);
+    const [result, setResult] = useState<number | string>(1);
+    const [operation, setOperation] = useState<string>('multiplication');
+    const [firstValue, setFirstValue] = useState<number>(1);
+    const [secondValue, setSecondValue] = useState<number>(1);
 
     useEffect(() => {
         const edges = getEdges().filter((edge) => edge.target === id);
 
-        let firstVal = 0;
-        let secondVal = 0;
+        let firstVal = 1;
+        let secondVal = 1;
 
         edges.forEach((edge) => {
             const sourceNode = getNode(edge.source);
-            const sourceValue = sourceNode?.data?.value || sourceNode?.data?.result || 0;
+            const sourceValue = sourceNode?.data?.value || sourceNode?.data?.result || 1;
 
             if (edge.targetHandle === 'target1') {
                 firstVal = sourceValue;
@@ -30,11 +30,11 @@ const AdditionSubNode = ({ id, data }: NodeProps<any>) => {
         setFirstValue(firstVal);
         setSecondValue(secondVal);
 
-        let calculatedResult = 0;
-        if (operation === 'addition') {
-            calculatedResult = firstVal + secondVal;
-        } else if (operation === 'subtraction') {
-            calculatedResult = firstVal - secondVal;
+        let calculatedResult: number | string = 0;
+        if (operation === 'multiplication') {
+            calculatedResult = firstVal * secondVal;
+        } else if (operation === 'division') {
+            calculatedResult = secondVal !== 0 ? firstVal / secondVal : 'Error (Div by 0)';
         }
 
         setResult(calculatedResult);
@@ -54,20 +54,27 @@ const AdditionSubNode = ({ id, data }: NodeProps<any>) => {
 
     const isValidConnection = (connection: Connection | Edge) => {
         const edges = getEdges().filter((edge) => edge.target === id);
-        return edges.length < 2;
+
+        const isTarget1Connected = edges.some((edge) => edge.targetHandle === 'target1');
+        const isTarget2Connected = edges.some((edge) => edge.targetHandle === 'target2');
+
+        if (connection.targetHandle === 'target1' && isTarget1Connected) return false;
+        if (connection.targetHandle === 'target2' && isTarget2Connected) return false;
+
+        return true;
     };
 
     return (
         <div style={{ padding: '10px', border: '1px solid black', borderRadius: '5px' }}>
-            <div>Add / Subtract Node</div>
+            <div>Division / Multiplication Node</div>
             <div className="nodrag">
                 <Select
-                    defaultValue="addition"
-                    style={{ width: 120, marginBottom: '10px' }}
+                    defaultValue="multiplication"
+                    style={{ width: 150, marginBottom: '10px' }}
                     onChange={handleOperationChange}
                 >
-                    <Select.Option value="addition">Addition</Select.Option>
-                    <Select.Option value="subtraction">Subtraction</Select.Option>
+                    <Select.Option value="multiplication">Multiplication</Select.Option>
+                    <Select.Option value="division">Division</Select.Option>
                 </Select>
             </div>
             <div>First Value: {firstValue}</div>
@@ -88,6 +95,7 @@ const AdditionSubNode = ({ id, data }: NodeProps<any>) => {
                 isValidConnection={isValidConnection}
                 style={{ top: '65%' }}
             />
+
             <Handle
                 type="source"
                 position={Position.Right}
@@ -97,4 +105,4 @@ const AdditionSubNode = ({ id, data }: NodeProps<any>) => {
     );
 };
 
-export default AdditionSubNode;
+export default DivisionMultiplicationNode;

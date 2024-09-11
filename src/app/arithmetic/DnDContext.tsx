@@ -8,7 +8,7 @@ interface DnDContextType {
 const DnDContext = createContext<DnDContextType | undefined>(undefined);
 
 interface DnDProviderProps {
-    children: ReactNode;  // Explicitly type children here
+    children: ReactNode;
 }
 
 export const DnDProvider = ({ children }: DnDProviderProps) => {

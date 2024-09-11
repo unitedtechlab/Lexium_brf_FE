@@ -17,17 +17,27 @@ import 'reactflow/dist/style.css';
 import classes from '@/app/assets/css/workflow.module.css';
 
 import Sidebar from './components/sidebar';
-import { DnDProvider, useDnD } from './components/DnDContext';
+import { DnDProvider, useDnD } from './DnDContext';
 import InputNode from './components/InputNode';
 import AdditionSubNode from './components/AdditionSub';
-import OutputNode from './components/OutputNode';
 import Topbar from './components/topbar';
+import CustomEdge from "./customEdge";
+import DivisionMultiplicationNode from './components/DivisionMulti';
+import ModifierNode from './components/Modifier';
+import CompilerNode from './components/Compiler';
 
 const nodeTypes = {
     inputNode: InputNode,
     additionSubNode: AdditionSubNode,
-    outputNode: OutputNode,
+    divisionMultiplicationNode: DivisionMultiplicationNode,
+    modifierNode: ModifierNode,
+    compilerNode: CompilerNode,
 };
+
+const edgeTypes = {
+    customEdge: CustomEdge,
+};
+
 
 let id = 0;
 const getId = () => `dndnode_${id++}`;
@@ -40,7 +50,7 @@ const DnDFlow: React.FC = () => {
     const { type } = useDnD();
 
     const onConnect = useCallback(
-        (params: Edge | Connection) => setEdges((eds) => addEdge(params, eds)),
+        (params: Edge | Connection) => setEdges((eds) => addEdge({ ...params, type: 'customEdge' }, eds)),
         [setEdges]
     );
 
@@ -88,6 +98,7 @@ const DnDFlow: React.FC = () => {
                         onDrop={onDrop}
                         onDragOver={onDragOver}
                         nodeTypes={nodeTypes}
+                        edgeTypes={edgeTypes} // Specify the custom edge types here
                     >
                         <Background variant={BackgroundVariant.Dots} gap={16} size={2} color="#ddd" />
                         <Controls />

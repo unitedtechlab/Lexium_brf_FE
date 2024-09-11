@@ -1,8 +1,11 @@
 import React from 'react';
-import { useDnD } from './DnDContext';
+import { useDnD } from '../DnDContext';
 import styles from '@/app/assets/css/workflow.module.css';
 import { Input, Select } from 'antd';
-import { MdOutlineInput, MdOutlineAddCircle, MdOutlineOutput } from 'react-icons/md';
+import { MdOutlineOutput, MdOutlineSelectAll } from 'react-icons/md';
+import { SiMonkeytype } from "react-icons/si";
+import { PiMathOperationsBold } from "react-icons/pi";
+import { TbMathXDivideY2, TbMathIntegralX, TbMathMaxMin } from "react-icons/tb";
 
 const { Search } = Input;
 
@@ -48,8 +51,17 @@ const Sidebar: React.FC = () => {
             onDragStart={(event) => onDragStart(event, 'inputNode')}
             draggable
           >
-            <IconComponent icon={<MdOutlineInput />} />
-            <h6 className={styles.titleName}>Input Node</h6>
+            <IconComponent icon={<SiMonkeytype />} />
+            <h6 className={styles.titleName}>Constant</h6>
+          </div>
+
+          <div
+            className={`flex gap-1 ${styles.sidebardragDrop}`}
+            onDragStart={(event) => onDragStart(event, 'variableNode')}
+            draggable
+          >
+            <IconComponent icon={<MdOutlineSelectAll />} />
+            <h6 className={styles.titleName}>Variables</h6>
           </div>
 
           <div
@@ -57,26 +69,26 @@ const Sidebar: React.FC = () => {
             onDragStart={(event) => onDragStart(event, 'additionSubNode')}
             draggable
           >
-            <IconComponent icon={<MdOutlineAddCircle />} />
+            <IconComponent icon={<PiMathOperationsBold />} />
             <h6 className={styles.titleName}>Addition / Subtraction</h6>
           </div>
 
           <div
             className={`flex gap-1 ${styles.sidebardragDrop}`}
-            onDragStart={(event) => onDragStart(event, 'divMulNode')}
+            onDragStart={(event) => onDragStart(event, 'divisionMultiplicationNode')}
             draggable
           >
-            <IconComponent icon={<MdOutlineAddCircle />} />
+            <IconComponent icon={<TbMathXDivideY2 />} />
             <h6 className={styles.titleName}>Division / Multiplication</h6>
           </div>
 
           <div
             className={`flex gap-1 ${styles.sidebardragDrop}`}
-            onDragStart={(event) => onDragStart(event, 'modifierNode ')}
+            onDragStart={(event) => onDragStart(event, 'modifierNode')}
             draggable
           >
-            <IconComponent icon={<MdOutlineAddCircle />} />
-            <h6 className={styles.titleName}>Modifier </h6>
+            <IconComponent icon={<TbMathIntegralX />} />
+            <h6 className={styles.titleName}>Modifier</h6>
           </div>
 
           <div
@@ -84,18 +96,10 @@ const Sidebar: React.FC = () => {
             onDragStart={(event) => onDragStart(event, 'compilerNode')}
             draggable
           >
-            <IconComponent icon={<MdOutlineAddCircle />} />
+            <IconComponent icon={<TbMathMaxMin />} />
             <h6 className={styles.titleName}>Compiler</h6>
           </div>
 
-          <div
-            className={`flex gap-1 ${styles.sidebardragDrop}`}
-            onDragStart={(event) => onDragStart(event, 'outputNode')}
-            draggable
-          >
-            <IconComponent icon={<MdOutlineOutput />} />
-            <h6 className={styles.titleName}>Output</h6>
-          </div>
         </div>
       </div>
 
