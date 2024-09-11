@@ -99,7 +99,6 @@ const Sidebar: React.FC = () => {
         </div>
       </div>
 
-
     </aside>
   );
 };
