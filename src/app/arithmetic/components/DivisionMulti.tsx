@@ -7,48 +7,55 @@ import TableImage from '../../assets/images/layout.svg';
 
 const DivisionMultiply = ({ id, data, type }: NodeProps<any>) => {
     const { getEdges, getNode, setNodes } = useReactFlow();
-    const [connectedValues, setConnectedValues] = useState<any>({
-        firstNodeValues: [],
-        secondNodeValues: []
+    const [nodeConnections, setNodeConnections] = useState<any>({
+        multiplyValues: [],
+        divideValues: []
     });
 
     useEffect(() => {
         const edges = getEdges().filter((edge) => edge.target === id);
 
-        let firstNodeValues: any[] = [];
-        let secondNodeValues: any[] = [];
+        const multiplyValues: any[] = [];
+        const divideValues: any[] = [];
 
         edges.forEach((edge, index) => {
             const sourceNode = getNode(edge.source);
             const sourceNodeData = sourceNode?.data;
 
-            if (index === 0 && sourceNodeData) {
-                // First connected node values (for multiplication/division)
-                Object.entries(sourceNodeData).forEach(([key, value]) => {
-                    if (key.startsWith('value') || key.startsWith('variable')) {
-                        firstNodeValues.push(value);
-                    }
-                });
-            }
+            if (sourceNodeData) {
+                // Get only the actual values (numbers/strings)
+                const filteredValues = Object.values(sourceNodeData).filter(
+                    (value) => typeof value === 'number' || typeof value === 'string'
+                );
 
-            if (index === 1 && sourceNodeData) {
-                // Second connected node values (for multiplication/division)
-                Object.entries(sourceNodeData).forEach(([key, value]) => {
-                    if (key.startsWith('value') || key.startsWith('variable')) {
-                        secondNodeValues.push(value);
-                    }
-                });
+                if (index === 0) {
+                    // First connected node (for multiplication)
+                    multiplyValues.push({
+                        node: {
+                            id: sourceNode.id,
+                            data: filteredValues
+                        }
+                    });
+                } else {
+                    // Other connected nodes (for division)
+                    divideValues.push({
+                        node: {
+                            id: sourceNode.id,
+                            data: filteredValues
+                        }
+                    });
+                }
             }
         });
 
-        // Update the connected values in state
-        setConnectedValues({ firstNodeValues, secondNodeValues });
+        // Update state with the connections
+        setNodeConnections({ multiplyValues, divideValues });
 
-        // Store the values in node's data to pass them to the JSON
+        // Store the values in node's data for JSON export
         setNodes((nodes) =>
             nodes.map((node) =>
                 node.id === id
-                    ? { ...node, data: { ...node.data, firstNodeValues, secondNodeValues } }
+                    ? { ...node, data: { ...node.data, multiplyValues, divideValues } }
                     : node
             )
         );

@@ -18,7 +18,7 @@ import classes from '@/app/assets/css/workflow.module.css';
 
 import Sidebar from './components/sidebar';
 import { DnDProvider, useDnD } from './DnDContext';
-import constantNode from './components/InputNode';
+import InputField from './components/InputNode';
 import AdditionSubNode from './components/AdditionSub';
 import Topbar from './components/topbar';
 import CustomEdge from "./customEdge";
@@ -27,11 +27,11 @@ import ModifierNode from './components/Modifier';
 import CompilerNode from './components/Compiler';
 
 const nodeTypes = {
-    constant: constantNode,
-    add_sub: AdditionSubNode,
-    multiply_divide: DivisionMultiplicationNode,
-    modifier: ModifierNode,
-    compiler: CompilerNode,
+    variables: InputField,
+    add_sub_type: AdditionSubNode,
+    multiply_divide_type: DivisionMultiplicationNode,
+    modifier_type: ModifierNode,
+    compiler_type: CompilerNode,
 };
 
 const edgeTypes = {
@@ -76,7 +76,7 @@ const DnDFlow: React.FC = () => {
                 id: getId(),
                 type: type.nodeType,
                 position,
-                data: { label: type.titleName, result: 0 },
+                data: { label: type.titleName },
             };
 
             setNodes((nds) => nds.concat(newNode));

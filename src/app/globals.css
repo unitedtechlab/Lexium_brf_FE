@@ -542,3 +542,13 @@ span.ant-select-selection-placeholder {
     transform: translateY(-50%);
     top: 50%;
 }
+
+.customselect .ant-select.ant-select-outlined {
+    padding: 0 !important;
+    margin: 0;
+}
+
+.customselect .ant-select.ant-select-outlined .ant-select-selector {
+    border-color: var(--tertiary-500) !important;
+    padding: 4px 12px !important;
+}

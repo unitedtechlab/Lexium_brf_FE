@@ -3,7 +3,8 @@ import { Handle, Position, NodeProps } from 'reactflow';
 import { Form, Button, Select } from 'antd';
 import 'reactflow/dist/style.css';
 import styles from '@/app/assets/css/workflow.module.css';
-import { PiFlagCheckered } from "react-icons/pi";
+import Image from 'next/image';
+import TableImage from '../../assets/images/layout.svg';
 import { MdDeleteOutline } from "react-icons/md";
 
 const VariableNode = ({ id, data, type }: NodeProps<any>) => {
@@ -36,9 +37,10 @@ const VariableNode = ({ id, data, type }: NodeProps<any>) => {
                     <div className={`flex gap-1 ${styles['node-main']}`}>
                         <div className={`flex gap-1 ${styles['node']}`}>
                             <div className={`flex gap-1 ${styles['nodewrap']}`}>
-                                <PiFlagCheckered className={styles.iconFlag} />
+                                <Image src={TableImage} alt='Table Image' width={32} height={32} />
                                 <div className={styles['node-text']}>
-                                    <h6>{data.label || "Addition / Subtraction"}</h6>
+                                    <h6>{data.label || "Variable Node"}</h6>
+                                    <span>{type || "Node type not found"}</span>
                                 </div>
                             </div>
                             <Button onClick={addVariableField}>
