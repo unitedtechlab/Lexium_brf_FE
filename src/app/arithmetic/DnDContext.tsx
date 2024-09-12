@@ -1,18 +1,9 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 
-interface DnDContextType {
-    type: string | null;
-    setType: (type: string | null) => void;
-}
+const DnDContext = createContext<any>(null);
 
-const DnDContext = createContext<DnDContextType | undefined>(undefined);
-
-interface DnDProviderProps {
-    children: ReactNode;
-}
-
-export const DnDProvider = ({ children }: DnDProviderProps) => {
-    const [type, setType] = useState<string | null>(null);
+export const DnDProvider = ({ children }: { children: React.ReactNode }) => {
+    const [type, setType] = useState<string | { nodeType: string; titleName: string }>('');
 
     return (
         <DnDContext.Provider value={{ type, setType }}>
@@ -21,10 +12,4 @@ export const DnDProvider = ({ children }: DnDProviderProps) => {
     );
 };
 
-export const useDnD = (): DnDContextType => {
-    const context = useContext(DnDContext);
-    if (!context) {
-        throw new Error('useDnD must be used within a DnDProvider');
-    }
-    return context;
-};
+export const useDnD = () => useContext(DnDContext);

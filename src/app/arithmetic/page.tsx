@@ -18,7 +18,7 @@ import classes from '@/app/assets/css/workflow.module.css';
 
 import Sidebar from './components/sidebar';
 import { DnDProvider, useDnD } from './DnDContext';
-import InputNode from './components/InputNode';
+import constantNode from './components/InputNode';
 import AdditionSubNode from './components/AdditionSub';
 import Topbar from './components/topbar';
 import CustomEdge from "./customEdge";
@@ -27,11 +27,11 @@ import ModifierNode from './components/Modifier';
 import CompilerNode from './components/Compiler';
 
 const nodeTypes = {
-    inputNode: InputNode,
-    additionSubNode: AdditionSubNode,
-    divisionMultiplicationNode: DivisionMultiplicationNode,
-    modifierNode: ModifierNode,
-    compilerNode: CompilerNode,
+    constant: constantNode,
+    add_sub: AdditionSubNode,
+    multiply_divide: DivisionMultiplicationNode,
+    modifier: ModifierNode,
+    compiler: CompilerNode,
 };
 
 const edgeTypes = {
@@ -71,11 +71,12 @@ const DnDFlow: React.FC = () => {
                 x: event.clientX,
                 y: event.clientY,
             });
+
             const newNode = {
                 id: getId(),
-                type,
+                type: type.nodeType,
                 position,
-                data: { label: `${type} node`, result: 0 },
+                data: { label: type.titleName, result: 0 },
             };
 
             setNodes((nds) => nds.concat(newNode));
@@ -98,7 +99,7 @@ const DnDFlow: React.FC = () => {
                         onDrop={onDrop}
                         onDragOver={onDragOver}
                         nodeTypes={nodeTypes}
-                        edgeTypes={edgeTypes} // Specify the custom edge types here
+                        edgeTypes={edgeTypes}
                     >
                         <Background variant={BackgroundVariant.Dots} gap={16} size={2} color="#ddd" />
                         <Controls />

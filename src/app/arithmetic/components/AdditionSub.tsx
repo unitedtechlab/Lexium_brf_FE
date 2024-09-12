@@ -1,56 +1,61 @@
 import React, { useState, useEffect } from 'react';
 import { Handle, Position, NodeProps, useReactFlow, Connection, Edge } from 'reactflow';
-import { Select } from 'antd';
 import 'reactflow/dist/style.css';
+import styles from '@/app/assets/css/workflow.module.css';
+import Image from 'next/image';
+import TableImage from '../../assets/images/layout.svg';
 
-const AdditionSubNode = ({ id, data }: NodeProps<any>) => {
+const AdditionSubNode = ({ id, data, type }: NodeProps<any>) => {
     const { getEdges, getNode, setNodes } = useReactFlow();
-    const [result, setResult] = useState(0);
-    const [operation, setOperation] = useState<string>('addition');
-    const [firstValue, setFirstValue] = useState<number>(0);
-    const [secondValue, setSecondValue] = useState<number>(0);
+    const [connectedValues, setConnectedValues] = useState<any>({
+        firstNodeValues: [],
+        secondNodeValues: []
+    });
 
     useEffect(() => {
         const edges = getEdges().filter((edge) => edge.target === id);
 
-        let firstVal = 0;
-        let secondVal = 0;
+        let firstNodeValues: any[] = [];
+        let secondNodeValues: any[] = [];
 
-        edges.forEach((edge) => {
+        edges.forEach((edge, index) => {
             const sourceNode = getNode(edge.source);
-            const sourceValue = sourceNode?.data?.value || sourceNode?.data?.result || 0;
+            const sourceNodeData = sourceNode?.data;
 
-            if (edge.targetHandle === 'target1') {
-                firstVal = sourceValue;
-            } else if (edge.targetHandle === 'target2') {
-                secondVal = sourceValue;
+            if (index === 0 && sourceNodeData) {
+                Object.entries(sourceNodeData).forEach(([key, value]) => {
+                    if (key.startsWith('value') || key.startsWith('variable')) {
+                        firstNodeValues.push(value);
+                    }
+                });
+            }
+
+            if (index === 1 && sourceNodeData) {
+                Object.entries(sourceNodeData).forEach(([key, value]) => {
+                    if (key.startsWith('value') || key.startsWith('variable')) {
+                        secondNodeValues.push(value);
+                    }
+                });
             }
         });
 
-        setFirstValue(firstVal);
-        setSecondValue(secondVal);
-
-        let calculatedResult = 0;
-        if (operation === 'addition') {
-            calculatedResult = firstVal + secondVal;
-        } else if (operation === 'subtraction') {
-            calculatedResult = firstVal - secondVal;
-        }
-
-        setResult(calculatedResult);
+        setConnectedValues({ firstNodeValues, secondNodeValues });
 
         setNodes((nodes) =>
             nodes.map((node) =>
                 node.id === id
-                    ? { ...node, data: { ...node.data, result: calculatedResult, operation } }
+                    ? {
+                        ...node,
+                        data: {
+                            ...node.data,
+                            firstNodeValues,
+                            secondNodeValues,
+                        }
+                    }
                     : node
             )
         );
-    }, [getEdges, getNode, id, setNodes, operation]);
-
-    const handleOperationChange = (value: string) => {
-        setOperation(value);
-    };
+    }, [getEdges, getNode, id, setNodes]);
 
     const isValidConnection = (connection: Connection | Edge) => {
         const edges = getEdges().filter((edge) => edge.target === id);
@@ -58,21 +63,26 @@ const AdditionSubNode = ({ id, data }: NodeProps<any>) => {
     };
 
     return (
-        <div style={{ padding: '10px', border: '1px solid black', borderRadius: '5px' }}>
-            <div>Add / Subtract Node</div>
-            <div className="nodrag">
-                <Select
-                    defaultValue="addition"
-                    style={{ width: 120, marginBottom: '10px' }}
-                    onChange={handleOperationChange}
-                >
-                    <Select.Option value="addition">Addition</Select.Option>
-                    <Select.Option value="subtraction">Subtraction</Select.Option>
-                </Select>
+        <div>
+            <div className={styles['starting-point-label']}>
+                +
             </div>
-            <div>First Value: {firstValue}</div>
-            <div>Second Value: {secondValue}</div>
-            <div>Result: {result}</div>
+            <div className={styles['nodeBox']}>
+                <div className={`flex gap-1 ${styles['node-main']}`}>
+                    <div className={`flex gap-1 ${styles['node']}`}>
+                        <div className={`flex gap-1 ${styles['nodewrap']}`}>
+                            <Image src={TableImage} alt='Table Image' width={32} height={32} />
+                            <div className={styles['node-text']}>
+                                <h6>{data.label || "Addition / Subtraction"}</h6>
+                                <span>{type || "Node type not found"}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div className={styles['minus-point-label']}>
+                -
+            </div>
 
             <Handle
                 type="target"

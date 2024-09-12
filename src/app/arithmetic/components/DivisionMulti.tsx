@@ -1,85 +1,85 @@
 import React, { useState, useEffect } from 'react';
 import { Handle, Position, NodeProps, useReactFlow, Connection, Edge } from 'reactflow';
-import { Select } from 'antd';
 import 'reactflow/dist/style.css';
+import styles from '@/app/assets/css/workflow.module.css';
+import Image from 'next/image';
+import TableImage from '../../assets/images/layout.svg';
 
-const DivisionMultiplicationNode = ({ id }: NodeProps<any>) => {
+const DivisionMultiply = ({ id, data, type }: NodeProps<any>) => {
     const { getEdges, getNode, setNodes } = useReactFlow();
-    const [result, setResult] = useState<number | string>(1);
-    const [operation, setOperation] = useState<string>('multiplication');
-    const [firstValue, setFirstValue] = useState<number>(1);
-    const [secondValue, setSecondValue] = useState<number>(1);
+    const [connectedValues, setConnectedValues] = useState<any>({
+        firstNodeValues: [],
+        secondNodeValues: []
+    });
 
     useEffect(() => {
         const edges = getEdges().filter((edge) => edge.target === id);
 
-        let firstVal = 1;
-        let secondVal = 1;
+        let firstNodeValues: any[] = [];
+        let secondNodeValues: any[] = [];
 
-        edges.forEach((edge) => {
+        edges.forEach((edge, index) => {
             const sourceNode = getNode(edge.source);
-            const sourceValue = sourceNode?.data?.value || sourceNode?.data?.result || 1;
+            const sourceNodeData = sourceNode?.data;
 
-            if (edge.targetHandle === 'target1') {
-                firstVal = sourceValue;
-            } else if (edge.targetHandle === 'target2') {
-                secondVal = sourceValue;
+            if (index === 0 && sourceNodeData) {
+                // First connected node values (for multiplication/division)
+                Object.entries(sourceNodeData).forEach(([key, value]) => {
+                    if (key.startsWith('value') || key.startsWith('variable')) {
+                        firstNodeValues.push(value);
+                    }
+                });
+            }
+
+            if (index === 1 && sourceNodeData) {
+                // Second connected node values (for multiplication/division)
+                Object.entries(sourceNodeData).forEach(([key, value]) => {
+                    if (key.startsWith('value') || key.startsWith('variable')) {
+                        secondNodeValues.push(value);
+                    }
+                });
             }
         });
 
-        setFirstValue(firstVal);
-        setSecondValue(secondVal);
+        // Update the connected values in state
+        setConnectedValues({ firstNodeValues, secondNodeValues });
 
-        let calculatedResult: number | string = 0;
-        if (operation === 'multiplication') {
-            calculatedResult = firstVal * secondVal;
-        } else if (operation === 'division') {
-            calculatedResult = secondVal !== 0 ? firstVal / secondVal : 'Error (Div by 0)';
-        }
-
-        setResult(calculatedResult);
-
+        // Store the values in node's data to pass them to the JSON
         setNodes((nodes) =>
             nodes.map((node) =>
                 node.id === id
-                    ? { ...node, data: { ...node.data, result: calculatedResult, operation } }
+                    ? { ...node, data: { ...node.data, firstNodeValues, secondNodeValues } }
                     : node
             )
         );
-    }, [getEdges, getNode, id, setNodes, operation]);
-
-    const handleOperationChange = (value: string) => {
-        setOperation(value);
-    };
+    }, [getEdges, getNode, id, setNodes]);
 
     const isValidConnection = (connection: Connection | Edge) => {
         const edges = getEdges().filter((edge) => edge.target === id);
-
-        const isTarget1Connected = edges.some((edge) => edge.targetHandle === 'target1');
-        const isTarget2Connected = edges.some((edge) => edge.targetHandle === 'target2');
-
-        if (connection.targetHandle === 'target1' && isTarget1Connected) return false;
-        if (connection.targetHandle === 'target2' && isTarget2Connected) return false;
-
-        return true;
+        return edges.length < 2; // Limit to 2 connections
     };
 
     return (
-        <div style={{ padding: '10px', border: '1px solid black', borderRadius: '5px' }}>
-            <div>Division / Multiplication Node</div>
-            <div className="nodrag">
-                <Select
-                    defaultValue="multiplication"
-                    style={{ width: 150, marginBottom: '10px' }}
-                    onChange={handleOperationChange}
-                >
-                    <Select.Option value="multiplication">Multiplication</Select.Option>
-                    <Select.Option value="division">Division</Select.Option>
-                </Select>
+        <div>
+            <div className={styles['starting-point-label']}>
+                *
             </div>
-            <div>First Value: {firstValue}</div>
-            <div>Second Value: {secondValue}</div>
-            <div>Result: {result}</div>
+            <div className={styles['nodeBox']}>
+                <div className={`flex gap-1 ${styles['node-main']}`}>
+                    <div className={`flex gap-1 ${styles['node']}`}>
+                        <div className={`flex gap-1 ${styles['nodewrap']}`}>
+                            <Image src={TableImage} alt='Table Image' width={32} height={32} />
+                            <div className={styles['node-text']}>
+                                <h6>{data.label || "Multiplication / Division"}</h6>
+                                <span>{type || "Node type not found"}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div className={styles['minus-point-label']}>
+                /
+            </div>
 
             <Handle
                 type="target"
@@ -95,7 +95,6 @@ const DivisionMultiplicationNode = ({ id }: NodeProps<any>) => {
                 isValidConnection={isValidConnection}
                 style={{ top: '65%' }}
             />
-
             <Handle
                 type="source"
                 position={Position.Right}
@@ -105,4 +104,4 @@ const DivisionMultiplicationNode = ({ id }: NodeProps<any>) => {
     );
 };
 
-export default DivisionMultiplicationNode;
+export default DivisionMultiply;

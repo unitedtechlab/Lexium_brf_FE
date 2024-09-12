@@ -1,12 +1,45 @@
-import React, { useState } from 'react';
+import React from 'react';
 import styles from '@/app/assets/css/workflow.module.css';
-import { Button, message } from 'antd';
+import { Button } from 'antd';
 import Image from 'next/image';
-import Logo from '@/app/assets/images/logo.svg'
-import Link from 'next/link';
-
+import Logo from '@/app/assets/images/logo.svg';
+import { useReactFlow } from 'reactflow';
 
 const Topbar = () => {
+    const { getNodes, getEdges } = useReactFlow();
+
+    const handleSave = () => {
+        const nodes = getNodes();
+        const edges = getEdges();
+
+        const nodeData = nodes.map((node) => {
+            const targetEdges = edges.filter((edge) => edge.target === node.id);
+            const sources = targetEdges.map((edge) => edge.source);
+
+            const sourceEdges = edges.filter((edge) => edge.source === node.id);
+            const targets = sourceEdges.map((edge) => edge.target);
+
+            const sourceValue = sources.length === 1 ? sources[0] : sources.length > 1 ? sources : '';
+            const targetValue = targets.length === 1 ? targets[0] : targets.length > 1 ? targets : '';
+
+            // Exclude 'label' and 'result' from node data
+            const { label, result, ...filteredData } = node.data;
+
+            return {
+                id: node.id,
+                type: node.type,
+                data: filteredData, // Pass filtered data
+                connectedEdges: [
+                    {
+                        source: sourceValue,
+                        target: targetValue
+                    }
+                ]
+            };
+        });
+
+        console.log(JSON.stringify(nodeData, null, 2));
+    };
 
     return (
         <div className={styles.topbarWrapper}>
@@ -19,16 +52,12 @@ const Topbar = () => {
                 </div>
 
                 <div className={`flex gap-1 ${styles.rightButtons}`}>
-                    <Link href="/"
-                        className='btn'
-                    >
+                    <Button className='btn' onClick={handleSave}>
                         Save
-                    </Link>
-                    <Link href="/dashboard"
-                        className='btn btn-outline'
-                    >
+                    </Button>
+                    <Button className="btn btn-outline">
                         Discard
-                    </Link>
+                    </Button>
                 </div>
             </div>
         </div>

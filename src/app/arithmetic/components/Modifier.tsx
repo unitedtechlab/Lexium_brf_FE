@@ -2,43 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { Handle, Position, NodeProps, useReactFlow, Connection, Edge } from 'reactflow';
 import { Select } from 'antd';
 import 'reactflow/dist/style.css';
+import styles from '@/app/assets/css/workflow.module.css';
+import Image from 'next/image';
+import TableImage from '../../assets/images/layout.svg';
 
-const ModifierNode = ({ id, data }: NodeProps<any>) => {
-    const { getEdges, getNode, setNodes } = useReactFlow();
-    const [result, setResult] = useState<number | string>(0);
-    const [operation, setOperation] = useState<string>('absolute');
-    const [inputValue, setInputValue] = useState<number>(0);
+const ModifierNode = ({ id, data, type }: NodeProps<any>) => {
+    const { getEdges, setNodes } = useReactFlow();
+    const [operation, setOperation] = useState<string>(data.operation || 'absolute');
 
     useEffect(() => {
-        const edges = getEdges().filter((edge) => edge.target === id);
-        let value = 0;
-
-        if (edges.length > 0) {
-            const edge = edges[0]; // Only one target connection allowed
-            const sourceNode = getNode(edge.source);
-            const sourceValue = sourceNode?.data?.value || sourceNode?.data?.result || 0;
-            value = sourceValue;
-        }
-
-        setInputValue(value);
-
-        let modifiedResult: number | string = 0;
-        if (operation === 'absolute') {
-            modifiedResult = Math.abs(value); // Absolute value
-        } else if (operation === 'round') {
-            modifiedResult = Math.round(value); // Rounded value
-        }
-
-        setResult(modifiedResult);
-
         setNodes((nodes) =>
             nodes.map((node) =>
-                node.id === id
-                    ? { ...node, data: { ...node.data, result: modifiedResult, operation } }
-                    : node
+                node.id === id ? { ...node, data: { ...node.data, operation } } : node
             )
         );
-    }, [getEdges, getNode, id, setNodes, operation]);
+    }, [operation, id, setNodes]);
 
     const handleOperationChange = (value: string) => {
         setOperation(value);
@@ -46,29 +24,41 @@ const ModifierNode = ({ id, data }: NodeProps<any>) => {
 
     const isValidConnection = (connection: Connection | Edge) => {
         const edges = getEdges().filter((edge) => edge.target === id);
-        return edges.length === 0; // Only allow one connection to the target
+        return edges.length === 0;
     };
 
     const isValidSourceConnection = (connection: Connection | Edge) => {
         const edges = getEdges().filter((edge) => edge.source === id);
-        return edges.length === 0; // Only allow one connection from the source
+        return edges.length === 0;
     };
 
     return (
-        <div style={{ padding: '10px', border: '1px solid black', borderRadius: '5px' }}>
-            <div>Modifier Node</div>
-            <div className="nodrag">
-                <Select
-                    defaultValue="absolute"
-                    style={{ width: 150, marginBottom: '10px' }}
-                    onChange={handleOperationChange}
-                >
-                    <Select.Option value="absolute">Absolute Value</Select.Option>
-                    <Select.Option value="round">Round Value</Select.Option>
-                </Select>
+        <div>
+            <div className={styles['nodeBox']}>
+                <div className={`flex gap-1 ${styles['node-main']}`}>
+                    <div className={`flex gap-1 ${styles['node']}`}>
+                        <div className={`flex gap-1 ${styles['nodewrap']}`}>
+                            <Image src={TableImage} alt='Table Image' width={32} height={32} />
+                            <div className={styles['node-text']}>
+                                <h6>{data.label || "Modifier"}</h6>
+                                <span>{type || "Node type not found"}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div style={{ width: '100%' }}>
+                        <Select
+                            value={operation}
+                            style={{ width: '100%' }}
+                            onChange={handleOperationChange}
+                            getPopupContainer={(triggerNode) => triggerNode.parentNode}
+                            className="nodrag"
+                        >
+                            <Select.Option value="absolute">Absolute</Select.Option>
+                            <Select.Option value="round">Round</Select.Option>
+                        </Select>
+                    </div>
+                </div>
             </div>
-            <div>Input Value: {inputValue}</div>
-            <div>Result: {result}</div>
 
             <Handle
                 type="target"

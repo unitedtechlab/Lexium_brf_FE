@@ -1,60 +1,55 @@
 import React, { useState, useEffect } from 'react';
-import { Handle, Position, NodeProps, useReactFlow, Connection, Edge } from 'reactflow';
+import { Handle, Position, NodeProps, useReactFlow } from 'reactflow';
 import { Select } from 'antd';
 import 'reactflow/dist/style.css';
+import styles from '@/app/assets/css/workflow.module.css';
+import Image from 'next/image';
+import TableImage from '../../assets/images/layout.svg';
 
-const CompilerNode = ({ id, data }: NodeProps<any>) => {
-    const { getEdges, getNode, setNodes } = useReactFlow();
-    const [result, setResult] = useState<number>(0);
-    const [operation, setOperation] = useState<string>('min');
-    const [inputValues, setInputValues] = useState<number[]>([]);
+const CompilerNode = ({ id, data, type }: NodeProps<any>) => {
+    const { setNodes } = useReactFlow();
+    const [operation, setOperation] = useState<string>(data.operation || 'min'); // Initialize with data.operation or default to 'min'
 
     useEffect(() => {
-        const edges = getEdges().filter((edge) => edge.target === id);
-        const values = edges.map((edge) => {
-            const sourceNode = getNode(edge.source);
-            return sourceNode?.data?.value || sourceNode?.data?.result || 0;
-        });
-
-        setInputValues(values);
-
-        let calculatedResult = 0;
-        if (operation === 'min') {
-            calculatedResult = Math.min(...values);
-        } else if (operation === 'max') {
-            calculatedResult = Math.max(...values);
-        }
-
-        setResult(calculatedResult);
-
+        // Update node's data when operation changes
         setNodes((nodes) =>
             nodes.map((node) =>
-                node.id === id
-                    ? { ...node, data: { ...node.data, result: calculatedResult, operation } }
-                    : node
+                node.id === id ? { ...node, data: { ...node.data, operation } } : node
             )
         );
-    }, [getEdges, getNode, id, setNodes, operation]);
+    }, [operation, id, setNodes]);
 
     const handleOperationChange = (value: string) => {
-        setOperation(value);
+        setOperation(value); // Update selected operation
     };
 
     return (
-        <div style={{ padding: '10px', border: '1px solid black', borderRadius: '5px' }}>
-            <div>Compiler Node</div>
-            <div className="nodrag">
-                <Select
-                    defaultValue="min"
-                    style={{ width: 150, marginBottom: '10px' }}
-                    onChange={handleOperationChange}
-                >
-                    <Select.Option value="min">Min Value</Select.Option>
-                    <Select.Option value="max">Max Value</Select.Option>
-                </Select>
+        <div>
+            <div className={styles['nodeBox']}>
+                <div className={`flex gap-1 ${styles['node-main']}`}>
+                    <div className={`flex gap-1 ${styles['node']}`}>
+                        <div className={`flex gap-1 ${styles['nodewrap']}`}>
+                            <Image src={TableImage} alt='Table Image' width={32} height={32} />
+                            <div className={styles['node-text']}>
+                                <h6>{data.label || "Modifier"}</h6>
+                                <span>{type || "Node type not found"}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div style={{ width: '100%' }}>
+                        <Select
+                            value={operation} // Bind the select to the current operation state
+                            style={{ width: '100%' }}
+                            onChange={handleOperationChange} // Update the state when the user selects a new option
+                            getPopupContainer={(triggerNode) => triggerNode.parentNode} // Fixes dropdown rendering in ReactFlow
+                            className="nodrag"
+                        >
+                            <Select.Option value="min">Min</Select.Option>
+                            <Select.Option value="max">Max</Select.Option>
+                        </Select>
+                    </div>
+                </div>
             </div>
-            <div>Input Values: {inputValues.join(', ')}</div>
-            <div>Result: {result}</div>
 
             <Handle
                 type="target"
