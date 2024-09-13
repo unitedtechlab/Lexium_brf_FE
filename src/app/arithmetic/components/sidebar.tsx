@@ -165,7 +165,7 @@ const Sidebar: React.FC = () => {
         <div className={styles.operations}>
           <h6>Arithmetic Operators</h6>
 
-          {/* Variable Field Node */}
+          {/* Variable Node */}
           <div
             className={`flex gap-1 ${styles.sidebardragDrop}`}
             onDragStart={(event) => onDragStart(event, 'variables', 'Variables')}
@@ -174,6 +174,7 @@ const Sidebar: React.FC = () => {
             <IconComponent icon={<MdOutlineSelectAll />} />
             <h6 className={styles.titleName}>Variables</h6>
           </div>
+
 
           {/* Constant Node */}
           <div
@@ -223,6 +224,26 @@ const Sidebar: React.FC = () => {
           >
             <IconComponent icon={<TbMathMaxMin />} />
             <h6 className={styles.titleName}>Compiler</h6>
+          </div>
+
+          {/* local variable Node */}
+          <div
+            className={`flex gap-1 ${styles.sidebardragDrop}`}
+            onDragStart={(event) => onDragStart(event, 'local_var_node', 'Local Variable')}
+            draggable
+          >
+            <IconComponent icon={<MdOutlineKeyboardAlt />} />
+            <h6 className={styles.titleName}>Local Variable</h6>
+          </div>
+
+          {/* Global variable Node */}
+          <div
+            className={`flex gap-1 ${styles.sidebardragDrop}`}
+            onDragStart={(event) => onDragStart(event, 'globl_var_node', 'Global Variable')}
+            draggable
+          >
+            <IconComponent icon={<MdOutlineKeyboardAlt />} />
+            <h6 className={styles.titleName}>Global Variable</h6>
           </div>
 
         </div>

@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Handle, Position, NodeProps } from 'reactflow';
-import { Form, Button, Input } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Handle, NodeProps, Position } from 'reactflow';
+import { Form, Input } from 'antd';
 import 'reactflow/dist/style.css';
 import styles from '@/app/assets/css/workflow.module.css';
 import { PiFlagCheckered } from "react-icons/pi";
@@ -9,35 +9,46 @@ const VariableNode = ({ id, data, type }: NodeProps<any>) => {
     const [inputValue, setInputValue] = useState<string>('');
     const [valueType, setValueType] = useState<string | null>(null);
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value;
-
-        // Reuse this code later for set type of input value (Don't Remove)
-        // if (/^-?\d*\.?\d*$/.test(value)) {
-        //     setInputValue(value);
-        //     if (value.includes('.')) {
-        //         setValueType('float');
-        //     } else if (value !== '') {
-        //         setValueType('int');
-        //     } else {
-        //         setValueType(null);
-        //     }
+    const determineValueType = (value: string) => {
+        // ============== Dont Remove this commnet as need to resuse it later.
+        // if (value.includes('.')) {
+        //     return 'float';
+        // } else if (value !== '') {
+        //     return 'int';
+        // } else {
+        //     return null;
         // }
 
-        if (/^-?\d*\.?\d*$/.test(value)) {
-            setInputValue(value);
-
-            if (value !== '') {
-                setValueType('number');
-            } else {
-                setValueType(null);
-            }
+        if (value !== '') {
+            return 'number';
+        } else {
+            return null;
         }
     };
 
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+
+        if (/^-?\d*\.?\d*$/.test(value)) {
+            setInputValue(value);
+            const valueType = determineValueType(value);
+            setValueType(valueType);
+
+            data.value = value;
+            data.variableType = valueType;
+        }
+    };
+
+    useEffect(() => {
+        if (data.value) {
+            setInputValue(data.value);
+            setValueType(data.variableType || determineValueType(data.value));
+        }
+    }, [data.value, data.variableType]);
+
     return (
         <div>
-            <div className={styles['nodeBox']} style={{ maxWidth: "370px" }}>
+            <div className={styles['nodeBox']} style={{ maxWidth: "340px" }}>
                 <Form name="custom-value" layout="vertical">
                     <div className={`flex gap-1 ${styles['node-main']}`}>
                         <div className={`flex gap-1 ${styles['node']}`}>

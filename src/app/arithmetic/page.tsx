@@ -18,17 +18,17 @@ import classes from '@/app/assets/css/workflow.module.css';
 
 import Sidebar from './components/sidebar';
 import { DnDProvider, useDnD } from './DnDContext';
-import InputField from './components/InputNode';
+import VariableNode from './components/Variables';
 import AdditionSubNode from './components/AdditionSub';
 import Topbar from './components/topbar';
 import CustomEdge from "./customEdge";
 import DivisionMultiplicationNode from './components/DivisionMulti';
 import ModifierNode from './components/Modifier';
 import CompilerNode from './components/Compiler';
-import Constants from "./components/constants"
+import Constants from "./components/constants";
 
 const nodeTypes = {
-    variables: InputField,
+    variables: VariableNode,
     add_sub_type: AdditionSubNode,
     multiply_divide_type: DivisionMultiplicationNode,
     modifier_type: ModifierNode,
@@ -39,7 +39,6 @@ const nodeTypes = {
 const edgeTypes = {
     customEdge: CustomEdge,
 };
-
 
 let id = 0;
 const getId = () => `dndnode_${id++}`;
@@ -78,7 +77,7 @@ const DnDFlow: React.FC = () => {
                 id: getId(),
                 type: type.nodeType,
                 position,
-                data: { label: type.titleName, columns: type.columns || [] }, // Pass columns to the node
+                data: { label: type.titleName, columns: type.columns || [] },
             };
 
             setNodes((nds) => nds.concat(newNode));
@@ -86,9 +85,50 @@ const DnDFlow: React.FC = () => {
         [screenToFlowPosition, type, setNodes]
     );
 
+    const handleSave = () => {
+        // Gather connected edges per node
+        const cleanedNodes = nodes.map((node) => {
+            const { data, type } = node; // Capture type
+            const { columns, label, ...cleanedData } = data;
+
+            // Find connected edges for each node (source and target)
+            const connectedEdges = edges
+                .filter((edge) => edge.source === node.id || edge.target === node.id)
+                .map((edge) => ({
+                    source: edge.source === node.id ? "" : edge.source,
+                    target: edge.target === node.id ? "" : edge.target,
+                }));
+
+            return {
+                id: node.id,
+                type, // Include the node type here
+                data: { ...cleanedData },
+                connectedEdges: connectedEdges.length > 0 ? connectedEdges : undefined,
+            };
+        });
+
+        // Adjust the final node to meet the required format
+        const finalNode = cleanedNodes.find((node) => node.data.additionNodeValues || node.data.substractionNodeValues);
+        if (finalNode) {
+            const finalConnectedSources = edges
+                .filter((edge) => edge.target === finalNode.id)
+                .map((edge) => edge.source)
+                .join(",");  // Concatenate the sources into a string
+
+            finalNode.connectedEdges = [
+                {
+                    source: finalConnectedSources,  // Assign the concatenated string
+                    target: "",
+                },
+            ];
+        }
+
+        console.log(JSON.stringify(cleanedNodes, null, 2));
+    };
+
     return (
         <div className={classes.workflowPage}>
-            <Topbar />
+            <Topbar onSave={handleSave} />
             <div className={classes.workflowWrapper}>
                 <Sidebar />
                 <div className={classes.reactflowMain} ref={reactFlowWrapper}>

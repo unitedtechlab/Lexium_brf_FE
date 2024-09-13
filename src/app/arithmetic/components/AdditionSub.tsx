@@ -8,38 +8,44 @@ import TableImage from '../../assets/images/layout.svg';
 const AdditionSubNode = ({ id, data, type }: NodeProps<any>) => {
     const { getEdges, getNode, setNodes } = useReactFlow();
     const [connectedValues, setConnectedValues] = useState<any>({
-        firstNodeValues: [],
-        secondNodeValues: []
+        additionNodeValues: [],
+        substractionNodeValues: []
     });
 
     useEffect(() => {
-        const edges = getEdges().filter((edge) => edge.target === id);
+        const edges = getEdges().filter((edge) => edge.target === id); // Use edges from the context
 
-        let firstNodeValues: any[] = [];
-        let secondNodeValues: any[] = [];
+        let additionNodeValues: any[] = [];
+        let substractionNodeValues: any[] = [];
 
-        edges.forEach((edge, index) => {
+        edges.forEach((edge) => {
             const sourceNode = getNode(edge.source);
             const sourceNodeData = sourceNode?.data;
 
-            if (index === 0 && sourceNodeData) {
-                Object.entries(sourceNodeData).forEach(([key, value]) => {
-                    if (key.startsWith('value') || key.startsWith('variable')) {
-                        firstNodeValues.push(value);
+            if (edge.targetHandle === 'target1' && sourceNodeData) {
+                additionNodeValues.push({
+                    id: sourceNode.id,
+                    data: {
+                        variableType: sourceNodeData.variableType || 'unknown',
+                        variable1: sourceNodeData.variable1 || sourceNodeData.value,
+                        variable2: sourceNodeData.variable2 || null
                     }
                 });
             }
 
-            if (index === 1 && sourceNodeData) {
-                Object.entries(sourceNodeData).forEach(([key, value]) => {
-                    if (key.startsWith('value') || key.startsWith('variable')) {
-                        secondNodeValues.push(value);
+            if (edge.targetHandle === 'target2' && sourceNodeData) {
+                substractionNodeValues.push({
+                    id: sourceNode.id,
+                    data: {
+                        variableType: sourceNodeData.variableType || 'unknown',
+                        variable1: sourceNodeData.variable1 || sourceNodeData.value,
+                        variable2: null
                     }
                 });
             }
         });
 
-        setConnectedValues({ firstNodeValues, secondNodeValues });
+        setConnectedValues({ additionNodeValues, substractionNodeValues });
 
         setNodes((nodes) =>
             nodes.map((node) =>
@@ -48,8 +54,8 @@ const AdditionSubNode = ({ id, data, type }: NodeProps<any>) => {
                         ...node,
                         data: {
                             ...node.data,
-                            firstNodeValues,
-                            secondNodeValues,
+                            additionNodeValues,
+                            substractionNodeValues,
                         }
                     }
                     : node
