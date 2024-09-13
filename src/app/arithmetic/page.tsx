@@ -25,6 +25,7 @@ import CustomEdge from "./customEdge";
 import DivisionMultiplicationNode from './components/DivisionMulti';
 import ModifierNode from './components/Modifier';
 import CompilerNode from './components/Compiler';
+import Constants from "./components/constants"
 
 const nodeTypes = {
     variables: InputField,
@@ -32,6 +33,7 @@ const nodeTypes = {
     multiply_divide_type: DivisionMultiplicationNode,
     modifier_type: ModifierNode,
     compiler_type: CompilerNode,
+    constants: Constants,
 };
 
 const edgeTypes = {
@@ -76,7 +78,7 @@ const DnDFlow: React.FC = () => {
                 id: getId(),
                 type: type.nodeType,
                 position,
-                data: { label: type.titleName },
+                data: { label: type.titleName, columns: type.columns || [] }, // Pass columns to the node
             };
 
             setNodes((nds) => nds.concat(newNode));

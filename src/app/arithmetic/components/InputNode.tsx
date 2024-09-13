@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
 import { Form, Button, Select } from 'antd';
 import 'reactflow/dist/style.css';
@@ -7,26 +7,50 @@ import { PiFlagCheckered } from "react-icons/pi";
 import { MdDeleteOutline } from "react-icons/md";
 
 const VariableNode = ({ id, data, type }: NodeProps<any>) => {
-    const [fields, setFields] = useState<any[]>([{ type: 'variable', selectedVariable: '' }]);
-    const [variables] = useState<string[]>(['name', 'age', 'doctor_name', 'billing_amount', 'gender', 'billing_date']);
+    const [fields, setFields] = useState<any[]>([{ type: 'variable', selectedVariable: '', selectedType: '' }]);
+    const { columns = {} } = data;
+
+    const selectedVariables = useMemo(() => {
+        return fields.map(field => field.selectedVariable);
+    }, [fields]);
+
+    const areAllFieldsSelected = useMemo(() => {
+        return fields.every(field => field.selectedVariable !== '');
+    }, [fields]);
+
+    const getFilteredColumns = (selectedType?: string) => {
+        return Object.keys(columns).filter((column) => {
+            const columnType = columns[column]?.toLowerCase();
+            return ['number', 'int', 'float'].includes(columnType) && (!selectedType || columnType === selectedType);
+        });
+    };
 
     const handleSelectChange = (index: number, value: string) => {
         setFields((prevFields) => {
             const newFields = [...prevFields];
             newFields[index].selectedVariable = value;
+            newFields[index].selectedType = columns[value] || '';
             return newFields;
         });
 
         data[`variable${index + 1}`] = value;
+        data[`variableType${index + 1}`] = columns[value] || '';
     };
 
     const addVariableField = () => {
-        setFields((prevFields) => [...prevFields, { type: 'variable', selectedVariable: '' }]);
+        if (areAllFieldsSelected) {
+            const firstSelectedType = fields[0]?.selectedType;
+            setFields((prevFields) => [
+                ...prevFields,
+                { type: 'variable', selectedVariable: '', selectedType: firstSelectedType }
+            ]);
+        }
     };
 
     const handleDelete = (index: number) => {
         setFields((prevFields) => prevFields.filter((_, i) => i !== index));
         delete data[`variable${index + 1}`];
+        delete data[`variableType${index + 1}`];
     };
 
     return (
@@ -39,9 +63,10 @@ const VariableNode = ({ id, data, type }: NodeProps<any>) => {
                                 <PiFlagCheckered className={styles.iconFlag} />
                                 <div className={styles['node-text']}>
                                     <h6>{data.label || "Addition / Subtraction"}</h6>
+                                    {fields[0].selectedType && <span>Type: {fields[0].selectedType}</span>}
                                 </div>
                             </div>
-                            <Button onClick={addVariableField}>
+                            <Button onClick={addVariableField} disabled={!areAllFieldsSelected}>
                                 Add Variable
                             </Button>
                         </div>
@@ -49,7 +74,6 @@ const VariableNode = ({ id, data, type }: NodeProps<any>) => {
                             {fields.map((field, index) => (
                                 <Form.Item
                                     key={index}
-                                    label={`Field ${index + 1}`}
                                     className={`nodrag ${styles.widthInput} ${styles.fullwidth} customselect`}
                                 >
                                     <Select
@@ -65,11 +89,19 @@ const VariableNode = ({ id, data, type }: NodeProps<any>) => {
                                                 : false
                                         }
                                     >
-                                        {variables.map((variable) => (
-                                            <Select.Option key={variable} value={variable}>
-                                                {variable}
-                                            </Select.Option>
-                                        ))}
+                                        {index === 0 ? (
+                                            getFilteredColumns().map((column: string) => (
+                                                <Select.Option key={column} value={column} disabled={selectedVariables.includes(column)}>
+                                                    {column}
+                                                </Select.Option>
+                                            ))
+                                        ) : (
+                                            getFilteredColumns(fields[0].selectedType).map((column: string) => (
+                                                <Select.Option key={column} value={column} disabled={selectedVariables.includes(column)}>
+                                                    {column}
+                                                </Select.Option>
+                                            ))
+                                        )}
                                     </Select>
 
                                     {index !== 0 && (

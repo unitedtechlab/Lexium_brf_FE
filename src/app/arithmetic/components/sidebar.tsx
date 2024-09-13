@@ -7,7 +7,7 @@ import { fetchWorkspaces, fetchFolders, fetchFolderData } from '@/app/API/api';
 import styles from '@/app/assets/css/workflow.module.css';
 import { PiMathOperationsBold } from "react-icons/pi";
 import { TbMathXDivideY2, TbMathIntegralX, TbMathMaxMin } from "react-icons/tb";
-import { MdOutlineSelectAll } from "react-icons/md";
+import { MdOutlineSelectAll, MdOutlineKeyboardAlt } from "react-icons/md";
 import { useEmail } from '@/app/context/emailContext';
 
 const { Search } = Input;
@@ -19,8 +19,9 @@ const Sidebar: React.FC = () => {
   const [selectedWorkspace, setSelectedWorkspace] = useState<string | null>(null);
   const [folders, setFolders] = useState<any[]>([]);
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
-  const [columns, setColumns] = useState<string[]>([]);
+  const [columnsWithTypes, setColumnsWithTypes] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState<boolean>(false);
+  const [tableSelected, setTableSelected] = useState<boolean>(false);
 
   // Fetch workspaces
   const loadWorkspaces = useCallback(async () => {
@@ -65,8 +66,12 @@ const Sidebar: React.FC = () => {
       setLoading(true);
       try {
         const folderData = await fetchFolderData(email, selectedWorkspace, folderId);
-        const fetchedColumns = Object.keys(folderData);
-        setColumns(fetchedColumns);
+        if (folderData) {
+          setColumnsWithTypes(folderData);
+          setTableSelected(true);
+        } else {
+          message.error('No column data found.');
+        }
       } catch (error) {
         message.error('Failed to fetch columns.');
         console.error("Failed to fetch columns:", error);
@@ -87,6 +92,7 @@ const Sidebar: React.FC = () => {
   const handleWorkspaceChange = (value: string) => {
     setSelectedWorkspace(value);
     loadFolders(value);
+    setTableSelected(false);
   };
 
   const handleFolderChange = (value: string) => {
@@ -95,7 +101,11 @@ const Sidebar: React.FC = () => {
   };
 
   const onDragStart = (event: React.DragEvent, nodeType: string, titleName: string) => {
-    setType({ nodeType, titleName });
+    if (!tableSelected) {
+      message.error('Please select Workspace or table first.');
+      return;
+    }
+    setType({ nodeType, titleName, columns: columnsWithTypes });
     event.dataTransfer.effectAllowed = 'move';
   };
 
@@ -138,6 +148,7 @@ const Sidebar: React.FC = () => {
             value={selectedFolder}
             onChange={handleFolderChange}
             loading={loading}
+            disabled={!selectedWorkspace}
           >
             {folders.map((folder) => (
               <Select.Option key={folder.id} value={folder.id}>
@@ -162,6 +173,16 @@ const Sidebar: React.FC = () => {
           >
             <IconComponent icon={<MdOutlineSelectAll />} />
             <h6 className={styles.titleName}>Variables</h6>
+          </div>
+
+          {/* Constant Node */}
+          <div
+            className={`flex gap-1 ${styles.sidebardragDrop}`}
+            onDragStart={(event) => onDragStart(event, 'constants', 'Constants')}
+            draggable
+          >
+            <IconComponent icon={<MdOutlineKeyboardAlt />} />
+            <h6 className={styles.titleName}>Constants</h6>
           </div>
 
           {/* Addition / Subtraction Node */}
@@ -203,6 +224,7 @@ const Sidebar: React.FC = () => {
             <IconComponent icon={<TbMathMaxMin />} />
             <h6 className={styles.titleName}>Compiler</h6>
           </div>
+
         </div>
       </div>
     </aside>
