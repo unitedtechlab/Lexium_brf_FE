@@ -47,9 +47,10 @@ const PivotTableModal: React.FC<PivotTableProps> = ({
 
 
     const handleTableChange = async (tableId: string) => {
+        console.log("handleTableChange:", tableId);
         setSelectedTable(tableId);
         const selectedTable = folders.find(folder => folder.id === tableId);
-
+        console.log("selectedTable:", selectedTable );
         if (selectedTable) {
             const columnsObject = selectedTable.columns;
             if (columnsObject && typeof columnsObject === 'object') {

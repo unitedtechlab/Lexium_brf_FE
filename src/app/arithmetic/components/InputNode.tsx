@@ -1,19 +1,30 @@
 import React, { useState } from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
-import { Form, Button, Select } from 'antd';
+import { Form, Button, Select, message } from 'antd';
 import 'reactflow/dist/style.css';
 import styles from '@/app/assets/css/workflow.module.css';
 import { PiFlagCheckered } from "react-icons/pi";
 import { MdDeleteOutline } from "react-icons/md";
 
 const VariableNode = ({ id, data, type }: NodeProps<any>) => {
-    const [fields, setFields] = useState<any[]>([{ type: 'variable', selectedVariable: '' }]);
-    const [variables] = useState<string[]>(['name', 'age', 'doctor_name', 'billing_amount', 'gender', 'billing_date']);
+    const [fields, setFields] = useState<any[]>([{ type: 'variable', selectedVariable: '', selectedType: '' }]);
+    const folderdata = data.folderdata || {}; 
+    const variableEntries = Object.entries(folderdata); 
 
     const handleSelectChange = (index: number, value: string) => {
+        const selectedType = folderdata[value]; 
+
+        const hasTextType = fields.some(field => field.selectedType === 'Text');
+        const hasNumberType = fields.some(field => field.selectedType === 'number');
+        if ((hasTextType && selectedType !== 'Text') || (hasNumberType && selectedType !== 'number')) {
+            message.warning('Cannot select a variable with a different type.');
+            return;
+        }
+
         setFields((prevFields) => {
             const newFields = [...prevFields];
             newFields[index].selectedVariable = value;
+            newFields[index].selectedType = selectedType;
             return newFields;
         });
 
@@ -21,7 +32,7 @@ const VariableNode = ({ id, data, type }: NodeProps<any>) => {
     };
 
     const addVariableField = () => {
-        setFields((prevFields) => [...prevFields, { type: 'variable', selectedVariable: '' }]);
+        setFields((prevFields) => [...prevFields, { type: 'variable', selectedVariable: '', selectedType: '' }]);
     };
 
     const handleDelete = (index: number) => {
@@ -52,6 +63,11 @@ const VariableNode = ({ id, data, type }: NodeProps<any>) => {
                                     label={`Field ${index + 1}`}
                                     className={`nodrag ${styles.widthInput} ${styles.fullwidth} customselect`}
                                 >
+                                    {fields[index].selectedType && (
+                                        <div className={styles.message}>
+                                            {fields[index].selectedType === 'Text' ? 'Type: Text' : 'Type: Number'}
+                                        </div>
+                                    )}
                                     <Select
                                         showSearch
                                         placeholder="Select Variable"
@@ -65,9 +81,9 @@ const VariableNode = ({ id, data, type }: NodeProps<any>) => {
                                                 : false
                                         }
                                     >
-                                        {variables.map((variable) => (
-                                            <Select.Option key={variable} value={variable}>
-                                                {variable}
+                                        {variableEntries.map(([key, type]) => (
+                                            <Select.Option key={key} value={key}>
+                                                {key} 
                                             </Select.Option>
                                         ))}
                                     </Select>

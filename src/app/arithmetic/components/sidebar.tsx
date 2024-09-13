@@ -11,8 +11,10 @@ import { MdOutlineSelectAll } from "react-icons/md";
 import { useEmail } from '@/app/context/emailContext';
 
 const { Search } = Input;
-
-const Sidebar: React.FC = () => {
+interface sidebar extends React.FC {
+  data: any;
+}
+const Sidebar:React.FC<{ setFolderData: (data: any[]) => void }> = ({ setFolderData })  => {
   const { email } = useEmail();
   const { setType } = useDnD();
   const [workspaces, setWorkspaces] = useState<any[]>([]);
@@ -65,6 +67,7 @@ const Sidebar: React.FC = () => {
       setLoading(true);
       try {
         const folderData = await fetchFolderData(email, selectedWorkspace, folderId);
+        setFolderData(folderData)
         const fetchedColumns = Object.keys(folderData);
         setColumns(fetchedColumns);
       } catch (error) {

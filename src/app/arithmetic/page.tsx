@@ -1,5 +1,5 @@
 "use client";
-import React, { useRef, useCallback } from 'react';
+import React, { useRef, useCallback, useState } from 'react';
 import {
     ReactFlow,
     ReactFlowProvider,
@@ -48,6 +48,7 @@ const DnDFlow: React.FC = () => {
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
     const { screenToFlowPosition } = useReactFlow();
     const { type } = useDnD();
+    const [folderdata, setFolderData] = useState<any[]>([]);
 
     const onConnect = useCallback(
         (params: Edge | Connection) => setEdges((eds) => addEdge({ ...params, type: 'customEdge' }, eds)),
@@ -76,19 +77,22 @@ const DnDFlow: React.FC = () => {
                 id: getId(),
                 type: type.nodeType,
                 position,
-                data: { label: type.titleName },
+                data: { label: type.titleName, folderdata },
             };
 
             setNodes((nds) => nds.concat(newNode));
         },
-        [screenToFlowPosition, type, setNodes]
+        [screenToFlowPosition, type, setNodes, folderdata]
     );
+    const handleFolderData = (data: any) => {
+        setFolderData(data);
+      };
 
     return (
         <div className={classes.workflowPage}>
             <Topbar />
             <div className={classes.workflowWrapper}>
-                <Sidebar />
+                <Sidebar setFolderData={handleFolderData} />
                 <div className={classes.reactflowMain} ref={reactFlowWrapper}>
                     <ReactFlow
                         nodes={nodes}
