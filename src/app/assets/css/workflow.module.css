@@ -30,6 +30,16 @@
     min-height: calc(100vh - 120px);
 }
 
+@media screen and (min-width: 1900px) {
+    .reactflowMain {
+        max-width: calc(100% - 350px);
+    }
+
+    .sidebarWrapper {
+        max-width: 350px;
+    }
+}
+
 .heading {
     padding: 30px 16px 0;
 }

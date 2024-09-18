@@ -46,6 +46,8 @@ const CompilerNode = ({ id, data, type }: NodeProps<any>) => {
                         >
                             <Select.Option value="min">Min</Select.Option>
                             <Select.Option value="max">Max</Select.Option>
+                            <Select.Option value="mean">Mean</Select.Option>
+                            <Select.Option value="median">Median</Select.Option>
                         </Select>
                     </div>
                 </div>

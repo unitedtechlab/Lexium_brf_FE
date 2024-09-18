@@ -86,12 +86,10 @@ const DnDFlow: React.FC = () => {
     );
 
     const handleSave = () => {
-        // Gather connected edges per node
         const cleanedNodes = nodes.map((node) => {
-            const { data, type } = node; // Capture type
+            const { data, type } = node;
             const { columns, label, ...cleanedData } = data;
 
-            // Find connected edges for each node (source and target)
             const connectedEdges = edges
                 .filter((edge) => edge.source === node.id || edge.target === node.id)
                 .map((edge) => ({
@@ -101,23 +99,22 @@ const DnDFlow: React.FC = () => {
 
             return {
                 id: node.id,
-                type, // Include the node type here
+                type,
                 data: { ...cleanedData },
                 connectedEdges: connectedEdges.length > 0 ? connectedEdges : undefined,
             };
         });
 
-        // Adjust the final node to meet the required format
         const finalNode = cleanedNodes.find((node) => node.data.additionNodeValues || node.data.substractionNodeValues);
         if (finalNode) {
             const finalConnectedSources = edges
                 .filter((edge) => edge.target === finalNode.id)
                 .map((edge) => edge.source)
-                .join(",");  // Concatenate the sources into a string
+                .join(",");
 
             finalNode.connectedEdges = [
                 {
-                    source: finalConnectedSources,  // Assign the concatenated string
+                    source: finalConnectedSources,
                     target: "",
                 },
             ];

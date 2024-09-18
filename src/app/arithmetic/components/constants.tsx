@@ -5,7 +5,7 @@ import 'reactflow/dist/style.css';
 import styles from '@/app/assets/css/workflow.module.css';
 import { PiFlagCheckered } from "react-icons/pi";
 
-const VariableNode = ({ id, data, type }: NodeProps<any>) => {
+const ConstantNode = ({ id, data, type }: NodeProps<any>) => {
     const [inputValue, setInputValue] = useState<string>('');
     const [valueType, setValueType] = useState<string | null>(null);
 
@@ -82,4 +82,4 @@ const VariableNode = ({ id, data, type }: NodeProps<any>) => {
     );
 };
 
-export default VariableNode;
+export default ConstantNode;
