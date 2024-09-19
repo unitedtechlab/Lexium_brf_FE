@@ -105,7 +105,7 @@ const DnDFlow: React.FC = () => {
             };
         });
 
-        const finalNode = cleanedNodes.find((node) => node.data.additionNodeValues || node.data.substractionNodeValues);
+        const finalNode = cleanedNodes.find((node) => node.data.additionNodeValues || node.data.substractionNodeValues || node.data.multiplyValues || node.data.divideValues);
         if (finalNode) {
             const finalConnectedSources = edges
                 .filter((edge) => edge.target === finalNode.id)

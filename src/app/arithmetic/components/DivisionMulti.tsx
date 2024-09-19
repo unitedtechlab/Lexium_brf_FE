@@ -15,36 +15,30 @@ const DivisionMultiply = ({ id, data }: NodeProps<any>) => {
     const [firstConnectedNodeType, setFirstConnectedNodeType] = useState<string | null>(null);
 
     useEffect(() => {
-        const edges = getEdges().filter((edge) => edge.target === id); // Filter edges connected to this node
+        const edges = getEdges().filter((edge) => edge.target === id);
 
         let multiplyValues: any[] = [];
         let divideValues: any[] = [];
         let firstConnectedType: string | null = null;
 
         edges.forEach((edge) => {
-            const sourceNode = getNode(edge.source); // Get source node for each edge
+            const sourceNode = getNode(edge.source);
             const sourceNodeData = sourceNode?.data;
 
-            // Set the first connected node's type
             if (!firstConnectedType && sourceNodeData?.variableType) {
                 firstConnectedType = sourceNodeData.variableType;
             }
 
-            // Prepare node data dynamically, including all variables (variable1, value, etc.)
             const prepareNodeData = (nodeData: any) => {
                 const cleanData: any = { variableType: nodeData.variableType || 'unknown' };
-
-                // Dynamically add all variables present in nodeData
                 Object.keys(nodeData).forEach((key) => {
                     if (key.startsWith('variable') || key === 'value') {
                         cleanData[key] = nodeData[key];
                     }
                 });
-
                 return cleanData;
             };
 
-            // Check which handle (target1 or target2) the edge is connected to and populate the respective values
             if (edge.targetHandle === 'target1' && sourceNodeData) {
                 multiplyValues.push({
                     id: sourceNode.id,
@@ -60,11 +54,9 @@ const DivisionMultiply = ({ id, data }: NodeProps<any>) => {
             }
         });
 
-        // Update connected values and set the first connected node's type
         setConnectedValues({ multiplyValues, divideValues });
-        setFirstConnectedNodeType(firstConnectedType); // Update the first connected node's type in the state
+        setFirstConnectedNodeType(firstConnectedType);
 
-        // Update the node state with the new connected values and node type
         setNodes((nodes) =>
             nodes.map((node) =>
                 node.id === id
@@ -79,12 +71,11 @@ const DivisionMultiply = ({ id, data }: NodeProps<any>) => {
                     : node
             )
         );
-    }, [getEdges, getNode, id, setNodes]); // Re-run this effect when edges or nodes change
+    }, [getEdges, getNode, id, setNodes]);
 
-    // Valid connection check to restrict connections
     const isValidConnection = (connection: Connection) => {
         const edges = getEdges().filter((edge) => edge.target === id);
-        return edges.length < 4; // Allow up to four connections (adjust as needed)
+        return edges.length < 4;
     };
 
     return (
