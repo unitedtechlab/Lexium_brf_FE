@@ -1,25 +1,17 @@
 
+import { useEffect, useState } from 'react';
 import styles from '@/app/assets/css/workflow.module.css';
 import { TbAdjustments, TbPlus } from 'react-icons/tb';
 import { IconComponent } from './sidebar';
 import { BiGridVertical } from 'react-icons/bi';
-import Image from "next/image";
-import { Avatar, Select } from 'antd';
-import userImage from "@/app/assets/images/user.png";
-import { useEffect, useState } from 'react';
-import { FiMoreHorizontal } from 'react-icons/fi';
-import { FaDeleteLeft } from 'react-icons/fa6';
-import { TiDelete } from 'react-icons/ti';
-import { AiFillDelete } from 'react-icons/ai';
+import { Button, Select } from 'antd';
+
 
 interface RightSideBarProps {
     variableEntries: any[];
 }
 const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
     const [isModalVisible, setIsModalVisible] = useState(false);
-    const [selectionPending, setSelectionPending] = useState<string[]>([]);
-    const [selectedVariable, setSelectedVariable] = useState<string[]>([]);
-    const [selectedType, setSelectedType] = useState<string[]>([]);
     const [isClicked, setIsClicked] = useState(false);
 
     const openModal = () => {
@@ -28,25 +20,6 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
 
     const closeModal = () => {
         setIsModalVisible(false);
-    };
-    const handleSelectChange = (value: string[]) => {
-        setSelectionPending(value);
-    };
-    const handleSelectedVariable = (value: string[]) => {
-        setSelectedVariable(value);
-        const selectedVar = variableEntries.find(([key]) => key === value[0]);
-        if (selectedVar) {
-            const [, type] = selectedVar;
-            setSelectedType([type]);
-        }
-    };
-    const handleSelectedType = (value: string[]) => {
-        setSelectedType(value);
-    };
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-    const toggleMenu = () => {
-        setIsMenuOpen(!isMenuOpen);
     };
 
     return (
@@ -61,25 +34,17 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
                 <div className={styles.variableList}>
                     <div className={styles.variables}>
                         <h6>Local Variable</h6>
-                        <div onClick={openModal}>
+                        <button className='nostyle'>
                             <IconComponent icon={<TbAdjustments size={18} style={{ transform: 'rotate(90deg)' }} />} />
-                        </div>
+                        </button>
                     </div>
 
                     <div className={styles.customvariable}>
                         <div className={styles.variables}>
                             <h6>Local Data</h6>
-                            <div className={isClicked ? styles.iconClicked : styles.icon} onClick={toggleMenu}>
+                            <div className={isClicked ? styles.iconClicked : styles.icon} onClick={openModal}>
                                 <IconComponent icon={<TbPlus size={18} />} />
                             </div>
-                            {isMenuOpen && (
-                                <div className={styles.dropdownMenu}>
-                                    <ul>
-                                        <li>Variables</li>
-                                        <li>Constant</li>
-                                    </ul>
-                                </div>
-                            )}
                         </div>
                         <div className={`${styles.variableNames}`}>
                             <ul>
@@ -133,39 +98,6 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
                                 &times;
                             </button>
                         </div>
-                        <div className={styles.selectedvariable}>
-                            <div className={styles.variableBox}>
-                                <div className={styles.iconAndLabel}>
-                                    <div className={`flex gap-1`}>
-                                        <div className={styles.iconWrapper}>
-                                            <IconComponent icon={<BiGridVertical size={24} />} />
-                                        </div>
-                                        <div className={styles.labelWrapper}>
-                                            <h6>Variable</h6>
-                                            <p>Integer</p>
-                                        </div>
-                                    </div>
-                                    <div className={styles.iconsRight}>
-                                        <IconComponent icon={<TbPlus size={20} />} />
-                                        <IconComponent icon={<FiMoreHorizontal size={20} style={{ marginLeft: '8px' }} />} />
-                                    </div>
-                                </div>
-
-                                <div className={styles.dropdownWrapper}>
-                                    <Select style={{ width: '100%' }} value={selectedVariable}
-                                        mode="multiple" placeholder="Select Variables" onChange={handleSelectedVariable}>
-                                        {variableEntries.map(([key]) => (
-                                            <Select.Option key={key} value={key}>
-                                                {key}
-                                            </Select.Option>))}
-                                    </Select>
-                                    <div className={styles.deleteIcon}>
-                                        <IconComponent icon={<AiFillDelete size={18} />} />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
                         <div className={styles.rightbar}>
                             <div className={`${styles.selectVariables}`}>
                                 <h6>Select Variable</h6>
@@ -178,7 +110,7 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
                             </div>
                             <div className={`${styles.selectVariables}`}>
                                 <h6>Variable Name</h6>
-                                <input type="text" className={styles.formcontrol} placeholder="5000" required />
+                                <input type="text" className={styles.formcontrol} placeholder="Name" required />
                             </div>
                         </div>
                         <div className={styles.rightbar}>
@@ -189,18 +121,11 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
                             </div>
                             <div className={`${styles.selectVariables} ${styles.inlineVariable}`}>
                                 <h6>Data Types</h6>
-                                <Select
-                                    placeholder="Select options"
-                                    style={{ width: '100%' }}
-                                    onChange={handleSelectedType}
-                                    value={selectedType} disabled>
-                                    {variableEntries.map(([key, type]) => (
-                                        <Select.Option key={type} value={type}>
-                                            {type}
-                                        </Select.Option>
-                                    ))}
-                                </Select>
+                                <p className={styles.typeData}>Number</p>
                             </div>
+                        </div>
+                        <div className={styles.createbtn}>
+                            <Button className='btn'>Create</Button>
                         </div>
                     </div>
                 </div>

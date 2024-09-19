@@ -560,3 +560,10 @@ span.ant-select-selection-placeholder {
     justify-content: space-between;
     gap: 10px;
 }
+
+.nostyle {
+    padding: 0;
+    margin: 0;
+    background: transparent;
+    border: 0;
+}
