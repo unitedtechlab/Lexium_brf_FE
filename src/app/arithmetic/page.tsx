@@ -16,7 +16,7 @@ import {
 import 'reactflow/dist/style.css';
 import classes from '@/app/assets/css/workflow.module.css';
 
-import Sidebar, { IconComponent } from './components/sidebar';
+import Sidebar from './components/sidebar';
 import { DnDProvider, useDnD } from './DnDContext';
 import InputField from './components/InputNode';
 import AdditionSubNode from './components/AdditionSub';
@@ -25,9 +25,6 @@ import CustomEdge from "./customEdge";
 import DivisionMultiplicationNode from './components/DivisionMulti';
 import ModifierNode from './components/Modifier';
 import CompilerNode from './components/Compiler';
-import { AiOutlinePlus, AiTwotoneSetting } from 'react-icons/ai';
-import { Button, Input, Modal, Select } from 'antd';
-import styles from '@/app/assets/css/workflow.module.css';
 import RightSideBar from './components/right-sidebar';
 
 const nodeTypes = {
