@@ -1,19 +1,19 @@
 .workflowPage {
-    min-height: 80vh;
+    min-height: 100vh;
 }
 
 .workflowWrapper {
     width: 100vw;
     display: flex;
-    flex-direction: row;
-    /* flex-wrap: wrap; */
+    flex-wrap: wrap;
     padding: 20px;
     background: #F9F9F9;
+    position: relative;
 }
 
 .reactflowMain {
-    width: 66.5%;
-    max-width: calc(95% - 290px);
+    width: 100%;
+    max-width: calc(100% - 310px);
     padding: 0;
 }
 
@@ -24,11 +24,21 @@
 
 .sidebarWrapper {
     width: 100%;
-    max-width: 290px;
+    max-width: 310px;
     background-color: var(--white-color);
     border: 1px solid var(--tertiary-400);
     border-radius: 18px;
     min-height: calc(100vh - 120px);
+}
+
+@media screen and (min-width: 1900px) {
+    .reactflowMain {
+        max-width: calc(100% - 350px);
+    }
+
+    .sidebarWrapper {
+        max-width: 350px;
+    }
 }
 
 .heading {
@@ -45,7 +55,7 @@
 
 .sidebardragDrop {
     justify-content: flex-start;
-    padding: 12px 0;
+    padding: 10px 0;
     cursor: pointer;
 }
 
@@ -431,10 +441,12 @@
 
 .operations {
     padding: 10px 20px;
+    max-height: 32vh;
+    overflow-y: auto;
 }
 
 .operations .sidebardragDrop {
-    padding: 10px 10px 10px 15px;
+    padding: 10px;
     gap: 12px;
 }
 
@@ -454,9 +466,47 @@
     border-radius: 12px;
 }
 
+.minus-point-label,
+.plus-point-label,
+.multiply-point-label {
+    background: #F5F5F5;
+    border-radius: 6px;
+    position: absolute;
+    bottom: -30px;
+    height: 25px;
+    width: 25px;
+    font-size: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 1px solid #D0D5DD;
+    box-shadow: 0px 1px 2px 0px #1018280D;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    color: #EE4541;
+}
+
+.multiply-point-label {
+    top: -30px;
+    color: #00ACD2;
+    bottom: auto;
+}
+
+.multiply-point-label svg {
+    transform: rotate(45deg);
+}
+
+.plus-point-label {
+    top: -30px;
+    color: #14804A;
+    bottom: auto;
+}
+
 .inputField {
-    padding: 7px 10px !important;
+    padding: 6px 10px !important;
     border-color: var(--tertiary-500) !important;
+    border-radius: 8px !important;
 }
 
 .nodeBox form {
@@ -481,11 +531,14 @@
 .widthInput .deleteBtn {
     padding: 0;
     margin: 0;
-    width: auto;
-    height: auto;
-    position: absolute;
-    top: -25px;
-    right: 5px;
+    width: 28px;
+    height: 28px;
+    background: #F1F1F1 !important;
+    color: var(--secondary-200);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
 }
 
 .iconFlag {
@@ -496,104 +549,60 @@
     border-radius: 6px;
 }
 
-.rightsidebarheader {
-    padding: 16px 16px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center
-}
-
-.settingcontainer {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 60px;
-    height: 60px;
-    background-color: #f0f0f0;
-    border-radius: 50%;
-    position: absolute;
-    bottom: 10px;
-    right: 20px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-.settingcontainer:hover {
-    background-color: #e0e0e0;
-}
-
-.operations {
-    padding: 15px;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.section {
-    border: 1px solid #ddd;
-    padding: 10px;
-    border-radius: 8px;
-}
-
-.header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.headingText {
-    background-color: rgba(16, 23, 39, 0.1);
-    width: 90px;
-    height: 36px;
-    padding: 8px 6px 8px 6px;
+.addBtn {
+    padding: 0px;
+    border: 0;
+    width: 20px;
+    height: 20px;
+    font-size: 17px;
     border-radius: 4px;
-    margin-top: 2%;
+    background: #F1F1F1 !important;
 }
 
+/* rightsidebar css start here ======================= */
 .titleName {
     font-size: 18px;
     font-weight: bold;
 }
 
-.variableSection {
-    margin-top: 10px;
+.variableList {
+    padding: 20px;
+    display: grid;
+    gap: 30px;
+    border-top: 1px solid #0000001A;
 }
 
-.variableGroup {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 10px;
+.customvariable:not(:last-child) {
+    border-bottom: 1px solid #0000001A;
+    padding-bottom: 20px;
 }
 
-.variableType {
-    font-weight: bold;
-    margin-bottom: 5px;
-}
-
-.variableOption {
-    padding-left: 10px;
-    color: #555;
+.variableNames {
+    margin-top: 20px;
 }
 
 .rightsidebar {
-    width: 117%;
-    max-width: 410px;
+    width: 100%;
+    max-width: 290px;
     background-color: var(--white-color);
     border: 1px solid var(--tertiary-400);
     border-radius: 18px;
     min-height: calc(100vh - 120px);
+    position: absolute;
+    right: 15px;
 }
 
 .iconWrapper {
-    display: inline-flex;
+    display: flex;
     justify-content: center;
     align-items: center;
     background-color: #f5f5f5;
-    border-radius: 8px;
+    border-radius: 4px;
     padding: 3px;
-    width: 35px;
-    height: 35px;
+    width: 25px;
+    height: 25px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: 1px solid #E3E5EA80;
 }
 
 .variables {
@@ -602,22 +611,32 @@
     align-items: center;
 }
 
-.localData {
+.variableNames ul {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.variableNames ul li {
     display: flex;
     justify-content: flex-start;
-    gap: 5%;
     align-items: center;
+    gap: 10px;
+}
+
+.variableNames ul li h6 {
+    margin: 0;
+    font-weight: var(--font-weight-400);
 }
 
 .variables h6 {
     margin: 0;
-    color: var(--tertiary-100);
     font-weight: var(--font-weight-500);
 }
 
 .variables svg {
-    width: 25px;
-    height: 25px;
+    width: 20px;
+    height: 20px;
     fill: var(--tertiary-100);
 }
 
@@ -631,69 +650,61 @@
 }
 
 .custommodalwrapper {
-    position: fixed;
-    top: 0;
-    left: 65.5%;
-    width: 100%;
-    height: 100%;
+    position: absolute;
     z-index: 1000;
     display: flex;
     pointer-events: auto;
+    right: 305px;
+    top: 90px;
+    width: 100%;
+    max-width: 300px;
 }
 
-
 .custommodal {
-    padding: 0px 0px 30px 0px;
-    border-radius: 18px;
-    width: 300px;
-    margin-top: 90px;
+    border-radius: 18px 0 0 18px;
+    width: 100%;
     border: 1px solid rgba(0, 0, 0, 0.05);
-    box-sizing: border-box;
     padding: 0;
     position: relative;
-    max-width: calc(100vw - 32px);
-    background-color: rgba(252, 252, 252, 1);
-    z-index: 1000;
+    background-color: var(--white-color);
+}
+
+.rightsidebarheader {
+    padding: 20px;
+}
+
+.rightsidebarheader h6 {
+    margin: 0;
 }
 
 .closebtn {
     position: absolute;
-    top: 10px;
-    right: 10px;
-    background: none;
+    top: 17px;
+    right: 15px;
     border: none;
     font-size: 26px;
     color: rgba(102, 112, 133, 1);
     cursor: pointer;
     background-color: #f5f5f5;
-    border-radius: 8px;
-    padding: 3px;
-    width: 33px;
-    height: 33px;
+    border-radius: 4px;
+    width: 25px;
+    height: 25px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .rightbar {
-    padding: 8px;
+    padding: 15px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 15px;
+    border-top: 1px solid #0000001A;
 }
 
 .rightbar h6 {
-    margin-bottom: 0;
-}
-
-.selectVariables {
-    justify-content: flex-start;
-    padding: 10px;
-    cursor: pointer;
-}
-
-.selectVariables h6 {
-    margin: 0;
-    color: var(--tertiary-100);
-    font-weight: var(--font-weight-500);
+    margin-bottom: 5px;
+    color: var(--secondary-300);
+    font-weight: var(--font-weight-600);
+    font-size: var(--font-xs);
 }
 
 .selectedvariable {
@@ -701,15 +712,21 @@
     padding: 20px;
 }
 
-.variableContainer {
+.inlineVariable {
     display: flex;
-    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+.inlineVariable h6 {
+    margin: 0;
+    min-width: 100px;
 }
 
 .variableBox {
     width: 100%;
-    padding: 16px;
-    background-color: #fff;
+    padding: 15px;
+    background-color: var(--white-color);
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     display: flex;
@@ -728,12 +745,6 @@
     display: flex;
     justify-content: space-between;
     width: 100%;
-    align-items: center;
-}
-
-.iconWrapper {
-    display: flex;
-    justify-content: center;
     align-items: center;
 }
 
@@ -759,11 +770,9 @@
     align-items: center;
     margin-top: 10px;
     width: 100%;
+    position: relative;
+    justify-content: space-between;
     gap: 10px;
-}
-
-.deleteIcon {
-    cursor: pointer;
 }
 
 .formcontrol {
@@ -780,10 +789,8 @@
 }
 
 .icon {
-    padding: 5px;
     background-color: transparent;
     cursor: pointer;
-    transition: rgba(1, 175, 178, 1) 0.3s ease;
 }
 
 .iconClicked {
@@ -810,6 +817,7 @@
 .dropdownMenu li {
     padding: 10px;
     cursor: pointer;
+    color: var(--tertiary-100);
 }
 
 .dropdownMenu li:hover {

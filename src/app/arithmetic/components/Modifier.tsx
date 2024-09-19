@@ -11,6 +11,7 @@ const ModifierNode = ({ id, data, type }: NodeProps<any>) => {
     const [operation, setOperation] = useState<string>(data.operation || 'absolute');
 
     useEffect(() => {
+        // Set operation in node data
         setNodes((nodes) =>
             nodes.map((node) =>
                 node.id === id ? { ...node, data: { ...node.data, operation } } : node
@@ -18,18 +19,21 @@ const ModifierNode = ({ id, data, type }: NodeProps<any>) => {
         );
     }, [operation, id, setNodes]);
 
+    // Handle operation change for the dropdown
     const handleOperationChange = (value: string) => {
         setOperation(value);
     };
 
+    // Check if the target connection is valid (ensure one connection)
     const isValidConnection = (connection: Connection | Edge) => {
         const edges = getEdges().filter((edge) => edge.target === id);
-        return edges.length === 0;
+        return edges.length === 0;  // Only allow one target connection
     };
 
+    // Check if the source connection is valid (ensure one connection)
     const isValidSourceConnection = (connection: Connection | Edge) => {
         const edges = getEdges().filter((edge) => edge.source === id);
-        return edges.length === 0;
+        return edges.length === 0;  // Only allow one source connection
     };
 
     return (
@@ -60,6 +64,7 @@ const ModifierNode = ({ id, data, type }: NodeProps<any>) => {
                 </div>
             </div>
 
+            {/* Target Handle */}
             <Handle
                 type="target"
                 position={Position.Left}
@@ -67,6 +72,7 @@ const ModifierNode = ({ id, data, type }: NodeProps<any>) => {
                 isValidConnection={isValidConnection}
             />
 
+            {/* Source Handle */}
             <Handle
                 type="source"
                 position={Position.Right}

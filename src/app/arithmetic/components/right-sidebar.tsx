@@ -64,83 +64,89 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
         <aside>
             <div className={styles.rightsidebar}>
                 <div className={styles.heading}>
-                    <Avatar size="large" src={<Image src={userImage} alt="User Image" priority width={40} height={40} />} />
                     <div className={styles.headingText}>
-                        <h6>Workflow</h6>
+                        <h6>Workflow Name</h6>
                     </div>
                 </div>
-                <div className={styles.operations}>
+
+                <div className={styles.variableList}>
                     <div className={styles.variables}>
                         <h6>Local Variable</h6>
                         <div onClick={openModal}>
-                            <IconComponent icon={<TbAdjustments size={20} style={{ transform: 'rotate(90deg)' }} />} />
+                            <IconComponent icon={<TbAdjustments size={18} style={{ transform: 'rotate(90deg)' }} />} />
                         </div>
                     </div>
-                    <div className={styles.variables}>
-                        <h6>Local Data</h6>
-                        <div className={isClicked ? styles.iconClicked : styles.icon} onClick={toggleMenu}>
-                            <IconComponent icon={<TbPlus size={20} />} />
-                        </div>
-                        {isMenuOpen && (
-                            <div className={styles.dropdownMenu}>
-                                <ul>
-                                    <li>Variables</li>
-                                    <li>Constant</li>
-                                </ul>
+
+                    <div className={styles.customvariable}>
+                        <div className={styles.variables}>
+                            <h6>Local Data</h6>
+                            <div className={isClicked ? styles.iconClicked : styles.icon} onClick={toggleMenu}>
+                                <IconComponent icon={<TbPlus size={18} />} />
                             </div>
-                        )}
-                    </div>
-                    <div className={`${styles.variables} ${styles.localData}`}>
-                        <div className={styles.iconWrapper}>
-                            <BiGridVertical size={30} />
+                            {isMenuOpen && (
+                                <div className={styles.dropdownMenu}>
+                                    <ul>
+                                        <li>Variables</li>
+                                        <li>Constant</li>
+                                    </ul>
+                                </div>
+                            )}
                         </div>
-                        <div>
-                            <h6>Variable</h6>
-                        </div>
-                    </div>
-                    <div className={`${styles.variables} ${styles.localData}`}>
-                        <div className={styles.iconWrapper}>
-                            <BiGridVertical size={30} />
-                        </div>
-                        <div>
-                            <h6>Constant</h6>
-                        </div>
-                    </div>
-                </div>
-                <div className={styles.operations} >
-                    <h6>Global Variable</h6>
-                    <div className={`${styles.variables} ${styles.localData}`}>
-                        <div className={styles.iconWrapper}>
-                            <BiGridVertical size={30} />
-                        </div>
-                        <div>
-                            <h6>Basic</h6>
+                        <div className={`${styles.variableNames}`}>
+                            <ul>
+                                <li>
+                                    <div className={styles.iconWrapper}>
+                                        <BiGridVertical size={18} />
+                                    </div>
+                                    <h6>Variable</h6>
+                                </li>
+                                <li>
+                                    <div className={styles.iconWrapper}>
+                                        <BiGridVertical size={18} />
+                                    </div>
+                                    <h6>Variable 2</h6>
+                                </li>
+                            </ul>
                         </div>
                     </div>
-                    <div className={`${styles.variables} ${styles.localData}`}>
-                        <div className={styles.iconWrapper}>
-                            <BiGridVertical size={30} />
+
+                    <div className={styles.customvariable}>
+                        <div className={styles.variables}>
+                            <h6>Global Variable</h6>
                         </div>
-                        <div>
-                            <h6>HRA</h6>
+                        <div className={`${styles.variableNames}`}>
+                            <ul>
+                                <li>
+                                    <div className={styles.iconWrapper}>
+                                        <BiGridVertical size={18} />
+                                    </div>
+                                    <h6>HRA</h6>
+                                </li>
+                                <li>
+                                    <div className={styles.iconWrapper}>
+                                        <BiGridVertical size={18} />
+                                    </div>
+                                    <h6>EDA</h6>
+                                </li>
+                            </ul>
                         </div>
                     </div>
+
                 </div>
             </div>
 
             {isModalVisible && (
                 <div className={styles.custommodalwrapper}>
                     <div className={styles.custommodal}>
-
                         <div className={styles.rightsidebarheader}>
                             <div><h6>Create New Local Variables</h6></div>
                             <div> <button className={styles.closebtn} onClick={saveModal}>&#10003;</button></div>
                             <div> <button className={styles.closebtn} onClick={closeModal}>&times;</button></div>
                         </div>
                         <div className={styles.selectedvariable}>
-                            <div className={styles.variableContainer}>
-                                <div className={styles.variableBox}>
-                                    <div className={styles.iconAndLabel}>
+                            <div className={styles.variableBox}>
+                                <div className={styles.iconAndLabel}>
+                                    <div className={`flex gap-1`}>
                                         <div className={styles.iconWrapper}>
                                             <IconComponent icon={<BiGridVertical size={24} />} />
                                         </div>
@@ -148,29 +154,28 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
                                             <h6>Variable</h6>
                                             <p>Integer</p>
                                         </div>
-                                        <div className={styles.iconsRight}>
-                                            <IconComponent icon={<TbPlus size={20} />} />
-                                            <IconComponent icon={<FiMoreHorizontal size={20} style={{ marginLeft: '8px' }} />} />
-                                        </div>
                                     </div>
+                                    <div className={styles.iconsRight}>
+                                        <IconComponent icon={<TbPlus size={20} />} />
+                                        <IconComponent icon={<FiMoreHorizontal size={20} style={{ marginLeft: '8px' }} />} />
+                                    </div>
+                                </div>
 
-                                    <div className={styles.dropdownWrapper}>
-                                        <div>
-                                            <Select style={{ width: '190px' }} value={selectedVariable}
-                                                mode="multiple" placeholder="Select Variables" onChange={handleSelectedVariable}>
-                                                {variableEntries.map(([key]) => (
-                                                    <Select.Option key={key} value={key}>
-                                                        {key}
-                                                    </Select.Option>))}
-                                            </Select>
-                                        </div>
-                                        <div className={styles.deleteIcon}>
-                                            <IconComponent icon={<AiFillDelete size={20} />} />
-                                        </div>
+                                <div className={styles.dropdownWrapper}>
+                                    <Select style={{ width: '100%' }} value={selectedVariable}
+                                        mode="multiple" placeholder="Select Variables" onChange={handleSelectedVariable}>
+                                        {variableEntries.map(([key]) => (
+                                            <Select.Option key={key} value={key}>
+                                                {key}
+                                            </Select.Option>))}
+                                    </Select>
+                                    <div className={styles.deleteIcon}>
+                                        <IconComponent icon={<AiFillDelete size={18} />} />
                                     </div>
                                 </div>
                             </div>
                         </div>
+
                         <div className={styles.rightbar}>
                             <div className={`${styles.selectVariables}`}>
                                 <h6>Select Variable</h6>
@@ -188,11 +193,11 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
                         </div>
                         <div className={styles.rightbar}>
                             <h6>Variable Properties</h6>
-                            <div className={`${styles.selectVariables}`}>
+                            <div className={`${styles.selectVariables} ${styles.inlineVariable}`}>
                                 <h6>Value</h6>
                                 <input type="text" className={styles.formcontrol} placeholder="5000" required />
                             </div>
-                            <div className={`${styles.selectVariables}`}>
+                            <div className={`${styles.selectVariables} ${styles.inlineVariable}`}>
                                 <h6>Data Types</h6>
                                 <Select
                                     placeholder="Select options"

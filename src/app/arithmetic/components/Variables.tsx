@@ -1,48 +1,71 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
-import { Form, Button, Select, message } from 'antd';
+import { Form, Button, Select } from 'antd';
 import 'reactflow/dist/style.css';
 import styles from '@/app/assets/css/workflow.module.css';
 import { PiFlagCheckered } from "react-icons/pi";
 import { MdDeleteOutline } from "react-icons/md";
+import { FiPlus } from "react-icons/fi";
+
 
 const VariableNode = ({ id, data, type }: NodeProps<any>) => {
-    const [fields, setFields] = useState<any[]>([{ type: 'variable', selectedVariable: '', selectedType: '' }]);
-    const folderdata = data.folderdata || {}; 
-    const variableEntries = Object.entries(folderdata); 
+    const [fields, setFields] = useState<any[]>([{ type: 'variable', selectedVariable: '' }]);
+    const { columns = {} } = data;
+
+    const selectedVariables = useMemo(() => {
+        return fields.map(field => field.selectedVariable);
+    }, [fields]);
+
+    const areAllFieldsSelected = useMemo(() => {
+        return fields.every(field => field.selectedVariable !== '');
+    }, [fields]);
+
+    const getFilteredColumns = () => {
+        return Object.keys(columns).filter((column) => {
+            const columnType = columns[column]?.toLowerCase();
+            return ['number', 'int', 'float'].includes(columnType);
+        });
+    };
 
     const handleSelectChange = (index: number, value: string) => {
-        const selectedType = folderdata[value]; 
-
-        const hasTextType = fields.some(field => field.selectedType === 'Text');
-        const hasNumberType = fields.some(field => field.selectedType === 'number');
-        if ((hasTextType && selectedType !== 'Text') || (hasNumberType && selectedType !== 'number')) {
-            message.warning('Cannot select a variable with a different type.');
-            return;
-        }
-
         setFields((prevFields) => {
             const newFields = [...prevFields];
             newFields[index].selectedVariable = value;
-            newFields[index].selectedType = selectedType;
+
+            if (index === 0) {
+                data['variableType'] = columns[value];
+            }
+
             return newFields;
         });
 
         data[`variable${index + 1}`] = value;
+
+        delete data[`variableType${index + 1}`];
     };
 
     const addVariableField = () => {
-        setFields((prevFields) => [...prevFields, { type: 'variable', selectedVariable: '', selectedType: '' }]);
+        if (areAllFieldsSelected) {
+            const firstSelectedType = fields[0]?.selectedType;
+            setFields((prevFields) => [
+                ...prevFields,
+                { type: 'variable', selectedVariable: '', selectedType: firstSelectedType }
+            ]);
+        }
     };
 
     const handleDelete = (index: number) => {
         setFields((prevFields) => prevFields.filter((_, i) => i !== index));
         delete data[`variable${index + 1}`];
+
+        if (index === 0) {
+            delete data['variableType'];
+        }
     };
 
     return (
         <div>
-            <div className={styles['nodeBox']} style={{ maxWidth: "370px" }}>
+            <div className={styles['nodeBox']} style={{ maxWidth: "340px" }}>
                 <Form name="custom-value" layout="vertical">
                     <div className={`flex gap-1 ${styles['node-main']}`}>
                         <div className={`flex gap-1 ${styles['node']}`}>
@@ -50,24 +73,19 @@ const VariableNode = ({ id, data, type }: NodeProps<any>) => {
                                 <PiFlagCheckered className={styles.iconFlag} />
                                 <div className={styles['node-text']}>
                                     <h6>{data.label || "Addition / Subtraction"}</h6>
+                                    {fields[0].selectedVariable && <span>Type: {data.variableType}</span>}
                                 </div>
                             </div>
-                            <Button onClick={addVariableField}>
-                                Add Variable
+                            <Button onClick={addVariableField} disabled={!areAllFieldsSelected} className={styles.addBtn}>
+                                <FiPlus />
                             </Button>
                         </div>
                         <div className={`flex gap-1 ${styles.formInput}`}>
                             {fields.map((field, index) => (
                                 <Form.Item
                                     key={index}
-                                    label={`Field ${index + 1}`}
                                     className={`nodrag ${styles.widthInput} ${styles.fullwidth} customselect`}
                                 >
-                                    {fields[index].selectedType && (
-                                        <div className={styles.message}>
-                                            {fields[index].selectedType === 'Text' ? 'Type: Text' : 'Type: Number'}
-                                        </div>
-                                    )}
                                     <Select
                                         showSearch
                                         placeholder="Select Variable"
@@ -81,9 +99,9 @@ const VariableNode = ({ id, data, type }: NodeProps<any>) => {
                                                 : false
                                         }
                                     >
-                                        {variableEntries.map(([key, type]) => (
-                                            <Select.Option key={key} value={key}>
-                                                {key} 
+                                        {getFilteredColumns().map((column: string) => (
+                                            <Select.Option key={column} value={column} disabled={selectedVariables.includes(column)}>
+                                                {column}
                                             </Select.Option>
                                         ))}
                                     </Select>

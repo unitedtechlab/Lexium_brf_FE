@@ -550,5 +550,13 @@ span.ant-select-selection-placeholder {
 
 .customselect .ant-select.ant-select-outlined .ant-select-selector {
     border-color: var(--tertiary-500) !important;
-    padding: 4px 12px !important;
+    padding: 2px 12px !important;
+    border-radius: 8px !important;
+}
+
+.customselect .ant-form-item-control-input-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
 }

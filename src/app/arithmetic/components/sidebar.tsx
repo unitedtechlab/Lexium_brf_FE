@@ -18,7 +18,7 @@ export const IconComponent: React.FC<{ icon: React.ReactElement }> = ({ icon }) 
   return <span className={styles.icon}>{icon}</span>;
 };
 
-const Sidebar:React.FC<{ setFolderData: (data: any[]) => void }> = ({ setFolderData })  => {
+const Sidebar: React.FC<{ setFolderData: (data: any[]) => void }> = ({ setFolderData }) => {
   const { email } = useEmail();
   const { setType } = useDnD();
   const [workspaces, setWorkspaces] = useState<any[]>([]);
@@ -106,7 +106,7 @@ const Sidebar:React.FC<{ setFolderData: (data: any[]) => void }> = ({ setFolderD
     event.dataTransfer.effectAllowed = 'move';
   };
 
- 
+
   return (
     <aside>
       <div className={styles.sidebarWrapper}>
@@ -157,16 +157,21 @@ const Sidebar:React.FC<{ setFolderData: (data: any[]) => void }> = ({ setFolderD
 
         <div className={styles.operations}>
           <h6>Arithmetic Operators</h6>
+
           {/* {Local Variable Node} */}
-          <div  className={`flex gap-1 ${styles.sidebardragDrop}`} onDragStart={(event) => onDragStart(event, 'modifier_type', 'Modifier Node')}
+          <div className={`flex gap-1 ${styles.sidebardragDrop}`} onDragStart={(event) => onDragStart(event, 'modifier_type', 'Modifier Node')}
             draggable>
+            <IconComponent icon={<MdOutlineSelectAll />} />
             <h6>Local Variable</h6>
           </div>
+
           {/* {Global Variable Node} */}
-          <div  className={`flex gap-1 ${styles.sidebardragDrop}`} onDragStart={(event) => onDragStart(event, 'modifier_type', 'Modifier Node')}
+          <div className={`flex gap-1 ${styles.sidebardragDrop}`} onDragStart={(event) => onDragStart(event, 'modifier_type', 'Modifier Node')}
             draggable>
+            <IconComponent icon={<MdOutlineSelectAll />} />
             <h6>Global Variable</h6>
           </div>
+
           {/* Variable Field Node */}
           <div
             className={`flex gap-1 ${styles.sidebardragDrop}`}
