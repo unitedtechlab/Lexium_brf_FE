@@ -1,27 +1,41 @@
-
 import styles from '@/app/assets/css/workflow.module.css';
-import { TbAdjustments, TbPlus } from 'react-icons/tb';
+import { TbPlus } from 'react-icons/tb';
 import { IconComponent } from './sidebar';
 import { BiGridVertical } from 'react-icons/bi';
-import Image from "next/image";
-import { Avatar, Select } from 'antd';
-import userImage from "@/app/assets/images/user.png";
-import { useState } from 'react';
-import { FiMoreHorizontal } from 'react-icons/fi';
-import { AiFillDelete } from 'react-icons/ai';
+import { Collapse, Select } from 'antd';
+import { useEffect, useState } from 'react';
 import Cookies from 'js-cookie';
+const { Panel } = Collapse;
 
 interface RightSideBarProps {
-    variableEntries: any[];
+    variableEntries: [string, string][];
 }
+
+interface Variable {
+    localVariableName: string;
+    details: {
+        name: string;
+        type: string;
+        value: string;
+    }[];
+}
+
 const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
     const [isModalVisible, setIsModalVisible] = useState(false);
-    const [selectionPending, setSelectionPending] = useState<string[]>([]);
     const [selectedVariable, setSelectedVariable] = useState<string[]>([]);
-    const [isClicked, setIsClicked] = useState(false);
-    const [variableName, setVariableName] = useState<string>(''); // Variable name state
+    const [variables, setVariables] = useState<Variable[]>([]);
+    const [variableName, setVariableName] = useState<string>('');
     const [selectedType, setSelectedType] = useState<string[]>([]);
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [valueInput, setValueInput] = useState<string>("");
+
+    useEffect(() => {
+        const storedVariables = Cookies.get('variables');
+        if (storedVariables) {
+            const parsedVariables: Variable[] = JSON.parse(storedVariables);
+            setVariables(parsedVariables);
+        }
+    }, []);
+
     const openModal = () => {
         setIsModalVisible(true);
     };
@@ -29,11 +43,7 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
     const closeModal = () => {
         setIsModalVisible(false);
     };
-    const saveModal = () => {
-    };
-    const handleSelectChange = (value: string[]) => {
-        setSelectionPending(value);
-    };
+
     const handleSelectedVariable = (value: string[]) => {
         setSelectedVariable(value);
 
@@ -47,17 +57,58 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
     };
 
     const handleVariableNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const name = e.target.value;
-        setVariableName(name);
-        Cookies.set('variableName', name, { expires: 7 });
+        setVariableName(e.target.value);
     };
 
     const handleSelectedType = (value: string[]) => {
         setSelectedType(value);
     };
+    const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setValueInput(e.target.value);
+    };
+    const saveModal = () => {
+        const existingVariable = variables.find(variable => variable.localVariableName === variableName);
 
-    const toggleMenu = () => {
-        setIsMenuOpen(!isMenuOpen);
+        if (existingVariable) {
+            const updatedVariables = variables.map(variable => {
+                if (variable.localVariableName === variableName) {
+                    return {
+                        ...variable,
+                        details: [
+                            ...(Array.isArray(variable.details) ? variable.details : []),  
+                            ...selectedVariable.map(variable => ({
+                                name: variable, 
+                                type: selectedType[0] || '' ,
+                                value: valueInput
+                            })),
+                        ]
+                    };
+                }
+                return variable;
+            });
+            setVariables(updatedVariables);
+            Cookies.set('variables', JSON.stringify(updatedVariables), { expires: 7 });
+        } else {
+
+            const newVariable = {
+                localVariableName: variableName,
+                details: selectedVariable.map(variable => ({
+                    name: variable, 
+                    type: selectedType[0] || '', 
+                    value: valueInput
+                }))
+            };
+
+            const newVariables = [...variables, newVariable];
+            setVariables(newVariables);
+            Cookies.set('variables', JSON.stringify(newVariables), { expires: 7 });
+        }
+
+        setSelectedVariable([]);
+        setVariableName('');
+        setSelectedType([]);
+        setValueInput("");
+        closeModal();
     };
 
     return (
@@ -72,49 +123,45 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
                 <div className={styles.variableList}>
                     <div className={styles.variables}>
                         <h6>Local Variable</h6>
-                        <div onClick={openModal}>
-                            <IconComponent icon={<TbAdjustments size={18} style={{ transform: 'rotate(90deg)' }} />} />
-                        </div>
                     </div>
 
                     <div className={styles.customvariable}>
                         <div className={styles.variables}>
                             <h6>Local Data</h6>
-                            <div className={isClicked ? styles.iconClicked : styles.icon} onClick={toggleMenu}>
-                                <IconComponent icon={<TbPlus size={18} />} />
+                            <div onClick={openModal}>
+                                <IconComponent icon={<TbPlus size={20} />} />
                             </div>
-                            {isMenuOpen && (
-                                <div className={styles.dropdownMenu}>
-                                    <ul>
-                                        <li>Variables</li>
-                                        <li>Constant</li>
-                                    </ul>
-                                </div>
-                            )}
                         </div>
-                        <div className={`${styles.variableNames}`}>
-                            <ul>
-                                <li>
-                                    <div className={styles.iconWrapper}>
-                                        <BiGridVertical size={18} />
-                                    </div>
-                                    <h6>Variable</h6>
-                                </li>
-                                <li>
-                                    <div className={styles.iconWrapper}>
-                                        <BiGridVertical size={18} />
-                                    </div>
-                                    <h6>Variable 2</h6>
-                                </li>
-                            </ul>
+
+                        <div className={styles.variableNames}>
+                            <Collapse accordion={false} className='accordian'>
+                                {variables.map((variable, index) => (
+                                    <Panel
+                                        key={index}
+                                        header={variable.localVariableName}
+                                        className={styles.panel}
+                                    >
+                                        <ul className={styles.detailsList}>
+                                            {variable.details.map((detail, detailIndex) => (
+                                                <li key={detailIndex}>
+                                                    <p>{detail.name}</p>
+                                                    <p>{detail.type}</p>
+                                                    <p>{detail.value}</p>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </Panel>
+                                ))}
+                            </Collapse>
                         </div>
+
                     </div>
 
                     <div className={styles.customvariable}>
                         <div className={styles.variables}>
                             <h6>Global Variable</h6>
                         </div>
-                        <div className={`${styles.variableNames}`}>
+                        <div className={styles.variableNames}>
                             <ul>
                                 <li>
                                     <div className={styles.iconWrapper}>
@@ -131,71 +178,60 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
                             </ul>
                         </div>
                     </div>
-
                 </div>
             </div>
 
+            {/* Modal for creating new variables */}
             {isModalVisible && (
                 <div className={styles.custommodalwrapper}>
                     <div className={styles.custommodal}>
                         <div className={styles.rightsidebarheader}>
                             <div><h6>Create New Local Variables</h6></div>
-                            <div> <button className={styles.closebtn} onClick={saveModal}>&#10003;</button></div>
-                            <div> <button className={styles.closebtn} onClick={closeModal}>&times;</button></div>
-                        </div>
-                        <div className={styles.selectedvariable}>
-                            <div className={styles.variableBox}>
-                                <div className={styles.iconAndLabel}>
-                                    <div className={`flex gap-1`}>
-                                        <div className={styles.iconWrapper}>
-                                            <IconComponent icon={<BiGridVertical size={24} />} />
-                                        </div>
-                                        <div className={styles.labelWrapper}>
-                                            <h6>Variable</h6>
-                                            <p>Integer</p>
-                                        </div>
-                                    </div>
-                                    <div className={styles.iconsRight}>
-                                        <IconComponent icon={<TbPlus size={20} />} />
-                                        <IconComponent icon={<FiMoreHorizontal size={20} style={{ marginLeft: '8px' }} />} />
-                                    </div>
-                                </div>
-
-                                <div className={styles.dropdownWrapper}>
-                                    <Select style={{ width: '100%' }} value={selectedVariable}
-                                        mode="multiple" placeholder="Select Variables" onChange={handleSelectedVariable}>
-                                        {variableEntries.map(([key]) => (
-                                            <Select.Option key={key} value={key}>
-                                                {key}
-                                            </Select.Option>))}
-                                    </Select>
-                                    <div className={styles.deleteIcon}>
-                                        <IconComponent icon={<AiFillDelete size={18} />} />
-                                    </div>
-                                </div>
+                            <div>
+                                <button className={styles.closebtn} onClick={closeModal}>&times;</button>
                             </div>
                         </div>
 
                         <div className={styles.rightbar}>
                             <div className={`${styles.selectVariables}`}>
                                 <h6>Select Variable</h6>
-                                <Select mode="multiple" placeholder="Select options" style={{ width: '100%' }} >
+                                <Select
+                                    style={{ width: '100%' }}
+                                    value={selectedVariable}
+                                    mode="multiple"
+                                    placeholder="Select Variables"
+                                    onChange={handleSelectedVariable}
+                                >
                                     {variableEntries.map(([key]) => (
                                         <Select.Option key={key} value={key}>
                                             {key}
-                                        </Select.Option>))}
+                                        </Select.Option>
+                                    ))}
                                 </Select>
                             </div>
+
                             <div className={`${styles.selectVariables}`}>
                                 <h6>Variable Name</h6>
-                                <input type="text" className={styles.formcontrol} placeholder="5000" value={variableName} onChange={handleVariableNameChange} required />
+                                <input
+                                    type="text"
+                                    className={styles.formcontrol}
+                                    placeholder="Enter Variable Name"
+                                    value={variableName}
+                                    onChange={handleVariableNameChange}
+                                    required
+                                />
                             </div>
                         </div>
+
                         <div className={styles.rightbar}>
                             <h6>Variable Properties</h6>
                             <div className={`${styles.selectVariables} ${styles.inlineVariable}`}>
                                 <h6>Value</h6>
-                                <input type="text" className={styles.formcontrol} placeholder="5000" required />
+                                <input
+                                    type="text"
+                                    className={styles.formcontrol}
+                                    placeholder="Enter Value"
+                                    value={valueInput} onChange={handleValueChange} required />
                             </div>
                             <div className={`${styles.selectVariables} ${styles.inlineVariable}`}>
                                 <h6>Data Types</h6>
@@ -203,7 +239,8 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
                                     placeholder="Select options"
                                     style={{ width: '100%' }}
                                     onChange={handleSelectedType}
-                                    value={selectedType} disabled>
+                                    value={selectedType}
+                                    disabled >
                                     {variableEntries.map(([key, type]) => (
                                         <Select.Option key={type} value={type}>
                                             {type}
@@ -212,10 +249,18 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
                                 </Select>
                             </div>
                         </div>
+
+                        <div className={styles.localVarBut}>
+                            <button className={styles.savebtn} onClick={saveModal}>
+                                Create Local Variable
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
         </aside>
     );
 };
+
 export default RightSideBar;
+
