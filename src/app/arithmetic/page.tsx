@@ -26,19 +26,26 @@ import DivisionMultiplicationNode from './components/DivisionMulti';
 import ModifierNode from './components/Modifier';
 import CompilerNode from './components/Compiler';
 import Constants from "./components/constants";
+import LocalVariable from './components/localVariable';
 import RightSideBar from './components/right-sidebar';
 
 const nodeTypes = {
     variables: VariableNode,
+    constant: Constants,
     add_sub_type: AdditionSubNode,
     multiply_divide_type: DivisionMultiplicationNode,
     modifier_type: ModifierNode,
     compiler_type: CompilerNode,
-    constants: Constants,
+    local_variable: LocalVariable,
 };
 
 const edgeTypes = {
     customEdge: CustomEdge,
+};
+
+type ConnectedEdge = {
+    source: string | string[];
+    target: string | string[];
 };
 
 let id = 0;
@@ -95,14 +102,28 @@ const DnDFlow: React.FC = () => {
     const handleSave = () => {
         const cleanedNodes = nodes.map((node) => {
             const { data, type } = node;
-            const { columns, label, ...cleanedData } = data;
+            const { folderdata, label, ...cleanedData } = data;
 
-            const connectedEdges = edges
-                .filter((edge) => edge.source === node.id || edge.target === node.id)
-                .map((edge) => ({
-                    source: edge.source === node.id ? "" : edge.source,
-                    target: edge.target === node.id ? "" : edge.target,
-                }));
+            const sourceConnections: string[] = [];
+            const targetConnections: string[] = [];
+
+            edges.forEach((edge) => {
+                if (edge.source === node.id) {
+                    targetConnections.push(edge.target || "");
+                }
+                if (edge.target === node.id) {
+                    sourceConnections.push(edge.source || "");
+                }
+            });
+
+            const connectedEdges = [];
+
+            if (sourceConnections.length || targetConnections.length) {
+                connectedEdges.push({
+                    source: sourceConnections.length === 1 ? (sourceConnections[0] || "") : (sourceConnections.length ? sourceConnections : ""),
+                    target: targetConnections.length === 1 ? (targetConnections[0] || "") : (targetConnections.length ? targetConnections : "")
+                });
+            }
 
             return {
                 id: node.id,
@@ -112,23 +133,10 @@ const DnDFlow: React.FC = () => {
             };
         });
 
-        const finalNode = cleanedNodes.find((node) => node.data.additionNodeValues || node.data.substractionNodeValues || node.data.multiplyValues || node.data.divideValues);
-        if (finalNode) {
-            const finalConnectedSources = edges
-                .filter((edge) => edge.target === finalNode.id)
-                .map((edge) => edge.source)
-                .join("");
-
-            finalNode.connectedEdges = [
-                {
-                    source: finalConnectedSources,
-                    target: "",
-                },
-            ];
-        }
-
         console.log(JSON.stringify(cleanedNodes, null, 2));
     };
+
+
 
     return (
         <div className={classes.workflowPage}>

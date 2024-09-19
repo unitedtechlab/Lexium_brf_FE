@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Handle, Position, NodeProps, useReactFlow, Connection } from 'reactflow';
+import { Handle, NodeProps, Position, useReactFlow } from 'reactflow';
 import 'reactflow/dist/style.css';
 import styles from '@/app/assets/css/workflow.module.css';
 import Image from 'next/image';
@@ -20,6 +20,7 @@ const AdditionSubNode = ({ id, data }: NodeProps<any>) => {
         let additionNodeValues: any[] = [];
         let substractionNodeValues: any[] = [];
         let firstConnectedType: string | null = null;
+        let sourceIds: string[] = [];
 
         edges.forEach((edge) => {
             const sourceNode = getNode(edge.source);
@@ -29,35 +30,20 @@ const AdditionSubNode = ({ id, data }: NodeProps<any>) => {
                 firstConnectedType = sourceNodeData.variableType;
             }
 
-            const prepareNodeData = (nodeData: any) => {
-                const cleanData: any = { variableType: nodeData.variableType || 'unknown' };
-
-                Object.keys(nodeData).forEach((key) => {
-                    if (key.startsWith('variable') && nodeData[key]) {
-                        cleanData[key] = nodeData[key];
-                    }
-                });
-
-                return cleanData;
-            };
-
-            if (edge.targetHandle === 'target1' && sourceNodeData) {
-                additionNodeValues.push({
-                    id: sourceNode.id,
-                    data: prepareNodeData(sourceNodeData),
-                });
+            if (edge.targetHandle === 'target1' && sourceNode) {
+                additionNodeValues.push({ id: sourceNode.id });
+                sourceIds.push(sourceNode.id);
             }
 
-            if (edge.targetHandle === 'target2' && sourceNodeData) {
-                substractionNodeValues.push({
-                    id: sourceNode.id,
-                    data: prepareNodeData(sourceNodeData),
-                });
+            if (edge.targetHandle === 'target2' && sourceNode) {
+                substractionNodeValues.push({ id: sourceNode.id });
+                sourceIds.push(sourceNode.id);
             }
         });
 
         setConnectedValues({ additionNodeValues, substractionNodeValues });
         setFirstConnectedNodeType(firstConnectedType);
+
         setNodes((nodes) =>
             nodes.map((node) =>
                 node.id === id
@@ -68,13 +54,16 @@ const AdditionSubNode = ({ id, data }: NodeProps<any>) => {
                             additionNodeValues,
                             substractionNodeValues,
                         },
+                        connectedEdges: sourceIds.length > 0
+                            ? [{ source: sourceIds, target: '' }]
+                            : [],
                     }
                     : node
             )
         );
     }, [getEdges, getNode, id, setNodes]);
 
-    const isValidConnection = (connection: Connection) => {
+    const isValidConnection = () => {
         const edges = getEdges().filter((edge) => edge.target === id);
         return edges.length < 4;
     };

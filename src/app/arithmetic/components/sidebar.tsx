@@ -9,6 +9,8 @@ import { PiMathOperationsBold } from "react-icons/pi";
 import { TbMathXDivideY2, TbMathIntegralX, TbMathMaxMin } from "react-icons/tb";
 import { MdOutlineSelectAll } from "react-icons/md";
 import { useEmail } from '@/app/context/emailContext';
+import { AiOutlineNumber, AiOutlineGlobal } from "react-icons/ai";
+import { SiLocal } from "react-icons/si";
 
 const { Search } = Input;
 interface sidebar extends React.FC {
@@ -158,18 +160,11 @@ const Sidebar: React.FC<{ setFolderData: (data: any[]) => void }> = ({ setFolder
         <div className={styles.operations}>
           <h6>Arithmetic Operators</h6>
 
-          {/* {Local Variable Node} */}
-          <div className={`flex gap-1 ${styles.sidebardragDrop}`} onDragStart={(event) => onDragStart(event, 'modifier_type', 'Modifier Node')}
+          {/* Constants Node} */}
+          <div className={`flex gap-1 ${styles.sidebardragDrop}`} onDragStart={(event) => onDragStart(event, 'constant', 'Constants Node')}
             draggable>
-            <IconComponent icon={<MdOutlineSelectAll />} />
-            <h6>Local Variable</h6>
-          </div>
-
-          {/* {Global Variable Node} */}
-          <div className={`flex gap-1 ${styles.sidebardragDrop}`} onDragStart={(event) => onDragStart(event, 'modifier_type', 'Modifier Node')}
-            draggable>
-            <IconComponent icon={<MdOutlineSelectAll />} />
-            <h6>Global Variable</h6>
+            <IconComponent icon={<AiOutlineNumber />} />
+            <h6>Constants</h6>
           </div>
 
           {/* Variable Field Node */}
@@ -221,6 +216,21 @@ const Sidebar: React.FC<{ setFolderData: (data: any[]) => void }> = ({ setFolder
             <IconComponent icon={<TbMathMaxMin />} />
             <h6 className={styles.titleName}>Compiler</h6>
           </div>
+
+          {/* {Local Variable Node} */}
+          <div className={`flex gap-1 ${styles.sidebardragDrop}`} onDragStart={(event) => onDragStart(event, 'local_variable', 'Local Variable')}
+            draggable>
+            <IconComponent icon={<SiLocal />} />
+            <h6>Local Variable</h6>
+          </div>
+
+          {/* {Global Variable Node} */}
+          <div className={`flex gap-1 ${styles.sidebardragDrop}`} onDragStart={(event) => onDragStart(event, 'global_variable', 'Global Variable')}
+            draggable>
+            <IconComponent icon={<AiOutlineGlobal />} />
+            <h6>Global Variable</h6>
+          </div>
+
         </div>
       </div>
     </aside>

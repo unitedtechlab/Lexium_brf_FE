@@ -48,7 +48,7 @@ const ConstantNode = ({ id, data, type }: NodeProps<any>) => {
 
     return (
         <div>
-            <div className={styles['nodeBox']} style={{ maxWidth: "340px" }}>
+            <div className={styles['nodeBox']} style={{ maxWidth: "250px" }}>
                 <Form name="custom-value" layout="vertical">
                     <div className={`flex gap-1 ${styles['node-main']}`}>
                         <div className={`flex gap-1 ${styles['node']}`}>

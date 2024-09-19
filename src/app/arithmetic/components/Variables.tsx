@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
 import { Form, Button, Select } from 'antd';
 import 'reactflow/dist/style.css';
@@ -7,25 +7,29 @@ import { PiFlagCheckered } from "react-icons/pi";
 import { MdDeleteOutline } from "react-icons/md";
 import { FiPlus } from "react-icons/fi";
 
-
-const VariableNode = ({ id, data, type }: NodeProps<any>) => {
+const VariableNode: React.FC<NodeProps<any>> = ({ id, data, type }) => {
     const [fields, setFields] = useState<any[]>([{ type: 'variable', selectedVariable: '' }]);
-    const { columns = {} } = data;
+    const [availableColumns, setAvailableColumns] = useState<string[]>([]);
 
+    // Effect to load available columns from data passed into the node
+    useEffect(() => {
+        if (data && data.folderdata) {
+            const columns = Object.keys(data.folderdata || {}).filter((key) => {
+                const columnType = data.folderdata[key]?.toLowerCase();
+                return ['number', 'int', 'float'].includes(columnType);
+            });
+            setAvailableColumns(columns);
+        }
+    }, [data]);
+
+    // Memo to track selected variables to disable already selected ones in the dropdown
     const selectedVariables = useMemo(() => {
-        return fields.map(field => field.selectedVariable);
+        return fields.map((field) => field.selectedVariable);
     }, [fields]);
 
     const areAllFieldsSelected = useMemo(() => {
         return fields.every(field => field.selectedVariable !== '');
     }, [fields]);
-
-    const getFilteredColumns = () => {
-        return Object.keys(columns).filter((column) => {
-            const columnType = columns[column]?.toLowerCase();
-            return ['number', 'int', 'float'].includes(columnType);
-        });
-    };
 
     const handleSelectChange = (index: number, value: string) => {
         setFields((prevFields) => {
@@ -33,15 +37,13 @@ const VariableNode = ({ id, data, type }: NodeProps<any>) => {
             newFields[index].selectedVariable = value;
 
             if (index === 0) {
-                data['variableType'] = columns[value];
+                data['variableType'] = data.folderdata[value];
             }
 
             return newFields;
         });
 
         data[`variable${index + 1}`] = value;
-
-        delete data[`variableType${index + 1}`];
     };
 
     const addVariableField = () => {
@@ -99,15 +101,23 @@ const VariableNode = ({ id, data, type }: NodeProps<any>) => {
                                                 : false
                                         }
                                     >
-                                        {getFilteredColumns().map((column: string) => (
-                                            <Select.Option key={column} value={column} disabled={selectedVariables.includes(column)}>
+                                        {availableColumns.map((column: string) => (
+                                            <Select.Option
+                                                key={column}
+                                                value={column}
+                                                disabled={selectedVariables.includes(column)}
+                                            >
                                                 {column}
                                             </Select.Option>
                                         ))}
                                     </Select>
 
                                     {index !== 0 && (
-                                        <button className={styles.deleteBtn} onClick={() => handleDelete(index)} style={{ cursor: 'pointer', background: 'none', border: 'none' }}>
+                                        <button
+                                            className={styles.deleteBtn}
+                                            onClick={() => handleDelete(index)}
+                                            style={{ cursor: 'pointer', background: 'none', border: 'none' }}
+                                        >
                                             <MdDeleteOutline />
                                         </button>
                                     )}

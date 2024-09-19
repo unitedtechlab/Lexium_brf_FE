@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Handle, Position, NodeProps, useReactFlow, Connection } from 'reactflow';
+import { Handle, NodeProps, Position, useReactFlow } from 'reactflow';
 import 'reactflow/dist/style.css';
 import styles from '@/app/assets/css/workflow.module.css';
 import Image from 'next/image';
@@ -20,6 +20,7 @@ const DivisionMultiply = ({ id, data }: NodeProps<any>) => {
         let multiplyValues: any[] = [];
         let divideValues: any[] = [];
         let firstConnectedType: string | null = null;
+        let sourceIds: string[] = [];
 
         edges.forEach((edge) => {
             const sourceNode = getNode(edge.source);
@@ -29,28 +30,14 @@ const DivisionMultiply = ({ id, data }: NodeProps<any>) => {
                 firstConnectedType = sourceNodeData.variableType;
             }
 
-            const prepareNodeData = (nodeData: any) => {
-                const cleanData: any = { variableType: nodeData.variableType || 'unknown' };
-                Object.keys(nodeData).forEach((key) => {
-                    if (key.startsWith('variable') || key === 'value') {
-                        cleanData[key] = nodeData[key];
-                    }
-                });
-                return cleanData;
-            };
-
-            if (edge.targetHandle === 'target1' && sourceNodeData) {
-                multiplyValues.push({
-                    id: sourceNode.id,
-                    data: prepareNodeData(sourceNodeData),
-                });
+            if (edge.targetHandle === 'target1' && sourceNode) {
+                multiplyValues.push({ id: sourceNode.id });
+                sourceIds.push(sourceNode.id);
             }
 
-            if (edge.targetHandle === 'target2' && sourceNodeData) {
-                divideValues.push({
-                    id: sourceNode.id,
-                    data: prepareNodeData(sourceNodeData),
-                });
+            if (edge.targetHandle === 'target2' && sourceNode) {
+                divideValues.push({ id: sourceNode.id });
+                sourceIds.push(sourceNode.id);
             }
         });
 
@@ -67,13 +54,16 @@ const DivisionMultiply = ({ id, data }: NodeProps<any>) => {
                             multiplyValues,
                             divideValues,
                         },
+                        connectedEdges: sourceIds.length > 0
+                            ? [{ source: sourceIds, target: '' }]
+                            : [],
                     }
                     : node
             )
         );
     }, [getEdges, getNode, id, setNodes]);
 
-    const isValidConnection = (connection: Connection) => {
+    const isValidConnection = () => {
         const edges = getEdges().filter((edge) => edge.target === id);
         return edges.length < 4;
     };

@@ -663,7 +663,8 @@
 .custommodal {
     border-radius: 18px 0 0 18px;
     width: 100%;
-    border: 1px solid rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-right: 0;
     padding: 0;
     position: relative;
     background-color: var(--white-color);
@@ -750,38 +751,20 @@
     font-weight: var(--font-weight-500);
 }
 
-/* .dropdownMenu {
+.toggleButton {
     position: absolute;
-    top: 25px;
-    right: 0;
-    background-color: var(--white-color);
-    border: 1px solid #f0f0f0;
-    border-radius: 6px;
-    z-index: 100;
-    width: 150px;
-    padding: 10px;
+    right: 35px;
+    top: 110px;
+    z-index: 89;
 }
 
-.dropdownMenu ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+.collapsed {
+    top: 20px;
+    right: 20px;
+    background: var(--white-color);
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid var(--tertiary-300);
+    line-height: 1;
 }
-
-.dropdownMenu li {
-    padding: 5px 10px;
-    cursor: pointer;
-    color: var(--primary-100);
-    background: var(--tertiary-200);
-    border-radius: 4px;
-    transition: all 0.3s linear;
-}
-
-.dropdownMenu li:hover {
-    border-radius: 6px;
-    background-color: rgba(1, 175, 178, 1);
-    color: var(--white-color);
-} */
