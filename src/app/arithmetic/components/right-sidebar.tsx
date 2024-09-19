@@ -6,11 +6,10 @@ import { BiGridVertical } from 'react-icons/bi';
 import Image from "next/image";
 import { Avatar, Select } from 'antd';
 import userImage from "@/app/assets/images/user.png";
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { FiMoreHorizontal } from 'react-icons/fi';
-import { FaDeleteLeft } from 'react-icons/fa6';
-import { TiDelete } from 'react-icons/ti';
 import { AiFillDelete } from 'react-icons/ai';
+import Cookies from 'js-cookie';
 
 interface RightSideBarProps {
     variableEntries: any[];
@@ -19,9 +18,10 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [selectionPending, setSelectionPending] = useState<string[]>([]);
     const [selectedVariable, setSelectedVariable] = useState<string[]>([]);
-    const [selectedType, setSelectedType] = useState<string[]>([]);
     const [isClicked, setIsClicked] = useState(false);
-
+    const [variableName, setVariableName] = useState<string>(''); // Variable name state
+    const [selectedType, setSelectedType] = useState<string[]>([]);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
     const openModal = () => {
         setIsModalVisible(true);
     };
@@ -29,21 +29,32 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
     const closeModal = () => {
         setIsModalVisible(false);
     };
+    const saveModal = () => {
+    };
     const handleSelectChange = (value: string[]) => {
         setSelectionPending(value);
     };
     const handleSelectedVariable = (value: string[]) => {
         setSelectedVariable(value);
+
+        Cookies.set('selectedVariable', JSON.stringify(value), { expires: 7 });
         const selectedVar = variableEntries.find(([key]) => key === value[0]);
         if (selectedVar) {
             const [, type] = selectedVar;
             setSelectedType([type]);
+            Cookies.set('selectedType', JSON.stringify([type]), { expires: 7 });
         }
     };
+
+    const handleVariableNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const name = e.target.value;
+        setVariableName(name);
+        Cookies.set('variableName', name, { expires: 7 });
+    };
+
     const handleSelectedType = (value: string[]) => {
         setSelectedType(value);
     };
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     const toggleMenu = () => {
         setIsMenuOpen(!isMenuOpen);
@@ -122,10 +133,9 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
                     <div className={styles.custommodal}>
 
                         <div className={styles.rightsidebarheader}>
-                            <h6>Create New Local Variables</h6>
-                            <button className={styles.closebtn} onClick={closeModal}>
-                                &times;
-                            </button>
+                            <div><h6>Create New Local Variables</h6></div>
+                            <div> <button className={styles.closebtn} onClick={saveModal}>&#10003;</button></div>
+                            <div> <button className={styles.closebtn} onClick={closeModal}>&times;</button></div>
                         </div>
                         <div className={styles.selectedvariable}>
                             <div className={styles.variableContainer}>
@@ -173,7 +183,7 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
                             </div>
                             <div className={`${styles.selectVariables}`}>
                                 <h6>Variable Name</h6>
-                                <input type="text" className={styles.formcontrol} placeholder="5000" required />
+                                <input type="text" className={styles.formcontrol} placeholder="5000" value={variableName} onChange={handleVariableNameChange} required />
                             </div>
                         </div>
                         <div className={styles.rightbar}>

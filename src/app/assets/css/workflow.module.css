@@ -497,7 +497,7 @@
 }
 
 .rightsidebarheader {
-    padding: 16px 16px 0;
+    padding: 16px 16px;
     display: flex;
     justify-content: space-between;
     align-items: center
@@ -599,6 +599,7 @@
 .variables {
     display: flex;
     justify-content: space-between;
+    align-items: center;
 }
 
 .localData {
@@ -758,12 +759,10 @@
     align-items: center;
     margin-top: 10px;
     width: 100%;
-    position: relative;
+    gap: 10px;
 }
 
 .deleteIcon {
-    position: absolute;
-    right: 10px;
     cursor: pointer;
 }
 
@@ -784,7 +783,7 @@
     padding: 5px;
     background-color: transparent;
     cursor: pointer;
-    transition:  rgba(1, 175, 178, 1) 0.3s ease;
+    transition: rgba(1, 175, 178, 1) 0.3s ease;
 }
 
 .iconClicked {
@@ -795,7 +794,7 @@
     position: absolute;
     top: 42%;
     right: 3%;
-    background-color:#f0f0f0;
+    background-color: #f0f0f0;
     border: 1px solid#f0f0f0;
     border-radius: 6px;
     z-index: 100;
@@ -816,5 +815,5 @@
 .dropdownMenu li:hover {
     border-radius: 6px;
     transition: 1s;
-    background-color:  rgba(1, 175, 178, 1);
+    background-color: rgba(1, 175, 178, 1);
 }
