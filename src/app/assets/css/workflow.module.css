@@ -429,7 +429,6 @@
     width: 100%;
 }
 
-/* /operations */
 .operations {
     padding: 10px 20px;
 }
@@ -453,18 +452,6 @@
     background: var(--white-color);
     border: 1px solid var(--tertiary-300);
     border-radius: 12px;
-}
-
-.minus-point-label {
-    background: var(--tertiary-400);
-    text-align: left;
-    padding: 5px 15px;
-    display: inline-block;
-    font-weight: var(--font-weight-600);
-    border-radius: 6px;
-    position: absolute;
-    bottom: -35px;
-    left: 0;
 }
 
 .inputField {
@@ -774,10 +761,6 @@
     position: relative;
 }
 
-.dropdownWrapper .ant-select {
-    width: 90%;
-}
-
 .deleteIcon {
     position: absolute;
     right: 10px;
@@ -786,6 +769,7 @@
 
 .formcontrol {
     border: 1px solid #ccc;
+    border-radius: 6px;
     padding: 5px;
     transition: border-color 0.3s ease;
     width: 100%;
@@ -796,16 +780,16 @@
     outline: none;
 }
 
-/* .icon {
+.icon {
     padding: 5px;
     background-color: transparent;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition:  rgba(1, 175, 178, 1) 0.3s ease;
 }
 
 .iconClicked {
     background-color: rgba(1, 175, 178, 1);
-} */
+}
 
 .dropdownMenu {
     position: absolute;
@@ -813,8 +797,7 @@
     right: 3%;
     background-color:#f0f0f0;
     border: 1px solid#f0f0f0;
-    transition: 1s;
-    border-radius: 4px;
+    border-radius: 6px;
     z-index: 100;
     width: 150px;
 }
@@ -831,5 +814,7 @@
 }
 
 .dropdownMenu li:hover {
+    border-radius: 6px;
+    transition: 1s;
     background-color:  rgba(1, 175, 178, 1);
 }

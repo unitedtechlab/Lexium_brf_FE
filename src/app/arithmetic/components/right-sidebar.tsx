@@ -22,10 +22,6 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
     const [selectedType, setSelectedType] = useState<string[]>([]);
     const [isClicked, setIsClicked] = useState(false);
 
-    useEffect(() => {
-        console.log(" variableEntries:", variableEntries);
-    }, [variableEntries]);
-
     const openModal = () => {
         setIsModalVisible(true);
     };
@@ -38,6 +34,11 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
     };
     const handleSelectedVariable = (value: string[]) => {
         setSelectedVariable(value);
+        const selectedVar = variableEntries.find(([key]) => key === value[0]);
+        if (selectedVar) {
+            const [, type] = selectedVar;
+            setSelectedType([type]);
+        }
     };
     const handleSelectedType = (value: string[]) => {
         setSelectedType(value);
@@ -45,7 +46,7 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     const toggleMenu = () => {
-      setIsMenuOpen(!isMenuOpen);
+        setIsMenuOpen(!isMenuOpen);
     };
 
     return (
@@ -60,13 +61,13 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
                 <div className={styles.operations}>
                     <div className={styles.variables}>
                         <h6>Local Variable</h6>
-                        <div className="open-modal-btn" onClick={openModal}>
+                        <div onClick={openModal}>
                             <IconComponent icon={<TbAdjustments size={20} style={{ transform: 'rotate(90deg)' }} />} />
                         </div>
                     </div>
                     <div className={styles.variables}>
                         <h6>Local Data</h6>
-                        <div className={isClicked ? styles.iconClicked : styles.icon}  onClick={toggleMenu}>
+                        <div className={isClicked ? styles.iconClicked : styles.icon} onClick={toggleMenu}>
                             <IconComponent icon={<TbPlus size={20} />} />
                         </div>
                         {isMenuOpen && (
@@ -144,13 +145,15 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
                                     </div>
 
                                     <div className={styles.dropdownWrapper}>
-                                        <Select
-                                            placeholder="Select Variable"
-                                            style={{ width: '100%' }}
-                                            defaultValue="Basic_Salary"
-                                        >
-                                            <Select.Option value="Basic_Salary">Basic_Salary</Select.Option>
-                                        </Select>
+                                        <div>
+                                            <Select style={{ width: '190px' }} value={selectedVariable}
+                                                mode="multiple" placeholder="Select Variables" onChange={handleSelectedVariable}>
+                                                {variableEntries.map(([key]) => (
+                                                    <Select.Option key={key} value={key}>
+                                                        {key}
+                                                    </Select.Option>))}
+                                            </Select>
+                                        </div>
                                         <div className={styles.deleteIcon}>
                                             <IconComponent icon={<AiFillDelete size={20} />} />
                                         </div>
@@ -158,23 +161,10 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
                                 </div>
                             </div>
                         </div>
-                        {/* <div className={styles.rightbar}>
-                            <div className={`${styles.selectVariables}`}>
-                                <h6>Variable</h6>
-                                <Select mode="multiple" placeholder="Select options" onChange={handleSelectChange} value={selectionPending} style={{ width: '100%' }}>
-                                    {variableEntries.map(([key]) => (
-                                        <Select.Option key={key} value={key}>
-                                            {key}
-                                        </Select.Option>))}
-                                </Select>
-                            </div>
-                        </div> */}
                         <div className={styles.rightbar}>
                             <div className={`${styles.selectVariables}`}>
                                 <h6>Select Variable</h6>
-                                <Select mode="multiple" placeholder="Select options" style={{ width: '100%' }}
-                                    onChange={handleSelectedVariable}
-                                    value={selectedVariable} >
+                                <Select mode="multiple" placeholder="Select options" style={{ width: '100%' }} >
                                     {variableEntries.map(([key]) => (
                                         <Select.Option key={key} value={key}>
                                             {key}
@@ -198,7 +188,7 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
                                     placeholder="Select options"
                                     style={{ width: '100%' }}
                                     onChange={handleSelectedType}
-                                    value={selectedType} >
+                                    value={selectedType} disabled>
                                     {variableEntries.map(([key, type]) => (
                                         <Select.Option key={type} value={type}>
                                             {type}
