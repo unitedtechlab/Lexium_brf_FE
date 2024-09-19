@@ -1,5 +1,5 @@
 "use client";
-import React, { useRef, useCallback } from 'react';
+import React, { useRef, useCallback, useState, useEffect } from 'react';
 import {
     ReactFlow,
     ReactFlowProvider,
@@ -26,6 +26,7 @@ import DivisionMultiplicationNode from './components/DivisionMulti';
 import ModifierNode from './components/Modifier';
 import CompilerNode from './components/Compiler';
 import Constants from "./components/constants";
+import RightSideBar from './components/right-sidebar';
 
 const nodeTypes = {
     variables: VariableNode,
@@ -49,6 +50,8 @@ const DnDFlow: React.FC = () => {
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
     const { screenToFlowPosition } = useReactFlow();
     const { type } = useDnD();
+    const [folderdata, setFolderData] = useState<any[]>([]);
+    const variableEntries = Object.entries(folderdata);
 
     const onConnect = useCallback(
         (params: Edge | Connection) => setEdges((eds) => addEdge({ ...params, type: 'customEdge' }, eds)),
@@ -77,13 +80,17 @@ const DnDFlow: React.FC = () => {
                 id: getId(),
                 type: type.nodeType,
                 position,
-                data: { label: type.titleName, columns: type.columns || [] },
+                data: { label: type.titleName, folderdata },
             };
 
             setNodes((nds) => nds.concat(newNode));
         },
-        [screenToFlowPosition, type, setNodes]
+        [screenToFlowPosition, type, setNodes, folderdata]
     );
+
+    const handleFolderData = (data: any) => {
+        setFolderData(data);
+    };
 
     const handleSave = () => {
         const cleanedNodes = nodes.map((node) => {
@@ -110,7 +117,7 @@ const DnDFlow: React.FC = () => {
             const finalConnectedSources = edges
                 .filter((edge) => edge.target === finalNode.id)
                 .map((edge) => edge.source)
-                .join(",");
+                .join("");
 
             finalNode.connectedEdges = [
                 {
@@ -127,7 +134,7 @@ const DnDFlow: React.FC = () => {
         <div className={classes.workflowPage}>
             <Topbar onSave={handleSave} />
             <div className={classes.workflowWrapper}>
-                <Sidebar />
+                <Sidebar setFolderData={handleFolderData} />
                 <div className={classes.reactflowMain} ref={reactFlowWrapper}>
                     <ReactFlow
                         nodes={nodes}
@@ -144,6 +151,7 @@ const DnDFlow: React.FC = () => {
                         <Controls />
                     </ReactFlow>
                 </div>
+                <RightSideBar variableEntries={variableEntries} />
             </div>
         </div>
     );

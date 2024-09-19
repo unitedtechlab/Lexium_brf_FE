@@ -7,21 +7,26 @@ import { fetchWorkspaces, fetchFolders, fetchFolderData } from '@/app/API/api';
 import styles from '@/app/assets/css/workflow.module.css';
 import { PiMathOperationsBold } from "react-icons/pi";
 import { TbMathXDivideY2, TbMathIntegralX, TbMathMaxMin } from "react-icons/tb";
-import { MdOutlineSelectAll, MdOutlineKeyboardAlt } from "react-icons/md";
+import { MdOutlineSelectAll } from "react-icons/md";
 import { useEmail } from '@/app/context/emailContext';
 
 const { Search } = Input;
+interface sidebar extends React.FC {
+  data: any;
+}
+export const IconComponent: React.FC<{ icon: React.ReactElement }> = ({ icon }) => {
+  return <span className={styles.icon}>{icon}</span>;
+};
 
-const Sidebar: React.FC = () => {
+const Sidebar: React.FC<{ setFolderData: (data: any[]) => void }> = ({ setFolderData }) => {
   const { email } = useEmail();
   const { setType } = useDnD();
   const [workspaces, setWorkspaces] = useState<any[]>([]);
   const [selectedWorkspace, setSelectedWorkspace] = useState<string | null>(null);
   const [folders, setFolders] = useState<any[]>([]);
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
-  const [columnsWithTypes, setColumnsWithTypes] = useState<{ [key: string]: string }>({});
+  const [columns, setColumns] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  const [tableSelected, setTableSelected] = useState<boolean>(false);
 
   // Fetch workspaces
   const loadWorkspaces = useCallback(async () => {
@@ -66,12 +71,9 @@ const Sidebar: React.FC = () => {
       setLoading(true);
       try {
         const folderData = await fetchFolderData(email, selectedWorkspace, folderId);
-        if (folderData) {
-          setColumnsWithTypes(folderData);
-          setTableSelected(true);
-        } else {
-          message.error('No column data found.');
-        }
+        setFolderData(folderData)
+        const fetchedColumns = Object.keys(folderData);
+        setColumns(fetchedColumns);
       } catch (error) {
         message.error('Failed to fetch columns.');
         console.error("Failed to fetch columns:", error);
@@ -92,7 +94,6 @@ const Sidebar: React.FC = () => {
   const handleWorkspaceChange = (value: string) => {
     setSelectedWorkspace(value);
     loadFolders(value);
-    setTableSelected(false);
   };
 
   const handleFolderChange = (value: string) => {
@@ -101,17 +102,10 @@ const Sidebar: React.FC = () => {
   };
 
   const onDragStart = (event: React.DragEvent, nodeType: string, titleName: string) => {
-    if (!tableSelected) {
-      message.error('Please select Workspace or table first.');
-      return;
-    }
-    setType({ nodeType, titleName, columns: columnsWithTypes });
+    setType({ nodeType, titleName });
     event.dataTransfer.effectAllowed = 'move';
   };
 
-  const IconComponent = ({ icon }: { icon: React.ReactElement }) => {
-    return <span className={styles.icon}>{icon}</span>;
-  };
 
   return (
     <aside>
@@ -148,7 +142,6 @@ const Sidebar: React.FC = () => {
             value={selectedFolder}
             onChange={handleFolderChange}
             loading={loading}
-            disabled={!selectedWorkspace}
           >
             {folders.map((folder) => (
               <Select.Option key={folder.id} value={folder.id}>
@@ -165,7 +158,21 @@ const Sidebar: React.FC = () => {
         <div className={styles.operations}>
           <h6>Arithmetic Operators</h6>
 
-          {/* Variable Node */}
+          {/* {Local Variable Node} */}
+          <div className={`flex gap-1 ${styles.sidebardragDrop}`} onDragStart={(event) => onDragStart(event, 'modifier_type', 'Modifier Node')}
+            draggable>
+            <IconComponent icon={<MdOutlineSelectAll />} />
+            <h6>Local Variable</h6>
+          </div>
+
+          {/* {Global Variable Node} */}
+          <div className={`flex gap-1 ${styles.sidebardragDrop}`} onDragStart={(event) => onDragStart(event, 'modifier_type', 'Modifier Node')}
+            draggable>
+            <IconComponent icon={<MdOutlineSelectAll />} />
+            <h6>Global Variable</h6>
+          </div>
+
+          {/* Variable Field Node */}
           <div
             className={`flex gap-1 ${styles.sidebardragDrop}`}
             onDragStart={(event) => onDragStart(event, 'variables', 'Variables')}
@@ -173,17 +180,6 @@ const Sidebar: React.FC = () => {
           >
             <IconComponent icon={<MdOutlineSelectAll />} />
             <h6 className={styles.titleName}>Variables</h6>
-          </div>
-
-
-          {/* Constant Node */}
-          <div
-            className={`flex gap-1 ${styles.sidebardragDrop}`}
-            onDragStart={(event) => onDragStart(event, 'constants', 'Constants')}
-            draggable
-          >
-            <IconComponent icon={<MdOutlineKeyboardAlt />} />
-            <h6 className={styles.titleName}>Constants</h6>
           </div>
 
           {/* Addition / Subtraction Node */}
@@ -225,27 +221,6 @@ const Sidebar: React.FC = () => {
             <IconComponent icon={<TbMathMaxMin />} />
             <h6 className={styles.titleName}>Compiler</h6>
           </div>
-
-          {/* local variable Node */}
-          <div
-            className={`flex gap-1 ${styles.sidebardragDrop}`}
-            onDragStart={(event) => onDragStart(event, 'local_var_node', 'Local Variable')}
-            draggable
-          >
-            <IconComponent icon={<MdOutlineKeyboardAlt />} />
-            <h6 className={styles.titleName}>Local Variable</h6>
-          </div>
-
-          {/* Global variable Node */}
-          <div
-            className={`flex gap-1 ${styles.sidebardragDrop}`}
-            onDragStart={(event) => onDragStart(event, 'globl_var_node', 'Global Variable')}
-            draggable
-          >
-            <IconComponent icon={<MdOutlineKeyboardAlt />} />
-            <h6 className={styles.titleName}>Global Variable</h6>
-          </div>
-
         </div>
       </div>
     </aside>
