@@ -4,6 +4,7 @@ import 'reactflow/dist/style.css';
 import styles from '@/app/assets/css/workflow.module.css';
 import Image from 'next/image';
 import TableImage from '../../assets/images/layout.svg';
+import { FiMinusCircle, FiPlusCircle } from "react-icons/fi";
 
 const AdditionSubNode = ({ id, data }: NodeProps<any>) => {
     const { getEdges, getNode, setNodes } = useReactFlow();
@@ -80,7 +81,9 @@ const AdditionSubNode = ({ id, data }: NodeProps<any>) => {
 
     return (
         <div>
-            <div className={styles['starting-point-label']}>+</div>
+            <div className={styles['plus-point-label']}>
+                <FiPlusCircle />
+            </div>
             <div className={styles['nodeBox']}>
                 <div className={`flex gap-1 ${styles['node-main']}`}>
                     <div className={`flex gap-1 ${styles['node']}`}>
@@ -94,7 +97,9 @@ const AdditionSubNode = ({ id, data }: NodeProps<any>) => {
                     </div>
                 </div>
             </div>
-            <div className={styles['minus-point-label']}>-</div>
+            <div className={styles['minus-point-label']}>
+                <FiMinusCircle />
+            </div>
 
             <Handle
                 type="target"
