@@ -18,11 +18,21 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
     const [variableName, setVariableName] = useState<string>('');
     const [variableValue, setVariableValue] = useState<string>('5000');
     const [variableType, setVariableType] = useState<string>('');
+    const [globalVariables, setGlobalVariables] = useState<any[]>([]);
 
     useEffect(() => {
-        const storedVariables = JSON.parse(localStorage.getItem('localVariables') || '[]');
-        setLocalVariables(storedVariables);
+        // Fetch both local and global variables from localStorage
+        const storedLocalVariables = JSON.parse(localStorage.getItem('localVariables') || '[]');
+        const storedGlobalVariables = JSON.parse(localStorage.getItem('GlobalVariables') || '[]');
+
+        setLocalVariables(storedLocalVariables);
+        setGlobalVariables(storedGlobalVariables);
     }, []);
+
+    const refreshVariables = () => {
+        const updatedGlobalVariables = JSON.parse(localStorage.getItem('GlobalVariables') || '[]');
+        setGlobalVariables(updatedGlobalVariables);
+    };
 
     const openModal = () => {
         setIsModalVisible(true);
@@ -119,26 +129,21 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
 
                         <div className={styles.customvariable}>
                             <div className={styles.variables}>
-                                <h6>Global Variable</h6>
+                                <h6>Global Variables</h6>
                             </div>
                             <div className={`${styles.variableNames}`}>
                                 <ul>
-                                    <li>
-                                        <div className={styles.iconWrapper}>
-                                            <BiGridVertical size={18} />
-                                        </div>
-                                        <h6>HRA</h6>
-                                    </li>
-                                    <li>
-                                        <div className={styles.iconWrapper}>
-                                            <BiGridVertical size={18} />
-                                        </div>
-                                        <h6>EDA</h6>
-                                    </li>
+                                    {globalVariables.map((variable, index) => (
+                                        <li key={index}>
+                                            <div className={styles.iconWrapper}>
+                                                <BiGridVertical size={18} />
+                                            </div>
+                                            <h6>{variable.outputName || 'Unnamed Variable'}</h6>
+                                        </li>
+                                    ))}
                                 </ul>
                             </div>
                         </div>
-
                     </div>
 
                     {isModalVisible && (
@@ -183,17 +188,6 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
                                 </div>
                                 <div className={styles.rightbar}>
                                     <h6>Variable Properties</h6>
-                                    {/* <div className={`${styles.selectVariables} ${styles.inlineVariable}`}>
-                                        <h6>Value</h6>
-                                        <input
-                                            type="text"
-                                            className={styles.formcontrol}
-                                            placeholder="5000"
-                                            value={variableValue}
-                                            onChange={(e) => setVariableValue(e.target.value)}
-                                            required
-                                        />
-                                    </div> */}
                                     <div className={`${styles.selectVariables} ${styles.inlineVariable}`}>
                                         <h6>Data Types</h6>
                                         <p className={styles.typeData}>{variableType || 'number'}</p>

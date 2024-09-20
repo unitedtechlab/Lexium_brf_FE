@@ -7,7 +7,7 @@ import { fetchWorkspaces, fetchFolders, fetchFolderData } from '@/app/API/api';
 import styles from '@/app/assets/css/workflow.module.css';
 import { PiMathOperationsBold } from "react-icons/pi";
 import { TbMathXDivideY2, TbMathIntegralX, TbMathMaxMin } from "react-icons/tb";
-import { MdOutlineSelectAll } from "react-icons/md";
+import { MdOutlineSelectAll, MdOutlineOutput } from "react-icons/md";
 import { useEmail } from '@/app/context/emailContext';
 import { AiOutlineNumber, AiOutlineGlobal } from "react-icons/ai";
 import { SiLocal } from "react-icons/si";
@@ -240,6 +240,17 @@ const Sidebar: React.FC<{ setFolderData: (data: any[]) => void }> = ({ setFolder
             <IconComponent icon={<AiOutlineGlobal />} />
             <h6>Global Variable</h6>
           </div>
+
+          {/* Output Node */}
+          <div
+            className={`flex gap-1 ${styles.sidebardragDrop}`}
+            onDragStart={(event) => onDragStart(event, 'output_node', 'Output Node')}
+            draggable
+          >
+            <IconComponent icon={<MdOutlineOutput />} />
+            <h6>Output Node</h6>
+          </div>
+
         </div>
       </div>
     </aside>

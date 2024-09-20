@@ -28,6 +28,7 @@ import CompilerNode from './components/Compiler';
 import Constants from "./components/constants";
 import LocalVariable from './components/localVariable';
 import RightSideBar from './components/right-sidebar';
+import OutputNode from './components/Output';
 
 const nodeTypes = {
     variables: VariableNode,
@@ -37,6 +38,7 @@ const nodeTypes = {
     modifier_type: ModifierNode,
     compiler_type: CompilerNode,
     local_variable: LocalVariable,
+    output_node: OutputNode,
 };
 
 const edgeTypes = {
@@ -100,6 +102,15 @@ const DnDFlow: React.FC = () => {
     };
 
     const handleSave = () => {
+        let outputNodeName = "";
+
+        // Identify the output node and extract its name
+        nodes.forEach((node) => {
+            if (node.type === "output_node" && node.data.outputName) {
+                outputNodeName = node.data.outputName;
+            }
+        });
+
         const cleanedNodes = nodes.map((node) => {
             const { data, type } = node;
             const { folderdata, label, ...cleanedData } = data;
@@ -133,7 +144,12 @@ const DnDFlow: React.FC = () => {
             };
         });
 
-        console.log(JSON.stringify(cleanedNodes, null, 2));
+        const finalWorkflowData = {
+            OutputName: outputNodeName,
+            nodes: cleanedNodes,
+        };
+
+        console.log(JSON.stringify(finalWorkflowData, null, 2));
     };
 
 
