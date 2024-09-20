@@ -13,9 +13,7 @@ import { AiOutlineNumber, AiOutlineGlobal } from "react-icons/ai";
 import { SiLocal } from "react-icons/si";
 
 const { Search } = Input;
-interface sidebar extends React.FC {
-  data: any;
-}
+
 export const IconComponent: React.FC<{ icon: React.ReactElement }> = ({ icon }) => {
   return <span className={styles.icon}>{icon}</span>;
 };
@@ -30,7 +28,6 @@ const Sidebar: React.FC<{ setFolderData: (data: any[]) => void }> = ({ setFolder
   const [columns, setColumns] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
 
-  // Fetch workspaces
   const loadWorkspaces = useCallback(async () => {
     if (email) {
       setLoading(true);
@@ -49,7 +46,6 @@ const Sidebar: React.FC<{ setFolderData: (data: any[]) => void }> = ({ setFolder
     }
   }, [email]);
 
-  // Fetch folders when workspace changes
   const loadFolders = useCallback(async (workspaceId: string) => {
     if (email) {
       setLoading(true);
@@ -67,13 +63,12 @@ const Sidebar: React.FC<{ setFolderData: (data: any[]) => void }> = ({ setFolder
     }
   }, [email]);
 
-  // Fetch columns when folder changes
   const loadColumns = useCallback(async (folderId: string) => {
     if (email && selectedWorkspace) {
       setLoading(true);
       try {
         const folderData = await fetchFolderData(email, selectedWorkspace, folderId);
-        setFolderData(folderData)
+        setFolderData(folderData);
         const fetchedColumns = Object.keys(folderData);
         setColumns(fetchedColumns);
       } catch (error) {
@@ -103,11 +98,17 @@ const Sidebar: React.FC<{ setFolderData: (data: any[]) => void }> = ({ setFolder
     loadColumns(value);
   };
 
+  const isDragDisabled = !selectedWorkspace || !selectedFolder;
+
   const onDragStart = (event: React.DragEvent, nodeType: string, titleName: string) => {
+    if (isDragDisabled) {
+      event.preventDefault(); // Prevent dragging if no workspace or folder is selected
+      message.error('Please select a Workspace and Table before dragging a node.');
+      return;
+    }
     setType({ nodeType, titleName });
     event.dataTransfer.effectAllowed = 'move';
   };
-
 
   return (
     <aside>
@@ -160,9 +161,12 @@ const Sidebar: React.FC<{ setFolderData: (data: any[]) => void }> = ({ setFolder
         <div className={styles.operations}>
           <h6>Arithmetic Operators</h6>
 
-          {/* Constants Node} */}
-          <div className={`flex gap-1 ${styles.sidebardragDrop}`} onDragStart={(event) => onDragStart(event, 'constant', 'Constants Node')}
-            draggable>
+          {/* Constants Node */}
+          <div
+            className={`flex gap-1 ${styles.sidebardragDrop}`}
+            onDragStart={(event) => onDragStart(event, 'constant', 'Constants')}
+            draggable
+          >
             <IconComponent icon={<AiOutlineNumber />} />
             <h6>Constants</h6>
           </div>
@@ -200,7 +204,7 @@ const Sidebar: React.FC<{ setFolderData: (data: any[]) => void }> = ({ setFolder
           {/* Modifier Node */}
           <div
             className={`flex gap-1 ${styles.sidebardragDrop}`}
-            onDragStart={(event) => onDragStart(event, 'modifier_type', 'Modifier Node')}
+            onDragStart={(event) => onDragStart(event, 'modifier_type', 'Modifier')}
             draggable
           >
             <IconComponent icon={<TbMathIntegralX />} />
@@ -210,27 +214,32 @@ const Sidebar: React.FC<{ setFolderData: (data: any[]) => void }> = ({ setFolder
           {/* Compiler Node */}
           <div
             className={`flex gap-1 ${styles.sidebardragDrop}`}
-            onDragStart={(event) => onDragStart(event, 'compiler_type', 'Compiler Node')}
+            onDragStart={(event) => onDragStart(event, 'compiler_type', 'Compiler')}
             draggable
           >
             <IconComponent icon={<TbMathMaxMin />} />
             <h6 className={styles.titleName}>Compiler</h6>
           </div>
 
-          {/* {Local Variable Node} */}
-          <div className={`flex gap-1 ${styles.sidebardragDrop}`} onDragStart={(event) => onDragStart(event, 'local_variable', 'Local Variable')}
-            draggable>
+          {/* Local Variable Node */}
+          <div
+            className={`flex gap-1 ${styles.sidebardragDrop}`}
+            onDragStart={(event) => onDragStart(event, 'local_variable', 'Local Variable')}
+            draggable
+          >
             <IconComponent icon={<SiLocal />} />
             <h6>Local Variable</h6>
           </div>
 
-          {/* {Global Variable Node} */}
-          <div className={`flex gap-1 ${styles.sidebardragDrop}`} onDragStart={(event) => onDragStart(event, 'global_variable', 'Global Variable')}
-            draggable>
+          {/* Global Variable Node */}
+          <div
+            className={`flex gap-1 ${styles.sidebardragDrop}`}
+            onDragStart={(event) => onDragStart(event, 'global_variable', 'Global Variable')}
+            draggable
+          >
             <IconComponent icon={<AiOutlineGlobal />} />
             <h6>Global Variable</h6>
           </div>
-
         </div>
       </div>
     </aside>

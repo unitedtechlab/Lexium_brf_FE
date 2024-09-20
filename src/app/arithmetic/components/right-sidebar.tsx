@@ -98,7 +98,7 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
 
                         <div className={styles.customvariable}>
                             <div className={styles.variables}>
-                                <h6>Local Data</h6>
+                                <h6>Local Variables</h6>
                                 <div className={isClicked ? styles.iconClicked : styles.icon} onClick={openModal}>
                                     <IconComponent icon={<TbPlus size={18} />} />
                                 </div>
@@ -170,7 +170,7 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
                                         </Select>
                                     </div>
                                     <div className={`${styles.selectVariables}`}>
-                                        <h6>Variable Name</h6>
+                                        <h6>Local Variable Name</h6>
                                         <input
                                             type="text"
                                             className={styles.formcontrol}
@@ -183,7 +183,7 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
                                 </div>
                                 <div className={styles.rightbar}>
                                     <h6>Variable Properties</h6>
-                                    <div className={`${styles.selectVariables} ${styles.inlineVariable}`}>
+                                    {/* <div className={`${styles.selectVariables} ${styles.inlineVariable}`}>
                                         <h6>Value</h6>
                                         <input
                                             type="text"
@@ -193,7 +193,7 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
                                             onChange={(e) => setVariableValue(e.target.value)}
                                             required
                                         />
-                                    </div>
+                                    </div> */}
                                     <div className={`${styles.selectVariables} ${styles.inlineVariable}`}>
                                         <h6>Data Types</h6>
                                         <p className={styles.typeData}>{variableType || 'number'}</p>

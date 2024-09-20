@@ -1,17 +1,27 @@
-import React, { useState, useEffect } from 'react';
-import { Handle, Position, NodeProps, useReactFlow } from 'reactflow';
-import { Select } from 'antd';
+import React, { useState, useEffect, useRef } from 'react';
+import { Handle, Position, NodeProps, useReactFlow, Connection, Edge } from 'reactflow';
+import { Select, message } from 'antd';
 import 'reactflow/dist/style.css';
 import styles from '@/app/assets/css/workflow.module.css';
 import Image from 'next/image';
 import TableImage from '../../assets/images/layout.svg';
 
 const CompilerNode = ({ id, data, type }: NodeProps<any>) => {
-    const { setNodes } = useReactFlow();
-    const [operation, setOperation] = useState<string>(data.operation || 'min'); // Initialize with data.operation or default to 'min'
+    const { getEdges, setNodes } = useReactFlow();
+    const [operation, setOperation] = useState<string>(data.operation || 'min');
+    const errorShownRef = useRef({ target: false, source: false });
+
+    const showErrorOnce = (msg: string, type: 'source' | 'target') => {
+        if (!errorShownRef.current[type]) {
+            message.error(msg);
+            errorShownRef.current[type] = true;
+            setTimeout(() => {
+                errorShownRef.current[type] = false;
+            }, 2000);
+        }
+    };
 
     useEffect(() => {
-        // Update node's data when operation changes
         setNodes((nodes) =>
             nodes.map((node) =>
                 node.id === id ? { ...node, data: { ...node.data, operation } } : node
@@ -20,7 +30,35 @@ const CompilerNode = ({ id, data, type }: NodeProps<any>) => {
     }, [operation, id, setNodes]);
 
     const handleOperationChange = (value: string) => {
-        setOperation(value); // Update selected operation
+        setOperation(value);
+    };
+
+    const isValidTargetConnection = (connection: Connection) => {
+        const edges = getEdges().filter((edge) => edge.target === id);
+        if (edges.length >= 1) {
+            showErrorOnce('Only one incoming connection is allowed to the target.', 'target');
+            return false;
+        }
+        return true;
+    };
+
+    const isValidSourceConnection = (connection: Connection) => {
+        const edges = getEdges().filter((edge) => edge.source === id);
+        if (edges.length >= 1) {
+            showErrorOnce('Only one outgoing connection is allowed from the source.', 'source');
+            return false;
+        }
+        return true;
+    };
+
+    const isValidConnection = (connection: Connection) => {
+        if (connection.target === id && connection.targetHandle === 'input') {
+            return isValidTargetConnection(connection);
+        }
+        if (connection.source === id && connection.sourceHandle === 'source') {
+            return isValidSourceConnection(connection);
+        }
+        return true;
     };
 
     return (
@@ -31,17 +69,17 @@ const CompilerNode = ({ id, data, type }: NodeProps<any>) => {
                         <div className={`flex gap-1 ${styles['nodewrap']}`}>
                             <Image src={TableImage} alt='Table Image' width={32} height={32} />
                             <div className={styles['node-text']}>
-                                <h6>{data.label || "Modifier"}</h6>
-                                <span>{type || "Node type not found"}</span>
+                                <h6>{data.label || 'Compiler'}</h6>
+                                <span>{type || 'Node type not found'}</span>
                             </div>
                         </div>
                     </div>
                     <div style={{ width: '100%' }}>
                         <Select
-                            value={operation} // Bind the select to the current operation state
+                            value={operation}
                             style={{ width: '100%' }}
-                            onChange={handleOperationChange} // Update the state when the user selects a new option
-                            getPopupContainer={(triggerNode) => triggerNode.parentNode} // Fixes dropdown rendering in ReactFlow
+                            onChange={handleOperationChange}
+                            getPopupContainer={(triggerNode) => triggerNode.parentNode}
                             className="nodrag"
                         >
                             <Select.Option value="min">Min</Select.Option>
@@ -53,16 +91,20 @@ const CompilerNode = ({ id, data, type }: NodeProps<any>) => {
                 </div>
             </div>
 
+            {/* Target Handle */}
             <Handle
                 type="target"
                 position={Position.Left}
                 id="input"
+                isValidConnection={isValidConnection}
             />
 
+            {/* Source Handle */}
             <Handle
                 type="source"
                 position={Position.Right}
                 id="source"
+                isValidConnection={isValidConnection}
             />
         </div>
     );

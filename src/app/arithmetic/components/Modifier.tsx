@@ -11,14 +11,13 @@ const ModifierNode = ({ id, data, type }: NodeProps<any>) => {
     const [operation, setOperation] = useState<string>(data.operation || 'absolute');
     const errorShownRef = useRef({ target: false, source: false });
 
-    // Display error message only once (per edge type)
     const showErrorOnce = (msg: string, type: 'source' | 'target') => {
         if (!errorShownRef.current[type]) {
             message.error(msg);
             errorShownRef.current[type] = true;
             setTimeout(() => {
                 errorShownRef.current[type] = false;
-            }, 2000); // Reset after 2 seconds
+            }, 2000);
         }
     };
 
@@ -34,7 +33,6 @@ const ModifierNode = ({ id, data, type }: NodeProps<any>) => {
         setOperation(value);
     };
 
-    // Check if there's already an incoming connection (target)
     const isValidTargetConnection = (connection: Connection) => {
         const edges = getEdges().filter((edge) => edge.target === id);
         if (edges.length >= 1) {
@@ -44,7 +42,6 @@ const ModifierNode = ({ id, data, type }: NodeProps<any>) => {
         return true;
     };
 
-    // Check if there's already an outgoing connection (source)
     const isValidSourceConnection = (connection: Connection) => {
         const edges = getEdges().filter((edge) => edge.source === id);
         if (edges.length >= 1) {
@@ -54,13 +51,12 @@ const ModifierNode = ({ id, data, type }: NodeProps<any>) => {
         return true;
     };
 
-    // Combined validation function that handles both source and target
     const isValidConnection = (connection: Connection) => {
         if (connection.target === id && connection.targetHandle === 'target') {
-            return isValidTargetConnection(connection); // Validate incoming connection
+            return isValidTargetConnection(connection);
         }
         if (connection.source === id && connection.sourceHandle === 'source') {
-            return isValidSourceConnection(connection); // Validate outgoing connection
+            return isValidSourceConnection(connection);
         }
         return true;
     };
@@ -98,8 +94,7 @@ const ModifierNode = ({ id, data, type }: NodeProps<any>) => {
                 type="target"
                 position={Position.Left}
                 id="target"
-                isValidConnection={isValidConnection} // Validate incoming connection
-                style={{ background: '#ff6f61' }}
+                isValidConnection={isValidConnection}
             />
 
             {/* Source Handle */}
@@ -107,8 +102,7 @@ const ModifierNode = ({ id, data, type }: NodeProps<any>) => {
                 type="source"
                 position={Position.Right}
                 id="source"
-                isValidConnection={isValidConnection} // Validate outgoing connection
-                style={{ background: '#61dafb' }}
+                isValidConnection={isValidConnection}
             />
         </div>
     );
