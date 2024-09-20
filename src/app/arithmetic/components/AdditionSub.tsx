@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { Handle, NodeProps, Position, useReactFlow } from 'reactflow';
+import React, { useState, useEffect, useRef } from 'react';
+import { Handle, NodeProps, Position, useReactFlow, Connection } from 'reactflow';
 import 'reactflow/dist/style.css';
 import styles from '@/app/assets/css/workflow.module.css';
 import Image from 'next/image';
 import TableImage from '../../assets/images/layout.svg';
 import { FiMinusCircle, FiPlusCircle } from "react-icons/fi";
+import { message } from 'antd';
 
 const AdditionSubNode = ({ id, data }: NodeProps<any>) => {
     const { getEdges, getNode, setNodes } = useReactFlow();
@@ -13,6 +14,7 @@ const AdditionSubNode = ({ id, data }: NodeProps<any>) => {
         substractionNodeValues: [],
     });
     const [firstConnectedNodeType, setFirstConnectedNodeType] = useState<string | null>(null);
+    const messageShownRef = useRef(false);
 
     useEffect(() => {
         const edges = getEdges().filter((edge) => edge.target === id);
@@ -63,9 +65,24 @@ const AdditionSubNode = ({ id, data }: NodeProps<any>) => {
         );
     }, [getEdges, getNode, id, setNodes]);
 
-    const isValidConnection = () => {
-        const edges = getEdges().filter((edge) => edge.target === id);
-        return edges.length < 4;
+    const showMessageOnce = (msg: string) => {
+        if (!messageShownRef.current) {
+            message.error(msg);
+            messageShownRef.current = true;
+            setTimeout(() => {
+                messageShownRef.current = false;
+            }, 2000);
+        }
+    };
+
+    const isValidConnection = (connection: Connection) => {
+        const edges = getEdges().filter((edge) => edge.source === id);
+
+        if (edges.length >= 1 && connection.sourceHandle === 'source') {
+            showMessageOnce('Only one outgoing connection is allowed from the source.');
+            return false;
+        }
+        return true;
     };
 
     return (
@@ -104,7 +121,12 @@ const AdditionSubNode = ({ id, data }: NodeProps<any>) => {
                 isValidConnection={isValidConnection}
                 style={{ top: '65%' }}
             />
-            <Handle type="source" position={Position.Right} id="source" />
+            <Handle
+                type="source"
+                position={Position.Right}
+                id="source"
+                isValidConnection={isValidConnection}
+            />
         </div>
     );
 };

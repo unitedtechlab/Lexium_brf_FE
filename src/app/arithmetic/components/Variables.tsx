@@ -67,7 +67,7 @@ const VariableNode: React.FC<NodeProps<any>> = ({ id, data, type }) => {
 
     return (
         <div>
-            <div className={styles['nodeBox']} style={{ maxWidth: "340px" }}>
+            <div className={styles['nodeBox']} style={{ maxWidth: "300px" }}>
                 <Form name="custom-value" layout="vertical">
                     <div className={`flex gap-1 ${styles['node-main']}`}>
                         <div className={`flex gap-1 ${styles['node']}`}>

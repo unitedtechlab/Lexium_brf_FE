@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Handle, Position, NodeProps, useReactFlow, Connection, Edge } from 'reactflow';
-import { Select } from 'antd';
+import { Select, message } from 'antd';
 import 'reactflow/dist/style.css';
 import styles from '@/app/assets/css/workflow.module.css';
 import Image from 'next/image';
@@ -9,9 +9,20 @@ import TableImage from '../../assets/images/layout.svg';
 const ModifierNode = ({ id, data, type }: NodeProps<any>) => {
     const { getEdges, setNodes } = useReactFlow();
     const [operation, setOperation] = useState<string>(data.operation || 'absolute');
+    const errorShownRef = useRef({ target: false, source: false });
+
+    // Display error message only once (per edge type)
+    const showErrorOnce = (msg: string, type: 'source' | 'target') => {
+        if (!errorShownRef.current[type]) {
+            message.error(msg);
+            errorShownRef.current[type] = true;
+            setTimeout(() => {
+                errorShownRef.current[type] = false;
+            }, 2000); // Reset after 2 seconds
+        }
+    };
 
     useEffect(() => {
-        // Set operation in node data
         setNodes((nodes) =>
             nodes.map((node) =>
                 node.id === id ? { ...node, data: { ...node.data, operation } } : node
@@ -19,21 +30,39 @@ const ModifierNode = ({ id, data, type }: NodeProps<any>) => {
         );
     }, [operation, id, setNodes]);
 
-    // Handle operation change for the dropdown
     const handleOperationChange = (value: string) => {
         setOperation(value);
     };
 
-    // Check if the target connection is valid (ensure one connection)
-    const isValidConnection = (connection: Connection | Edge) => {
+    // Check if there's already an incoming connection (target)
+    const isValidTargetConnection = (connection: Connection) => {
         const edges = getEdges().filter((edge) => edge.target === id);
-        return edges.length === 0;  // Only allow one target connection
+        if (edges.length >= 1) {
+            showErrorOnce('Only one incoming connection is allowed to the target.', 'target');
+            return false;
+        }
+        return true;
     };
 
-    // Check if the source connection is valid (ensure one connection)
-    const isValidSourceConnection = (connection: Connection | Edge) => {
+    // Check if there's already an outgoing connection (source)
+    const isValidSourceConnection = (connection: Connection) => {
         const edges = getEdges().filter((edge) => edge.source === id);
-        return edges.length === 0;  // Only allow one source connection
+        if (edges.length >= 1) {
+            showErrorOnce('Only one outgoing connection is allowed from the source.', 'source');
+            return false;
+        }
+        return true;
+    };
+
+    // Combined validation function that handles both source and target
+    const isValidConnection = (connection: Connection) => {
+        if (connection.target === id && connection.targetHandle === 'target') {
+            return isValidTargetConnection(connection); // Validate incoming connection
+        }
+        if (connection.source === id && connection.sourceHandle === 'source') {
+            return isValidSourceConnection(connection); // Validate outgoing connection
+        }
+        return true;
     };
 
     return (
@@ -44,8 +73,8 @@ const ModifierNode = ({ id, data, type }: NodeProps<any>) => {
                         <div className={`flex gap-1 ${styles['nodewrap']}`}>
                             <Image src={TableImage} alt='Table Image' width={32} height={32} />
                             <div className={styles['node-text']}>
-                                <h6>{data.label || "Modifier"}</h6>
-                                <span>{type || "Node type not found"}</span>
+                                <h6>{data.label || 'Modifier'}</h6>
+                                <span>{type || 'Node type not found'}</span>
                             </div>
                         </div>
                     </div>
@@ -68,8 +97,9 @@ const ModifierNode = ({ id, data, type }: NodeProps<any>) => {
             <Handle
                 type="target"
                 position={Position.Left}
-                id="input"
-                isValidConnection={isValidConnection}
+                id="target"
+                isValidConnection={isValidConnection} // Validate incoming connection
+                style={{ background: '#ff6f61' }}
             />
 
             {/* Source Handle */}
@@ -77,7 +107,8 @@ const ModifierNode = ({ id, data, type }: NodeProps<any>) => {
                 type="source"
                 position={Position.Right}
                 id="source"
-                isValidConnection={isValidSourceConnection}
+                isValidConnection={isValidConnection} // Validate outgoing connection
+                style={{ background: '#61dafb' }}
             />
         </div>
     );
