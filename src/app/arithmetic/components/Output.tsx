@@ -46,6 +46,8 @@ const OutputNode: React.FC<NodeProps<any>> = ({ id, data, isConnectable }) => {
 
         localStorage.setItem('GlobalVariables', JSON.stringify(updatedGlobalVariables));
         message.success('Saved as a global variable');
+        const event = new Event('globalVariableUpdated');
+        window.dispatchEvent(event);
     };
 
     return (

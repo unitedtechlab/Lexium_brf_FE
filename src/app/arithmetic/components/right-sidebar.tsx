@@ -27,6 +27,16 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
 
         setLocalVariables(storedLocalVariables);
         setGlobalVariables(storedGlobalVariables);
+        const handleGlobalVariableUpdate = () => {
+            const updatedGlobalVariables = JSON.parse(localStorage.getItem('GlobalVariables') || '[]');
+            setGlobalVariables(updatedGlobalVariables);
+        };
+    
+        window.addEventListener('globalVariableUpdated', handleGlobalVariableUpdate);
+        return () => {
+            window.removeEventListener('globalVariableUpdated', handleGlobalVariableUpdate);
+        };
+
     }, []);
 
     const refreshVariables = () => {

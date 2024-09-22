@@ -9,6 +9,7 @@ import TableImage from '../../assets/images/layout.svg';
 const ModifierNode = ({ id, data, type }: NodeProps<any>) => {
     const { getEdges, setNodes } = useReactFlow();
     const [operation, setOperation] = useState<string>(data.operation || 'absolute');
+    const [firstConnectedNodeType, setFirstConnectedNodeType] = useState<string | null>(null);
     const errorShownRef = useRef({ target: false, source: false });
 
     const showErrorOnce = (msg: string, type: 'source' | 'target') => {
@@ -27,7 +28,11 @@ const ModifierNode = ({ id, data, type }: NodeProps<any>) => {
                 node.id === id ? { ...node, data: { ...node.data, operation } } : node
             )
         );
-    }, [operation, id, setNodes]);
+        if (data.variableType) {
+            setFirstConnectedNodeType(data.variableType);
+          }
+
+    }, [operation, id, setNodes,data.variableType]);
 
     const handleOperationChange = (value: string) => {
         setOperation(value);
@@ -70,7 +75,7 @@ const ModifierNode = ({ id, data, type }: NodeProps<any>) => {
                             <Image src={TableImage} alt='Table Image' width={32} height={32} />
                             <div className={styles['node-text']}>
                                 <h6>{data.label || 'Modifier'}</h6>
-                                <span>{type || 'Node type not found'}</span>
+                                <span>{firstConnectedNodeType ? `Type: ${firstConnectedNodeType}` : "No Type Connected"}</span>
                             </div>
                         </div>
                     </div>

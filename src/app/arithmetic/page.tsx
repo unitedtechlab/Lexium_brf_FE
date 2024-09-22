@@ -29,6 +29,7 @@ import Constants from "./components/constants";
 import LocalVariable from './components/localVariable';
 import RightSideBar from './components/right-sidebar';
 import OutputNode from './components/Output';
+import { message } from 'antd';
 
 const nodeTypes = {
     variables: VariableNode,
@@ -63,10 +64,39 @@ const DnDFlow: React.FC = () => {
     const variableEntries = Object.entries(folderdata);
 
     const onConnect = useCallback(
-        (params: Edge | Connection) => setEdges((eds) => addEdge({ ...params, type: 'customEdge' }, eds)),
-        [setEdges]
-    );
+        (params: Edge | Connection) => {
+          const sourceNode = nodes.find((node) => node.id === params.source);
+          const targetNode = nodes.find((node) => node.id === params.target);
 
+          if (!sourceNode?.data?.variableType) {
+            message.error("Cannot connect a node without entering a value.");
+            return;
+          }
+
+          if (params.source === params.target) {
+            message.error("Self-connections are not allowed.");
+            return;
+          }
+      
+          setNodes((nds) =>
+            nds.map((node) =>
+              node.id === targetNode?.id
+                ? {
+                    ...node,
+                    data: {
+                      ...node.data,
+                      variableType: sourceNode.data.variableType,
+                    },
+                  }
+                : node
+            )
+          );
+
+          setEdges((eds) => addEdge({ ...params, type: "customEdge" }, eds));
+        },
+        [nodes, setEdges, setNodes]
+      );  
+      
     const onDragOver = useCallback((event: React.DragEvent) => {
         event.preventDefault();
         event.dataTransfer.dropEffect = 'move';
@@ -149,7 +179,7 @@ const DnDFlow: React.FC = () => {
             nodes: cleanedNodes,
         };
 
-        console.log(JSON.stringify(finalWorkflowData, null, 2));
+        console.log("Output Json Data",JSON.stringify(finalWorkflowData, null, 2));
     };
 
 

@@ -45,7 +45,9 @@ const DivisionMultiply = ({ id, data }: NodeProps<any>) => {
         });
 
         setConnectedValues({ multiplyValues, divideValues });
-        setFirstConnectedNodeType(firstConnectedType);
+        if (data.variableType) {
+            setFirstConnectedNodeType(data.variableType);
+        }
 
         setNodes((nodes) =>
             nodes.map((node) =>
@@ -64,7 +66,7 @@ const DivisionMultiply = ({ id, data }: NodeProps<any>) => {
                     : node
             )
         );
-    }, [getEdges, getNode, id, setNodes]);
+    }, [getEdges, getNode, id, setNodes, data.variableType]);
 
     const showMessageOnce = (msg: string) => {
         if (!messageShownRef.current) {
@@ -78,9 +80,22 @@ const DivisionMultiply = ({ id, data }: NodeProps<any>) => {
 
     const isValidConnection = (connection: Connection) => {
         const edges = getEdges().filter((edge) => edge.source === id);
-
+        console.log("connection", connection)
+        console.log("connectedValues", connectedValues)
         if (edges.length >= 1 && connection.sourceHandle === 'source') {
             showMessageOnce('Only one outgoing connection is allowed from the source.');
+            return false;
+        }
+        const existingConnections = getEdges().filter((edge) => edge.target === id);
+
+        const hasTarget1Connection = existingConnections.some(edge => edge.targetHandle === 'target1');
+        const hasTarget2Connection = existingConnections.some(edge => edge.targetHandle === 'target2');
+        if (connection.targetHandle === 'target1' && hasTarget1Connection) {
+            showMessageOnce('Only one connection is allowed.')
+            return false;
+        }
+        if (connection.targetHandle === 'target2' && hasTarget2Connection) {
+            showMessageOnce('Only one connection is allowed.');
             return false;
         }
         return true;
