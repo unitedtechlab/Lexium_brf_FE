@@ -92,11 +92,6 @@ const OutputNode: React.FC<NodeProps<any>> = ({ id, data, isConnectable }) => {
                             position={Position.Left}
                             isConnectable={isConnectable}
                         />
-                        <Handle
-                            type="source"
-                            position={Position.Right}
-                            isConnectable={isConnectable}
-                        />
                     </div>
                 </Form>
             </div>
