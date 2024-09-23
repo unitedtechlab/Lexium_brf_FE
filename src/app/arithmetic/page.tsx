@@ -29,6 +29,7 @@ import Constants from "./components/constants";
 import LocalVariable from './components/localVariable';
 import RightSideBar from './components/right-sidebar';
 import OutputNode from './components/Output';
+import GlobalVariable from './components/globalVariable';
 import { message } from 'antd';
 
 const nodeTypes = {
@@ -39,6 +40,7 @@ const nodeTypes = {
     modifier_type: ModifierNode,
     compiler_type: CompilerNode,
     local_variable: LocalVariable,
+    global_variable: GlobalVariable,
     output_node: OutputNode,
 };
 

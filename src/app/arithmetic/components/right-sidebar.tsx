@@ -4,6 +4,7 @@ import { TbAdjustments, TbPlus } from 'react-icons/tb';
 import { IconComponent } from './sidebar';
 import { BiGridVertical } from 'react-icons/bi';
 import { Button, Select, message } from 'antd';
+import { HiOutlineEye, HiOutlineEyeOff } from 'react-icons/hi';
 
 interface RightSideBarProps {
     variableEntries: [string, string][];
@@ -19,6 +20,7 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
     const [variableValue, setVariableValue] = useState<string>('5000');
     const [variableType, setVariableType] = useState<string>('');
     const [globalVariables, setGlobalVariables] = useState<any[]>([]);
+    const [visibleVariables, setVisibleVariables] = useState<number[]>([]);
 
     useEffect(() => {
         // Fetch both local and global variables from localStorage
@@ -31,7 +33,7 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
             const updatedGlobalVariables = JSON.parse(localStorage.getItem('GlobalVariables') || '[]');
             setGlobalVariables(updatedGlobalVariables);
         };
-    
+
         window.addEventListener('globalVariableUpdated', handleGlobalVariableUpdate);
         return () => {
             window.removeEventListener('globalVariableUpdated', handleGlobalVariableUpdate);
@@ -94,6 +96,12 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
         setIsSidebarVisible(!isSidebarVisible);
     };
 
+    const toggleVisibility = (index: number) => {
+        setVisibleVariables((prev) =>
+            prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
+        );
+    };
+
     return (
         <aside>
             <button
@@ -123,18 +131,46 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
                                     <IconComponent icon={<TbPlus size={18} />} />
                                 </div>
                             </div>
-                            <div className={`${styles.variableNames}`}>
+                            <div className={`${styles.variableItem}`}>
                                 <ul>
                                     {localVariables.map((variable, index) => (
-                                        <li key={index}>
-                                            <div className={styles.iconWrapper}>
-                                                <BiGridVertical size={18} />
+                                        <li key={index} className={styles.variableListItem}>
+                                            <div className={styles.variableHeader}>
+                                                <div className={styles.variablewrapper}>
+                                                    <div className={styles.iconWrapper}>
+                                                        <BiGridVertical size={18} />
+                                                    </div>
+                                                    <h6>{variable.name}</h6>
+                                                </div>
+                                                <div className={"styles.iconWrapper"} onClick={() => toggleVisibility(index)}>
+                                                    {visibleVariables.includes(index) ? (
+                                                        <HiOutlineEyeOff size={18} />
+                                                    ) : (
+                                                        <HiOutlineEye size={18} />
+                                                    )}
+                                                </div>
                                             </div>
-                                            <h6>{variable.name}</h6>
+
+                                            {visibleVariables.includes(index) && (
+                                                <div className={styles.variableDetailsMenu}>
+                                                    <ul className={styles.variableMenuList}>
+                                                        <li className={styles.menuItem}>
+                                                            <strong>Variable:</strong> {variable.selectedVariable}
+                                                        </li>
+                                                        <li className={styles.menuItem}>
+                                                            <strong>Value:</strong> {variable.value}
+                                                        </li>
+                                                        <li className={styles.menuItem}>
+                                                            <strong>Type:</strong> {variable.type}
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            )}
                                         </li>
                                     ))}
                                 </ul>
                             </div>
+
                         </div>
 
                         <div className={styles.customvariable}>
