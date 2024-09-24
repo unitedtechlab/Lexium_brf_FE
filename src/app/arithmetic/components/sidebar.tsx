@@ -102,7 +102,7 @@ const Sidebar: React.FC<{ setFolderData: (data: any[]) => void }> = ({ setFolder
 
   const onDragStart = (event: React.DragEvent, nodeType: string, titleName: string) => {
     if (isDragDisabled) {
-      event.preventDefault(); // Prevent dragging if no workspace or folder is selected
+      event.preventDefault();
       message.error('Please select a Workspace and Table before dragging a node.');
       return;
     }

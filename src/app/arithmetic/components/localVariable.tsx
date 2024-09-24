@@ -26,7 +26,6 @@ const LocalVariableNode = ({ id, data, type }: NodeProps<any>) => {
             setValueType(foundVariable.type || 'number');
         }
 
-        // Update node data to store the selected variable details
         data.selectedVariable = foundVariable?.name;
         data.value = foundVariable?.value;
         data.variableType = foundVariable?.type;
@@ -66,7 +65,6 @@ const LocalVariableNode = ({ id, data, type }: NodeProps<any>) => {
                             </Form.Item>
                         </div>
 
-                        {/* Add both source and target handles */}
                         <Handle
                             type="target"
                             position={Position.Left}

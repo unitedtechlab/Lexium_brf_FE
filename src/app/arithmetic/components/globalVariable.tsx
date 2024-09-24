@@ -26,7 +26,6 @@ const GobalVariableNode = ({ id, data, type }: NodeProps<any>) => {
             setVariableValue(foundVariable.value || '');
             setValueType(foundVariable.type || 'number');
         }
-        // Update node data to store the selected variable details
         data.selectedVariable = foundVariable?.outputName;
         data.value = foundVariable?.value;
         data.variableType = foundVariable?.type;
