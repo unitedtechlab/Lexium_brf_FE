@@ -5,6 +5,7 @@ import { IconComponent } from './sidebar';
 import { BiGridVertical } from 'react-icons/bi';
 import { Button, Select, message } from 'antd';
 import { HiOutlineEye, HiOutlineEyeOff } from 'react-icons/hi';
+import { MdOutlineDelete } from 'react-icons/md';
 
 interface RightSideBarProps {
     variableEntries: [string, string][];
@@ -23,7 +24,6 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
     const [visibleVariables, setVisibleVariables] = useState<number[]>([]);
 
     useEffect(() => {
-        // Fetch both local and global variables from localStorage
         const storedLocalVariables = JSON.parse(localStorage.getItem('localVariables') || '[]');
         const storedGlobalVariables = JSON.parse(localStorage.getItem('GlobalVariables') || '[]');
 
@@ -78,18 +78,31 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
 
         const newVariable = {
             name: variableName,
-            value: variableValue,
             selectedVariable: selectedVariable.join(', '),
             type: variableType,
         };
 
-        // Save to local storage
         const updatedVariables = [...localVariables, newVariable];
         localStorage.setItem('localVariables', JSON.stringify(updatedVariables));
         setLocalVariables(updatedVariables);
 
         closeModal();
         message.success('Variable added successfully!');
+    };
+
+    // Function to delete the variable (local or global)
+    const handleDeleteVariable = (index: number, isGlobal: boolean) => {
+        if (isGlobal) {
+            const updatedGlobalVariables = globalVariables.filter((_, i) => i !== index);
+            localStorage.setItem('GlobalVariables', JSON.stringify(updatedGlobalVariables));
+            setGlobalVariables(updatedGlobalVariables);
+            message.success('Global variable deleted successfully!');
+        } else {
+            const updatedLocalVariables = localVariables.filter((_, i) => i !== index);
+            localStorage.setItem('localVariables', JSON.stringify(updatedLocalVariables));
+            setLocalVariables(updatedLocalVariables);
+            message.success('Local variable deleted successfully!');
+        }
     };
 
     const toggleSidebar = () => {
@@ -115,15 +128,12 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
                 <div className={styles.rightsidebar}>
                     <div className={styles.heading}>
                         <div className={styles.headingText}>
-                            <h6>Workflow Name</h6>
+                            <h6>Variables</h6>
                         </div>
                     </div>
 
                     <div className={styles.variableList}>
-                        <div className={styles.variables}>
-                            <h6>Variables</h6>
-                        </div>
-
+                        {/* Local Variables Section */}
                         <div className={styles.customvariable}>
                             <div className={styles.variables}>
                                 <h6>Local Variables</h6>
@@ -142,12 +152,17 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
                                                     </div>
                                                     <h6>{variable.name}</h6>
                                                 </div>
-                                                <div className={"styles.iconWrapper"} onClick={() => toggleVisibility(index)}>
-                                                    {visibleVariables.includes(index) ? (
-                                                        <HiOutlineEyeOff size={18} />
-                                                    ) : (
-                                                        <HiOutlineEye size={18} />
-                                                    )}
+                                                <div className='flex gap-1'>
+                                                    <div className={"styles.iconWrapper"} onClick={() => toggleVisibility(index)}>
+                                                        {visibleVariables.includes(index) ? (
+                                                            <HiOutlineEyeOff size={18} />
+                                                        ) : (
+                                                            <HiOutlineEye size={18} />
+                                                        )}
+                                                    </div>
+                                                    <button onClick={() => handleDeleteVariable(index, false)} className='nostyle'>
+                                                        <MdOutlineDelete style={{ fontSize: "18px", color: "red" }} />
+                                                    </button>
                                                 </div>
                                             </div>
 
@@ -156,9 +171,6 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
                                                     <ul className={styles.variableMenuList}>
                                                         <li className={styles.menuItem}>
                                                             <strong>Variable:</strong> {variable.selectedVariable}
-                                                        </li>
-                                                        <li className={styles.menuItem}>
-                                                            <strong>Value:</strong> {variable.value}
                                                         </li>
                                                         <li className={styles.menuItem}>
                                                             <strong>Type:</strong> {variable.type}
@@ -170,9 +182,9 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
                                     ))}
                                 </ul>
                             </div>
-
                         </div>
 
+                        {/* Global Variables Section */}
                         <div className={styles.customvariable}>
                             <div className={styles.variables}>
                                 <h6>Global Variables</h6>
@@ -181,10 +193,15 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
                                 <ul>
                                     {globalVariables.map((variable, index) => (
                                         <li key={index}>
-                                            <div className={styles.iconWrapper}>
-                                                <BiGridVertical size={18} />
+                                            <div className='flex gap-1'>
+                                                <div className={styles.iconWrapper}>
+                                                    <BiGridVertical size={18} />
+                                                </div>
+                                                <h6>{variable.outputName || 'Unnamed Variable'}</h6>
                                             </div>
-                                            <h6>{variable.outputName || 'Unnamed Variable'}</h6>
+                                            <button onClick={() => handleDeleteVariable(index, true)} className='nostyle'>
+                                                <MdOutlineDelete style={{ fontSize: "18px", color: "red" }} />
+                                            </button>
                                         </li>
                                     ))}
                                 </ul>
@@ -192,6 +209,7 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
                         </div>
                     </div>
 
+                    {/* Modal for Creating Local Variables */}
                     {isModalVisible && (
                         <div className={styles.custommodalwrapper}>
                             <div className={styles.custommodal}>
