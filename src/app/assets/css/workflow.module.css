@@ -115,7 +115,7 @@
 }
 
 .node-text span {
-    font-weight: var(--font-weight-700);
+    font-weight: var(--font-weight-600);
     color: var(--primary-200);
 }
 
@@ -467,8 +467,7 @@
 }
 
 .minus-point-label,
-.plus-point-label,
-.multiply-point-label {
+.plus-point-label {
     background: #F5F5F5;
     border-radius: 6px;
     position: absolute;
@@ -484,10 +483,10 @@
     align-items: center;
     justify-content: center;
     line-height: 1;
-    color: #EE4541;
+    color: var(--primary-200);
 }
 
-.multiply-point-label {
+.plus-point-label {
     top: -30px;
     color: #00ACD2;
     bottom: auto;
@@ -495,12 +494,6 @@
 
 .multiply-point-label svg {
     transform: rotate(45deg);
-}
-
-.plus-point-label {
-    top: -30px;
-    color: #14804A;
-    bottom: auto;
 }
 
 .inputField {
@@ -542,9 +535,9 @@
 }
 
 .iconFlag {
-    font-size: 26px;
+    font-size: 42px;
     border: 1px solid var(--tertiary-300);
-    padding: 3px;
+    padding: 8px;
     background-color: var(--tertiary-200);
     border-radius: 6px;
 }
@@ -552,11 +545,11 @@
 .addBtn {
     padding: 0px;
     border: 0;
-    width: 20px;
-    height: 20px;
-    font-size: 17px;
+    width: 25px;
+    height: 25px;
+    font-size: 22px;
     border-radius: 4px;
-    background: #F1F1F1 !important;
+    background: #dbdbdb !important;
 }
 
 /* rightsidebar css start here ======================= */
@@ -852,4 +845,85 @@
     opacity: 0;
     transform: translateY(-10px);
     display: none;
+}
+
+.variblenode {
+    border-color: var(--primary-200);
+    background: #F9F4FF;
+}
+
+.variblenode .node-text h6 {
+    color: var(--primary-200);
+}
+
+.variblenode .iconFlag {
+    fill: var(--primary-200);
+}
+
+.constant {
+    border-color: #d9363e;
+    background: #fff2f2;
+}
+
+.constant .node-text h6,
+.constant .node-text span {
+    color: #d9363e;
+}
+
+.constant .iconFlag {
+    fill: #d9363e;
+}
+
+.additionsub {
+    border-color: #F37602;
+    background: #FFF4EA;
+}
+
+.additionsub .node-text h6,
+.additionsub .node-text span {
+    color: #F37602;
+}
+
+.additionsub .iconFlag {
+    fill: #F37602;
+}
+
+.multidivide {
+    border-color: #1677ff;
+    background: #f0f6ff;
+}
+
+.multidivide .node-text h6,
+.multidivide .node-text span {
+    color: #1677ff;
+}
+
+.multidivide .iconFlag {
+    fill: #1677ff;
+}
+
+.toppoint {
+    top: -20px;
+    left: calc(50% - 15px);
+    transform: translateX(-50%);
+}
+
+.bottompoint {
+    top: calc(100% + 15px);
+    left: calc(50% - 15px);
+    transform: translateX(-50%);
+}
+
+.endnode {
+    border-color: #02619b;
+    background: #eff9ff;
+}
+
+.endnode .node-text h6,
+.endnode .node-text span {
+    color: #02619b;
+}
+
+.endnode .iconFlag {
+    fill: #02619b;
 }

@@ -2,10 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Handle, NodeProps, Position, useReactFlow, Connection } from 'reactflow';
 import 'reactflow/dist/style.css';
 import styles from '@/app/assets/css/workflow.module.css';
-import Image from 'next/image';
-import TableImage from '@/app/assets/images/layout.png';
 import { FiDivideCircle, FiPlusCircle } from "react-icons/fi";
 import { message } from 'antd';
+import { TbMathXDivideY2 } from "react-icons/tb";
 
 const DivisionMultiply = ({ id, data }: NodeProps<any>) => {
     const { getEdges, getNode, setNodes } = useReactFlow();
@@ -103,14 +102,14 @@ const DivisionMultiply = ({ id, data }: NodeProps<any>) => {
 
     return (
         <div>
-            <div className={styles['multiply-point-label']}>
+            <div className={styles['plus-point-label']}>
                 <FiPlusCircle />
             </div>
-            <div className={styles['nodeBox']}>
+            <div className={`${styles['nodeBox']} ${styles.multidivide}`}>
                 <div className={`flex gap-1 ${styles['node-main']}`}>
                     <div className={`flex gap-1 ${styles['node']}`}>
                         <div className={`flex gap-1 ${styles['nodewrap']}`}>
-                            <Image src={TableImage} alt='Table Image' width={32} height={32} />
+                            <TbMathXDivideY2 className={styles.iconFlag} />
                             <div className={styles['node-text']}>
                                 <h6>{data.label || "Multiplication / Division"}</h6>
                                 <span>{firstConnectedNodeType ? `Type: ${firstConnectedNodeType}` : "No Type Connected"}</span>
@@ -123,20 +122,19 @@ const DivisionMultiply = ({ id, data }: NodeProps<any>) => {
                 <FiDivideCircle />
             </div>
 
-            {/* Handles for connections */}
             <Handle
                 type="target"
                 position={Position.Left}
                 id="target1"
                 isValidConnection={isValidConnection}
-                style={{ top: '35%' }}
+                className={styles.toppoint}
             />
             <Handle
                 type="target"
                 position={Position.Left}
                 id="target2"
                 isValidConnection={isValidConnection}
-                style={{ top: '65%' }}
+                className={styles.bottompoint}
             />
             <Handle
                 type="source"

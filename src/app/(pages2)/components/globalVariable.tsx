@@ -2,7 +2,7 @@ import { Handle, NodeProps, Position } from "reactflow";
 import { useEffect, useState } from "react";
 import styles from '@/app/assets/css/workflow.module.css';
 import { Form, Input, Select } from "antd";
-import { MdOutlineSelectAll } from "react-icons/md";
+import { AiOutlineGlobal } from "react-icons/ai";
 const { Option } = Select;
 const GobalVariableNode = ({ id, data, type }: NodeProps<any>) => {
     const [globalVariables, setGlobalVariables] = useState<any[]>([]);
@@ -36,9 +36,9 @@ const GobalVariableNode = ({ id, data, type }: NodeProps<any>) => {
                     <div className={`flex gap-1 ${styles['node-main']}`}>
                         <div className={`flex gap-1 ${styles['node']}`}>
                             <div className={`flex gap-1 ${styles['nodewrap']}`}>
-                                <MdOutlineSelectAll className={styles.iconFlag} />
+                                <AiOutlineGlobal className={styles.iconFlag} />
                                 <div className={styles['node-text']}>
-                                    <h6>{data.label || "Local Variable"}</h6>
+                                    <h6>{data.label || "Global Variable"}</h6>
                                     {valueType && (
                                         <span>Type: {valueType}</span>
                                     )}
@@ -59,12 +59,10 @@ const GobalVariableNode = ({ id, data, type }: NodeProps<any>) => {
                         <Handle
                             type="target"
                             position={Position.Left}
-                            style={{ background: 'red' }}
                         />
                         <Handle
                             type="source"
                             position={Position.Right}
-                            style={{ background: 'red' }}
                         />
                     </div>
                 </Form>

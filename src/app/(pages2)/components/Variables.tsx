@@ -10,6 +10,7 @@ import { FiPlus } from "react-icons/fi";
 const VariableNode: React.FC<NodeProps<any>> = ({ id, data, type }) => {
     const [fields, setFields] = useState<any[]>([{ type: 'variable', selectedVariable: '' }]);
     const [availableColumns, setAvailableColumns] = useState<string[]>([]);
+    const [variableType, setVariableType] = useState<string | null>(null);
 
     useEffect(() => {
         if (data && data.folderdata) {
@@ -18,6 +19,11 @@ const VariableNode: React.FC<NodeProps<any>> = ({ id, data, type }) => {
                 return ['number', 'int', 'float'].includes(columnType);
             });
             setAvailableColumns(columns);
+        }
+
+        // Initialize variables array in the data object if not already present
+        if (!data.variables) {
+            data.variables = [];
         }
     }, [data]);
 
@@ -34,38 +40,53 @@ const VariableNode: React.FC<NodeProps<any>> = ({ id, data, type }) => {
             const newFields = [...prevFields];
             newFields[index].selectedVariable = value;
 
-            if (index === 0) {
-                data['variableType'] = data.folderdata[value];
+            // If it's the first variable or variableType is not set, assign the type
+            if (index === 0 || !variableType) {
+                const selectedType = data.folderdata[value];
+                data['variableType'] = selectedType;
+                setVariableType(selectedType);
+            }
+
+            // Update the variables array or string in the data object
+            if (newFields.length === 1) {
+                data.variables = value; // Store as a string if only one variable
+            } else {
+                data.variables = newFields.map((field) => field.selectedVariable); // Store as an array if multiple variables
             }
 
             return newFields;
         });
-
-        data[`variable${index + 1}`] = value;
     };
 
     const addVariableField = () => {
         if (areAllFieldsSelected) {
-            const firstSelectedType = fields[0]?.selectedType;
             setFields((prevFields) => [
                 ...prevFields,
-                { type: 'variable', selectedVariable: '', selectedType: firstSelectedType }
+                { type: 'variable', selectedVariable: '' }
             ]);
         }
     };
 
     const handleDelete = (index: number) => {
-        setFields((prevFields) => prevFields.filter((_, i) => i !== index));
-        delete data[`variable${index + 1}`];
+        if (fields.length === 1) return; // Prevent deleting the last remaining field
 
-        if (index === 0) {
-            delete data['variableType'];
-        }
+        setFields((prevFields) => {
+            const updatedFields = prevFields.filter((_, i) => i !== index);
+
+            // Update the variables array or string in the data object
+            if (updatedFields.length === 1) {
+                data.variables = updatedFields[0].selectedVariable; // Store as a string if only one variable remains
+            } else {
+                data.variables = updatedFields.map((field) => field.selectedVariable); // Store as an array if multiple variables remain
+            }
+
+            return updatedFields;
+        });
     };
 
     return (
         <div>
-            <div className={styles['nodeBox']} style={{ maxWidth: "300px" }}>
+            <div className={`${styles['nodeBox']} ${styles.variblenode}`} style={{ maxWidth: "300px" }}>
                 <Form name="variable_form" layout="vertical">
                     <div className={`flex gap-1 ${styles['node-main']}`}>
                         <div className={`flex gap-1 ${styles['node']}`}>
@@ -73,7 +94,7 @@ const VariableNode: React.FC<NodeProps<any>> = ({ id, data, type }) => {
                                 <PiFlagCheckered className={styles.iconFlag} />
                                 <div className={styles['node-text']}>
                                     <h6>{data.label || "Addition / Subtraction"}</h6>
-                                    {fields[0].selectedVariable && <span>Type: {data.variableType}</span>}
+                                    {variableType && <span>Type: {variableType}</span>}
                                 </div>
                             </div>
                             <Button onClick={addVariableField} disabled={!areAllFieldsSelected} className={styles.addBtn}>
@@ -110,7 +131,7 @@ const VariableNode: React.FC<NodeProps<any>> = ({ id, data, type }) => {
                                         ))}
                                     </Select>
 
-                                    {index !== 0 && (
+                                    {fields.length > 1 && (
                                         <button
                                             className={styles.deleteBtn}
                                             onClick={() => handleDelete(index)}

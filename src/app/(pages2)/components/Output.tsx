@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Handle, NodeProps, Position } from 'reactflow';
-import { Form, Input, Button, message } from 'antd';
+import { Form, Input } from 'antd';
 import 'reactflow/dist/style.css';
 import styles from '@/app/assets/css/workflow.module.css';
 import { MdOutlineOutput } from 'react-icons/md';
@@ -10,49 +10,12 @@ const OutputNode: React.FC<NodeProps<any>> = ({ id, data, isConnectable }) => {
 
     const handleOutputNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setOutputName(e.target.value);
-        data.outputName = e.target.value;
-    };
-
-    const validateForm = () => {
-        if (!outputName.trim()) {
-            message.error('Output name is required');
-            return false;
-        }
-        return true;
-    };
-
-    const saveWorkflow = () => {
-        if (!validateForm()) return;
-
-        const workflowData = {
-            outputName,
-        };
-
-        data.outputName = outputName;
-        console.log('Saving workflow with data:', workflowData);
-    };
-
-    const saveAsGlobalVariable = () => {
-        if (!validateForm()) return;
-
-        const storedGlobalVariables = JSON.parse(localStorage.getItem('GlobalVariables') || '[]');
-        const newGlobalVariable = {
-            outputName,
-        };
-
-        const updatedGlobalVariables = Array.isArray(storedGlobalVariables)
-            ? [...storedGlobalVariables, newGlobalVariable]
-            : [newGlobalVariable];
-
-        localStorage.setItem('GlobalVariables', JSON.stringify(updatedGlobalVariables));
-        message.success('Saved as a global variable');
-        const event = new Event('globalVariableUpdated');
-        window.dispatchEvent(event);
+        data.outputName = e.target.value;  // Ensure outputName is correctly set in node data
     };
 
     return (
         <div>
-            <div className={styles['nodeBox']} style={{ maxWidth: '340px' }}>
+            <div className={`${styles['nodeBox']} ${styles.endnode}`} style={{ maxWidth: '340px' }}>
                 <Form name={`output-form-${id}`} layout="vertical">
                     <div className={`flex gap-1 ${styles['node-main']}`}>
                         <div className={`flex gap-1 ${styles['node']}`}>
@@ -76,15 +39,6 @@ const OutputNode: React.FC<NodeProps<any>> = ({ id, data, isConnectable }) => {
                                     className={styles.inputField}
                                 />
                             </Form.Item>
-                        </div>
-
-                        <div className={`flex gap-1 ${styles.BtnGroups}`}>
-                            <Button type="primary" onClick={saveWorkflow} className="btn">
-                                Save Output
-                            </Button>
-                            <Button type="default" onClick={saveAsGlobalVariable} className="btn btn-outline">
-                                Save as Global Variable
-                            </Button>
                         </div>
 
                         <Handle

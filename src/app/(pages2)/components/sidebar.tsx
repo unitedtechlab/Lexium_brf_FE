@@ -167,11 +167,11 @@ const Sidebar: React.FC<{ setFolderData: (data: any[]) => void }> = ({ setFolder
               <h6>Arithmetic Operators</h6>
               <div
                 className={`flex gap-1 ${styles.sidebardragDrop}`}
-                onDragStart={(event) => onDragStart(event, 'constant', 'Constants')}
+                onDragStart={(event) => onDragStart(event, 'constant', 'Constant')}
                 draggable
               >
                 <IconComponent icon={<AiOutlineNumber />} />
-                <h6>Constants</h6>
+                <h6>Constant</h6>
               </div>
 
               <div
@@ -264,14 +264,14 @@ const Sidebar: React.FC<{ setFolderData: (data: any[]) => void }> = ({ setFolder
             <h6>Global Variable</h6>
           </div>
 
-          {/* Output Node */}
+          {/* End Node */}
           <div
             className={`flex gap-1 ${styles.sidebardragDrop}`}
-            onDragStart={(event) => onDragStart(event, 'output_node', 'Output Node')}
+            onDragStart={(event) => onDragStart(event, 'end_node', 'End Node')}
             draggable
           >
             <IconComponent icon={<MdOutlineOutput />} />
-            <h6>Output Node</h6>
+            <h6>End Node</h6>
           </div>
 
         </div>

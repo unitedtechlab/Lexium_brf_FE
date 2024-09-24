@@ -2,10 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Handle, NodeProps, Position, useReactFlow, Connection } from 'reactflow';
 import 'reactflow/dist/style.css';
 import styles from '@/app/assets/css/workflow.module.css';
-import Image from 'next/image';
-import TableImage from '@/app/assets/images/layout.png';
 import { FiMinusCircle, FiPlusCircle } from "react-icons/fi";
 import { message } from 'antd';
+import { PiMathOperationsBold } from "react-icons/pi";
 
 const AdditionSubNode = ({ id, data }: NodeProps<any>) => {
     const { getEdges, getNode, setNodes } = useReactFlow();
@@ -91,11 +90,11 @@ const AdditionSubNode = ({ id, data }: NodeProps<any>) => {
             <div className={styles['plus-point-label']}>
                 <FiPlusCircle />
             </div>
-            <div className={styles['nodeBox']}>
+            <div className={`${styles['nodeBox']} ${styles.additionsub}`}>
                 <div className={`flex gap-1 ${styles['node-main']}`}>
                     <div className={`flex gap-1 ${styles['node']}`}>
                         <div className={`flex gap-1 ${styles['nodewrap']}`}>
-                            <Image src={TableImage} alt='Table Image' width={32} height={32} />
+                            <PiMathOperationsBold className={styles.iconFlag} />
                             <div className={styles['node-text']}>
                                 <h6>{data.label || "Addition / Subtraction"}</h6>
                                 <span>{firstConnectedNodeType ? `Type: ${firstConnectedNodeType}` : "No Type Connected"}</span>
@@ -113,14 +112,14 @@ const AdditionSubNode = ({ id, data }: NodeProps<any>) => {
                 position={Position.Left}
                 id="target1"
                 isValidConnection={isValidConnection}
-                style={{ top: '35%' }}
+                className={styles.toppoint}
             />
             <Handle
                 type="target"
                 position={Position.Left}
                 id="target2"
                 isValidConnection={isValidConnection}
-                style={{ top: '65%' }}
+                className={styles.bottompoint}
             />
             <Handle
                 type="source"

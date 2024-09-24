@@ -3,7 +3,7 @@ import { Handle, NodeProps, Position } from 'reactflow';
 import { Form, Select } from 'antd';
 import 'reactflow/dist/style.css';
 import styles from '@/app/assets/css/workflow.module.css';
-import { MdOutlineSelectAll } from 'react-icons/md';
+import { SiLocal } from "react-icons/si";
 
 const { Option } = Select;
 
@@ -38,7 +38,7 @@ const LocalVariableNode = ({ id, data, type }: NodeProps<any>) => {
                     <div className={`flex gap-1 ${styles['node-main']}`}>
                         <div className={`flex gap-1 ${styles['node']}`}>
                             <div className={`flex gap-1 ${styles['nodewrap']}`}>
-                                <MdOutlineSelectAll className={styles.iconFlag} />
+                                <SiLocal className={styles.iconFlag} />
                                 <div className={styles['node-text']}>
                                     <h6>{data.label || "Local Variable"}</h6>
                                     {valueType && (
@@ -68,12 +68,10 @@ const LocalVariableNode = ({ id, data, type }: NodeProps<any>) => {
                         <Handle
                             type="target"
                             position={Position.Left}
-                            style={{ background: 'red' }}
                         />
                         <Handle
                             type="source"
                             position={Position.Right}
-                            style={{ background: 'red' }}
                         />
                     </div>
                 </Form>
