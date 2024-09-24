@@ -3,7 +3,7 @@ import { Handle, NodeProps, Position, useReactFlow, Connection } from 'reactflow
 import 'reactflow/dist/style.css';
 import styles from '@/app/assets/css/workflow.module.css';
 import Image from 'next/image';
-import TableImage from '../../assets/images/layout.svg';
+import TableImage from '../../assets/images/layout.png';
 import { FiMinusCircle, FiPlusCircle } from "react-icons/fi";
 import { message } from 'antd';
 

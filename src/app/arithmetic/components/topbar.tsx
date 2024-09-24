@@ -2,7 +2,7 @@ import React from 'react';
 import styles from '@/app/assets/css/workflow.module.css';
 import { Button } from 'antd';
 import Image from 'next/image';
-import Logo from '@/app/assets/images/logo.svg';
+import Logo from '@/app/assets/images/logo.png';
 import Link from 'next/link';
 
 const Topbar = ({ onSave }: { onSave: () => void }) => {

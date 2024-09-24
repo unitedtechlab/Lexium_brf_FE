@@ -7,7 +7,7 @@ import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import { useEmail } from '@/app/context/emailContext';
 import classes from '@/app/assets/css/pages.module.css';
-import wireFrameIcon from "@/app/assets/images/wireframe.svg";
+import wireFrameIcon from "@/app/assets/images/wireframe.png";
 import { BiDotsVerticalRounded } from 'react-icons/bi';
 import BreadCrumb from "@/app/components/Breadcrumbs/breadcrumb";
 import { useParams } from "next/navigation";

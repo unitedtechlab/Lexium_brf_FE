@@ -16,7 +16,7 @@ import styles from '@/app/assets/css/workflow.module.css';
 import * as Icons from 'react-icons/sl';
 import * as FaIcons from 'react-icons/fa';
 import Image from 'next/image';
-import TableImage from '../../assets/images/layout.svg';
+import TableImage from '../../assets/images/layout.png';
 import { FiMoreHorizontal } from 'react-icons/fi';
 import { Dropdown, message } from 'antd';
 import { useEmail } from '@/app/context/emailContext';
