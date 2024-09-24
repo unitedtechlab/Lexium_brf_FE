@@ -2,15 +2,16 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Select, Input, message } from 'antd';
-import { useDnD } from '../DnDContext';
+import { useDnD } from './DnDContext';
 import { fetchWorkspaces, fetchFolders, fetchFolderData } from '@/app/API/api';
 import styles from '@/app/assets/css/workflow.module.css';
 import { PiMathOperationsBold } from "react-icons/pi";
 import { TbMathXDivideY2, TbMathIntegralX, TbMathMaxMin } from "react-icons/tb";
-import { MdOutlineSelectAll, MdOutlineOutput } from "react-icons/md";
+import { MdOutlineSelectAll, MdOutlineOutput, MdOutlineAccountTree } from "react-icons/md";
 import { useEmail } from '@/app/context/emailContext';
 import { AiOutlineNumber, AiOutlineGlobal } from "react-icons/ai";
 import { SiLocal } from "react-icons/si";
+import { usePathname } from 'next/navigation';
 
 const { Search } = Input;
 
@@ -27,6 +28,8 @@ const Sidebar: React.FC<{ setFolderData: (data: any[]) => void }> = ({ setFolder
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
   const [columns, setColumns] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+
+  const pathname = usePathname();
 
   const loadWorkspaces = useCallback(async () => {
     if (email) {
@@ -159,67 +162,87 @@ const Sidebar: React.FC<{ setFolderData: (data: any[]) => void }> = ({ setFolder
         </div>
 
         <div className={styles.operations}>
-          <h6>Arithmetic Operators</h6>
+          {pathname === '/arithmetic' && (
+            <>
+              <h6>Arithmetic Operators</h6>
+              <div
+                className={`flex gap-1 ${styles.sidebardragDrop}`}
+                onDragStart={(event) => onDragStart(event, 'constant', 'Constants')}
+                draggable
+              >
+                <IconComponent icon={<AiOutlineNumber />} />
+                <h6>Constants</h6>
+              </div>
 
-          {/* Constants Node */}
-          <div
-            className={`flex gap-1 ${styles.sidebardragDrop}`}
-            onDragStart={(event) => onDragStart(event, 'constant', 'Constants')}
-            draggable
-          >
-            <IconComponent icon={<AiOutlineNumber />} />
-            <h6>Constants</h6>
-          </div>
+              <div
+                className={`flex gap-1 ${styles.sidebardragDrop}`}
+                onDragStart={(event) => onDragStart(event, 'variables', 'Variables')}
+                draggable
+              >
+                <IconComponent icon={<MdOutlineSelectAll />} />
+                <h6 className={styles.titleName}>Variables</h6>
+              </div>
 
-          {/* Variable Field Node */}
-          <div
-            className={`flex gap-1 ${styles.sidebardragDrop}`}
-            onDragStart={(event) => onDragStart(event, 'variables', 'Variables')}
-            draggable
-          >
-            <IconComponent icon={<MdOutlineSelectAll />} />
-            <h6 className={styles.titleName}>Variables</h6>
-          </div>
+              <div
+                className={`flex gap-1 ${styles.sidebardragDrop}`}
+                onDragStart={(event) => onDragStart(event, 'add_sub_type', 'Addition / Subtraction')}
+                draggable
+              >
+                <IconComponent icon={<PiMathOperationsBold />} />
+                <h6 className={styles.titleName}>Addition / Subtraction</h6>
+              </div>
 
-          {/* Addition / Subtraction Node */}
-          <div
-            className={`flex gap-1 ${styles.sidebardragDrop}`}
-            onDragStart={(event) => onDragStart(event, 'add_sub_type', 'Addition / Subtraction')}
-            draggable
-          >
-            <IconComponent icon={<PiMathOperationsBold />} />
-            <h6 className={styles.titleName}>Addition / Subtraction</h6>
-          </div>
+              <div
+                className={`flex gap-1 ${styles.sidebardragDrop}`}
+                onDragStart={(event) => onDragStart(event, 'multiply_divide_type', 'Multiplication / Division')}
+                draggable
+              >
+                <IconComponent icon={<TbMathXDivideY2 />} />
+                <h6 className={styles.titleName}>Multiplication / Division</h6>
+              </div>
 
-          {/* Multiplication / Division Node */}
-          <div
-            className={`flex gap-1 ${styles.sidebardragDrop}`}
-            onDragStart={(event) => onDragStart(event, 'multiply_divide_type', 'Multiplication / Division')}
-            draggable
-          >
-            <IconComponent icon={<TbMathXDivideY2 />} />
-            <h6 className={styles.titleName}>Multiplication / Division</h6>
-          </div>
+              <div
+                className={`flex gap-1 ${styles.sidebardragDrop}`}
+                onDragStart={(event) => onDragStart(event, 'modifier_type', 'Modifier')}
+                draggable
+              >
+                <IconComponent icon={<TbMathIntegralX />} />
+                <h6 className={styles.titleName}>Modifier</h6>
+              </div>
 
-          {/* Modifier Node */}
-          <div
-            className={`flex gap-1 ${styles.sidebardragDrop}`}
-            onDragStart={(event) => onDragStart(event, 'modifier_type', 'Modifier')}
-            draggable
-          >
-            <IconComponent icon={<TbMathIntegralX />} />
-            <h6 className={styles.titleName}>Modifier</h6>
-          </div>
+              <div
+                className={`flex gap-1 ${styles.sidebardragDrop}`}
+                onDragStart={(event) => onDragStart(event, 'compiler_type', 'Compiler')}
+                draggable
+              >
+                <IconComponent icon={<TbMathMaxMin />} />
+                <h6 className={styles.titleName}>Compiler</h6>
+              </div>
+            </>
+          )}
 
-          {/* Compiler Node */}
-          <div
-            className={`flex gap-1 ${styles.sidebardragDrop}`}
-            onDragStart={(event) => onDragStart(event, 'compiler_type', 'Compiler')}
-            draggable
-          >
-            <IconComponent icon={<TbMathMaxMin />} />
-            <h6 className={styles.titleName}>Compiler</h6>
-          </div>
+          {pathname === '/conditional' && (
+            <>
+              <h6>Conditional Operators</h6>
+              <div
+                className={`flex gap-1 ${styles.sidebardragDrop}`}
+                onDragStart={(event) => onDragStart(event, 'variables', 'Variables')}
+                draggable
+              >
+                <IconComponent icon={<MdOutlineSelectAll />} />
+                <h6 className={styles.titleName}>Variables</h6>
+              </div>
+
+              <div
+                className={`flex gap-1 ${styles.sidebardragDrop}`}
+                onDragStart={(event) => onDragStart(event, 'conditional', 'Conditional Operator')}
+                draggable
+              >
+                <IconComponent icon={<MdOutlineAccountTree />} />
+                <h6 className={styles.titleName}>Conditional Operator</h6>
+              </div>
+            </>
+          )}
 
           {/* Local Variable Node */}
           <div

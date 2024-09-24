@@ -4,12 +4,11 @@ import { Select, message } from 'antd';
 import 'reactflow/dist/style.css';
 import styles from '@/app/assets/css/workflow.module.css';
 import Image from 'next/image';
-import TableImage from '../../assets/images/layout.png';
+import TableImage from '@/app/assets/images/layout.png';
 
-const ModifierNode = ({ id, data, type }: NodeProps<any>) => {
+const CompilerNode = ({ id, data, type }: NodeProps<any>) => {
     const { getEdges, setNodes } = useReactFlow();
-    const [operation, setOperation] = useState<string>(data.operation || 'absolute');
-    const [firstConnectedNodeType, setFirstConnectedNodeType] = useState<string | null>(null);
+    const [operation, setOperation] = useState<string>(data.operation || 'min');
     const errorShownRef = useRef({ target: false, source: false });
 
     const showErrorOnce = (msg: string, type: 'source' | 'target') => {
@@ -28,11 +27,7 @@ const ModifierNode = ({ id, data, type }: NodeProps<any>) => {
                 node.id === id ? { ...node, data: { ...node.data, operation } } : node
             )
         );
-        if (data.variableType) {
-            setFirstConnectedNodeType(data.variableType);
-        }
-
-    }, [operation, id, setNodes, data.variableType]);
+    }, [operation, id, setNodes]);
 
     const handleOperationChange = (value: string) => {
         setOperation(value);
@@ -57,7 +52,7 @@ const ModifierNode = ({ id, data, type }: NodeProps<any>) => {
     };
 
     const isValidConnection = (connection: Connection) => {
-        if (connection.target === id && connection.targetHandle === 'target') {
+        if (connection.target === id && connection.targetHandle === 'input') {
             return isValidTargetConnection(connection);
         }
         if (connection.source === id && connection.sourceHandle === 'source') {
@@ -74,8 +69,8 @@ const ModifierNode = ({ id, data, type }: NodeProps<any>) => {
                         <div className={`flex gap-1 ${styles['nodewrap']}`}>
                             <Image src={TableImage} alt='Table Image' width={32} height={32} />
                             <div className={styles['node-text']}>
-                                <h6>{data.label || 'Modifier'}</h6>
-                                <span>{firstConnectedNodeType ? `Type: ${firstConnectedNodeType}` : "No Type Connected"}</span>
+                                <h6>{data.label || 'Compiler'}</h6>
+                                <span>{type || 'Node type not found'}</span>
                             </div>
                         </div>
                     </div>
@@ -87,8 +82,10 @@ const ModifierNode = ({ id, data, type }: NodeProps<any>) => {
                             getPopupContainer={(triggerNode) => triggerNode.parentNode}
                             className="nodrag"
                         >
-                            <Select.Option value="absolute">Absolute</Select.Option>
-                            <Select.Option value="round">Round</Select.Option>
+                            <Select.Option value="min">Min</Select.Option>
+                            <Select.Option value="max">Max</Select.Option>
+                            <Select.Option value="mean">Mean</Select.Option>
+                            <Select.Option value="median">Median</Select.Option>
                         </Select>
                     </div>
                 </div>
@@ -98,7 +95,7 @@ const ModifierNode = ({ id, data, type }: NodeProps<any>) => {
             <Handle
                 type="target"
                 position={Position.Left}
-                id="target"
+                id="input"
                 isValidConnection={isValidConnection}
             />
 
@@ -113,4 +110,4 @@ const ModifierNode = ({ id, data, type }: NodeProps<any>) => {
     );
 };
 
-export default ModifierNode;
+export default CompilerNode;

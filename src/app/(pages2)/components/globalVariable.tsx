@@ -3,8 +3,6 @@ import { useEffect, useState } from "react";
 import styles from '@/app/assets/css/workflow.module.css';
 import { Form, Input, Select } from "antd";
 import { MdOutlineSelectAll } from "react-icons/md";
-import { HiOutlineEye, HiOutlineEyeOff } from "react-icons/hi";
-import { HiOutlineEyeDropper, HiOutlineEyeSlash } from "react-icons/hi2";
 const { Option } = Select;
 const GobalVariableNode = ({ id, data, type }: NodeProps<any>) => {
     const [globalVariables, setGlobalVariables] = useState<any[]>([]);

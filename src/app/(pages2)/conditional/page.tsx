@@ -16,26 +16,22 @@ import {
 import 'reactflow/dist/style.css';
 import classes from '@/app/assets/css/workflow.module.css';
 
-import Sidebar from './components/sidebar';
-import { DnDProvider, useDnD } from './DnDContext';
-import VariableNode from './components/Variables';
-import AdditionSubNode from './components/AdditionSub';
-import Topbar from './components/topbar';
-import CustomEdge from "./customEdge";
-import DivisionMultiplicationNode from './components/DivisionMulti';
-import ModifierNode from './components/Modifier';
-import CompilerNode from './components/Compiler';
-import Constants from "./components/constants";
-import LocalVariable from './components/localVariable';
-import RightSideBar from './components/right-sidebar';
-import OutputNode from './components/Output';
-import GlobalVariable from './components/globalVariable';
+import Sidebar from '../components/sidebar';
+import { DnDProvider, useDnD } from '../components/DnDContext';
+import VariableNode from '../components/Variables';
+import Topbar from '../components/topbar';
+import CustomEdge from "../components/customEdge";
+import LocalVariable from '../components/localVariable';
+import RightSideBar from '../components/right-sidebar';
+import OutputNode from '../components/Output';
+import GlobalVariable from '../components/globalVariable';
+import ConditionalNode from '../components/ConditionalNode'
 import { message } from 'antd';
 
 let id = 0;
 const getId = () => `dndnode_${id++}`;
 
-const DnDFlow: React.FC = () => {
+const Conditional: React.FC = () => {
     const reactFlowWrapper = useRef<HTMLDivElement>(null);
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -46,14 +42,10 @@ const DnDFlow: React.FC = () => {
 
     const nodeTypes = useMemo(() => ({
         variables: VariableNode,
-        constant: Constants,
-        add_sub_type: AdditionSubNode,
-        multiply_divide_type: DivisionMultiplicationNode,
-        modifier_type: ModifierNode,
-        compiler_type: CompilerNode,
         local_variable: LocalVariable,
         global_variable: GlobalVariable,
         output_node: OutputNode,
+        conditional: ConditionalNode,
     }), []);
 
     const edgeTypes = useMemo(() => ({
@@ -216,12 +208,12 @@ const DnDFlow: React.FC = () => {
     );
 };
 
-const DnDFlowApp: React.FC = () => (
+const ConditionalOperation: React.FC = () => (
     <ReactFlowProvider>
         <DnDProvider>
-            <DnDFlow />
+            <Conditional />
         </DnDProvider>
     </ReactFlowProvider>
 );
 
-export default DnDFlowApp;
+export default ConditionalOperation;
