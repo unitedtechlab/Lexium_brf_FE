@@ -158,9 +158,6 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
                                                             <strong>Variable:</strong> {variable.selectedVariable}
                                                         </li>
                                                         <li className={styles.menuItem}>
-                                                            <strong>Value:</strong> {variable.value}
-                                                        </li>
-                                                        <li className={styles.menuItem}>
                                                             <strong>Type:</strong> {variable.type}
                                                         </li>
                                                     </ul>
