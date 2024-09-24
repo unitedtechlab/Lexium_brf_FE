@@ -1,33 +1,32 @@
-import { Handle, NodeProps, Position } from "reactflow";
-import { useEffect, useState } from "react";
+import React, { useState, useEffect } from 'react';
+import { Handle, NodeProps, Position } from 'reactflow';
+import { Form, Select } from 'antd';
+import 'reactflow/dist/style.css';
 import styles from '@/app/assets/css/workflow.module.css';
-import { Form, Input, Select } from "antd";
-import { MdOutlineSelectAll } from "react-icons/md";
-import { HiOutlineEye, HiOutlineEyeOff } from "react-icons/hi";
-import { HiOutlineEyeDropper, HiOutlineEyeSlash } from "react-icons/hi2";
+import { MdOutlineSelectAll } from 'react-icons/md';
+
 const { Option } = Select;
-const GobalVariableNode = ({ id, data, type }: NodeProps<any>) => {
-    const [globalVariables, setGlobalVariables] = useState<any[]>([]);
+
+const LocalVariableNode = ({ id, data, type }: NodeProps<any>) => {
+    const [localVariables, setLocalVariables] = useState<any[]>([]);
     const [selectedVariable, setSelectedVariable] = useState<string | null>(data.selectedVariable || null);
     const [variableValue, setVariableValue] = useState<string>(data.value || '');
     const [valueType, setValueType] = useState<string | null>(data.variableType || null);
 
     useEffect(() => {
-        if (typeof window !== 'undefined') {
-            const updatedGlobalVariables = JSON.parse(localStorage.getItem('GlobalVariables') || '[]');
-            setGlobalVariables(updatedGlobalVariables);
-        }
+        const storedVariables = JSON.parse(localStorage.getItem('localVariables') || '[]');
+        setLocalVariables(storedVariables);
     }, []);
 
     const handleSelectChange = (value: string) => {
         setSelectedVariable(value);
-        const foundVariable = globalVariables.find(variable => variable.name === value);
+        const foundVariable = localVariables.find(variable => variable.name === value);
         if (foundVariable) {
             setVariableValue(foundVariable.value || '');
             setValueType(foundVariable.type || 'number');
         }
-        // Update node data to store the selected variable details
-        data.selectedVariable = foundVariable?.outputName;
+
+        data.selectedVariable = foundVariable?.name;
         data.value = foundVariable?.value;
         data.variableType = foundVariable?.type;
     };
@@ -35,7 +34,7 @@ const GobalVariableNode = ({ id, data, type }: NodeProps<any>) => {
     return (
         <div>
             <div className={styles['nodeBox']} style={{ maxWidth: "340px" }}>
-                <Form name="global-variable" layout="vertical">
+                <Form name="local-variable" layout="vertical">
                     <div className={`flex gap-1 ${styles['node-main']}`}>
                         <div className={`flex gap-1 ${styles['node']}`}>
                             <div className={`flex gap-1 ${styles['nodewrap']}`}>
@@ -48,17 +47,24 @@ const GobalVariableNode = ({ id, data, type }: NodeProps<any>) => {
                                 </div>
                             </div>
                         </div>
+
                         <div className={`flex gap-1 ${styles.formInput}`}>
                             <Form.Item className={`nodrag ${styles.widthInput} ${styles.fullwidth} customselect`}>
-                                <Select className={`nodrag ${styles.inputField}`} placeholder="Select a Variable" onChange={handleSelectChange} value={selectedVariable}>
-                                    {globalVariables.map((variable, index) => (
-                                        <Option key={index} value={variable.outputName}>
-                                            {variable.outputName}
+                                <Select
+                                    className={`nodrag ${styles.inputField}`}
+                                    placeholder="Select a Variable"
+                                    onChange={handleSelectChange}
+                                    value={selectedVariable}
+                                >
+                                    {localVariables.map((variable, index) => (
+                                        <Option key={index} value={variable.name}>
+                                            {variable.name}
                                         </Option>
                                     ))}
                                 </Select>
                             </Form.Item>
                         </div>
+
                         <Handle
                             type="target"
                             position={Position.Left}
@@ -73,6 +79,7 @@ const GobalVariableNode = ({ id, data, type }: NodeProps<any>) => {
                 </Form>
             </div>
         </div>
-    )
-}
-export default GobalVariableNode;
+    );
+};
+
+export default LocalVariableNode;

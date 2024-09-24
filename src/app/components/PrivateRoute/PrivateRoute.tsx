@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getToken, setToken, isValidToken, removeToken, decodeToken, isBrowser } from '@/utils/auth';
@@ -73,7 +75,7 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
                 removeToken();
                 window.location.reload();
             }
-        }, 24 * 60 * 60 * 1000);
+        }, 24 * 60 * 60 * 1000); // Token expiration after 24 hours
 
         return () => clearTimeout(timeout);
     }, [router, setEmail, setFirstName, setLastName]);

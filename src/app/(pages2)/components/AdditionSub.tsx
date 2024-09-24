@@ -3,48 +3,46 @@ import { Handle, NodeProps, Position, useReactFlow, Connection } from 'reactflow
 import 'reactflow/dist/style.css';
 import styles from '@/app/assets/css/workflow.module.css';
 import Image from 'next/image';
-import TableImage from '../../assets/images/layout.svg';
-import { FiDivideCircle, FiPlusCircle } from "react-icons/fi";
+import TableImage from '@/app/assets/images/layout.png';
+import { FiMinusCircle, FiPlusCircle } from "react-icons/fi";
 import { message } from 'antd';
 
-const DivisionMultiply = ({ id, data }: NodeProps<any>) => {
+const AdditionSubNode = ({ id, data }: NodeProps<any>) => {
     const { getEdges, getNode, setNodes } = useReactFlow();
     const [connectedValues, setConnectedValues] = useState<any>({
-        multiplyValues: [],
-        divideValues: [],
+        additionNodeValues: [],
+        substractionNodeValues: [],
     });
     const [firstConnectedNodeType, setFirstConnectedNodeType] = useState<string | null>(null);
-
     const messageShownRef = useRef(false);
 
     useEffect(() => {
         const edges = getEdges().filter((edge) => edge.target === id);
 
-        let multiplyValues: any[] = [];
-        let divideValues: any[] = [];
+        let additionNodeValues: any[] = [];
+        let substractionNodeValues: any[] = [];
         let firstConnectedType: string | null = null;
         let sourceIds: string[] = [];
 
         edges.forEach((edge) => {
             const sourceNode = getNode(edge.source);
             const sourceNodeData = sourceNode?.data;
-
             if (!firstConnectedType && sourceNodeData?.variableType) {
                 firstConnectedType = sourceNodeData.variableType;
             }
 
             if (edge.targetHandle === 'target1' && sourceNode) {
-                multiplyValues.push({ id: sourceNode.id });
+                additionNodeValues.push({ id: sourceNode.id });
                 sourceIds.push(sourceNode.id);
             }
 
             if (edge.targetHandle === 'target2' && sourceNode) {
-                divideValues.push({ id: sourceNode.id });
+                substractionNodeValues.push({ id: sourceNode.id });
                 sourceIds.push(sourceNode.id);
             }
         });
 
-        setConnectedValues({ multiplyValues, divideValues });
+        setConnectedValues({ additionNodeValues, substractionNodeValues });
         if (data.variableType) {
             setFirstConnectedNodeType(data.variableType);
         }
@@ -56,11 +54,11 @@ const DivisionMultiply = ({ id, data }: NodeProps<any>) => {
                         ...node,
                         data: {
                             ...node.data,
-                            multiplyValues,
-                            divideValues,
+                            additionNodeValues,
+                            substractionNodeValues,
                         },
                         connectedEdges: sourceIds.length > 0
-                            ? [{ source: sourceIds.length === 1 ? sourceIds[0] : sourceIds, target: '' }]
+                            ? [{ source: sourceIds, target: '' }]
                             : [],
                     }
                     : node
@@ -80,22 +78,9 @@ const DivisionMultiply = ({ id, data }: NodeProps<any>) => {
 
     const isValidConnection = (connection: Connection) => {
         const edges = getEdges().filter((edge) => edge.source === id);
-        console.log("connection", connection)
-        console.log("connectedValues", connectedValues)
+
         if (edges.length >= 1 && connection.sourceHandle === 'source') {
             showMessageOnce('Only one outgoing connection is allowed from the source.');
-            return false;
-        }
-        const existingConnections = getEdges().filter((edge) => edge.target === id);
-
-        const hasTarget1Connection = existingConnections.some(edge => edge.targetHandle === 'target1');
-        const hasTarget2Connection = existingConnections.some(edge => edge.targetHandle === 'target2');
-        if (connection.targetHandle === 'target1' && hasTarget1Connection) {
-            showMessageOnce('Only one connection is allowed.')
-            return false;
-        }
-        if (connection.targetHandle === 'target2' && hasTarget2Connection) {
-            showMessageOnce('Only one connection is allowed.');
             return false;
         }
         return true;
@@ -103,7 +88,7 @@ const DivisionMultiply = ({ id, data }: NodeProps<any>) => {
 
     return (
         <div>
-            <div className={styles['multiply-point-label']}>
+            <div className={styles['plus-point-label']}>
                 <FiPlusCircle />
             </div>
             <div className={styles['nodeBox']}>
@@ -112,7 +97,7 @@ const DivisionMultiply = ({ id, data }: NodeProps<any>) => {
                         <div className={`flex gap-1 ${styles['nodewrap']}`}>
                             <Image src={TableImage} alt='Table Image' width={32} height={32} />
                             <div className={styles['node-text']}>
-                                <h6>{data.label || "Multiplication / Division"}</h6>
+                                <h6>{data.label || "Addition / Subtraction"}</h6>
                                 <span>{firstConnectedNodeType ? `Type: ${firstConnectedNodeType}` : "No Type Connected"}</span>
                             </div>
                         </div>
@@ -120,10 +105,9 @@ const DivisionMultiply = ({ id, data }: NodeProps<any>) => {
                 </div>
             </div>
             <div className={styles['minus-point-label']}>
-                <FiDivideCircle />
+                <FiMinusCircle />
             </div>
 
-            {/* Handles for connections */}
             <Handle
                 type="target"
                 position={Position.Left}
@@ -148,4 +132,4 @@ const DivisionMultiply = ({ id, data }: NodeProps<any>) => {
     );
 };
 
-export default DivisionMultiply;
+export default AdditionSubNode;

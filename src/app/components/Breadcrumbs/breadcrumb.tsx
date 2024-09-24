@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import Image from "next/image";
-import Leftarrow from "../../assets/images/left-arrow.svg";
+import Leftarrow from "../../assets/images/left-arrow.png";
 import classes from "./breadcrumb.module.css";
 import Link from "next/link";
 

@@ -2,10 +2,13 @@ import React from 'react';
 import styles from '@/app/assets/css/workflow.module.css';
 import { Button } from 'antd';
 import Image from 'next/image';
-import Logo from '@/app/assets/images/logo.svg';
+import Logo from '@/app/assets/images/logo.png';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 const Topbar = ({ onSave }: { onSave: () => void }) => {
+    const pathname = usePathname();
+
     return (
         <div className={styles.topbarWrapper}>
             <div className={`flex gap-1 ${styles.topbar}`}>
@@ -15,7 +18,14 @@ const Topbar = ({ onSave }: { onSave: () => void }) => {
                     </Link>
                 </div>
                 <div className={styles.workspaceName}>
-                    <h6 style={{ margin: 0 }}>Arithmetic Operation</h6>
+                    <h6 style={{ margin: 0 }}>
+                        {pathname === '/conditional' && (
+                            <>Conditional Operation</>
+                        )}
+                        {pathname === '/arithmetic' && (
+                            <>Arithmetic Operation</>
+                        )}
+                    </h6>
                 </div>
 
                 <div className={`flex gap-1 ${styles.rightButtons}`}>

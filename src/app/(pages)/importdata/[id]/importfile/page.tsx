@@ -5,7 +5,7 @@ import { Button, Col, Row, Form, Input, Upload, message, Progress } from 'antd';
 import classes from '@/app/assets/css/pages.module.css';
 import { IoMdCloseCircle } from 'react-icons/io';
 import { RiDeleteBin6Fill, RiLoader2Fill, RiCheckboxCircleFill } from 'react-icons/ri';
-import fileIcon from '@/app/assets/images/fileIcon.svg';
+import fileIcon from '@/app/assets/images/file-icon.png';
 import axios from 'axios';
 import { BaseURL } from '@/app/constants/index';
 import Image from 'next/image';

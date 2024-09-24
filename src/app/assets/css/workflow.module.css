@@ -570,6 +570,8 @@
     display: grid;
     gap: 30px;
     border-top: 1px solid #0000001A;
+    max-height: 75vh;
+    overflow-y: auto;
 }
 
 .customvariable:not(:last-child) {
@@ -619,7 +621,7 @@
 
 .variableNames ul li {
     display: flex;
-    justify-content: flex-start;
+    justify-content: space-between;
     align-items: center;
     gap: 10px;
 }
@@ -754,7 +756,7 @@
 .toggleButton {
     position: absolute;
     right: 35px;
-    top: 110px;
+    top: 45px;
     z-index: 89;
 }
 

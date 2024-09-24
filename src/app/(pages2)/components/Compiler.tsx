@@ -4,7 +4,7 @@ import { Select, message } from 'antd';
 import 'reactflow/dist/style.css';
 import styles from '@/app/assets/css/workflow.module.css';
 import Image from 'next/image';
-import TableImage from '../../assets/images/layout.svg';
+import TableImage from '@/app/assets/images/layout.png';
 
 const CompilerNode = ({ id, data, type }: NodeProps<any>) => {
     const { getEdges, setNodes } = useReactFlow();

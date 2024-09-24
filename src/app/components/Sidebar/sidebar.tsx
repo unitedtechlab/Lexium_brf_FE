@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Layout, Menu, Button } from 'antd';
 import Image from 'next/image';
-import Logo from '@/app/assets/images/logo.svg';
+import Logo from '@/app/assets/images/logo.png';
 import CollapsedLogo from '@/app/assets/images/logo-collapsed.svg';
 import sidebarStyles from './sidebar.module.css';
 import { useTheme } from '../../context/ThemeContext';

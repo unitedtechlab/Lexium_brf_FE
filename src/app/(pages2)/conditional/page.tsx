@@ -1,5 +1,5 @@
 "use client";
-import React, { useRef, useCallback, useState, useEffect } from 'react';
+import React, { useRef, useCallback, useState, useEffect, useMemo } from 'react';
 import {
     ReactFlow,
     ReactFlowProvider,
@@ -16,47 +16,22 @@ import {
 import 'reactflow/dist/style.css';
 import classes from '@/app/assets/css/workflow.module.css';
 
-import Sidebar from './components/sidebar';
-import { DnDProvider, useDnD } from './DnDContext';
-import VariableNode from './components/Variables';
-import AdditionSubNode from './components/AdditionSub';
-import Topbar from './components/topbar';
-import CustomEdge from "./customEdge";
-import DivisionMultiplicationNode from './components/DivisionMulti';
-import ModifierNode from './components/Modifier';
-import CompilerNode from './components/Compiler';
-import Constants from "./components/constants";
-import LocalVariable from './components/localVariable';
-import RightSideBar from './components/right-sidebar';
-import OutputNode from './components/Output';
-import GlobalVariable from './components/globalVariable';
+import Sidebar from '../components/sidebar';
+import { DnDProvider, useDnD } from '../components/DnDContext';
+import VariableNode from '../components/Variables';
+import Topbar from '../components/topbar';
+import CustomEdge from "../components/customEdge";
+import LocalVariable from '../components/localVariable';
+import RightSideBar from '../components/right-sidebar';
+import OutputNode from '../components/Output';
+import GlobalVariable from '../components/globalVariable';
+import ConditionalNode from '../components/ConditionalNode'
 import { message } from 'antd';
-
-const nodeTypes = {
-    variables: VariableNode,
-    constant: Constants,
-    add_sub_type: AdditionSubNode,
-    multiply_divide_type: DivisionMultiplicationNode,
-    modifier_type: ModifierNode,
-    compiler_type: CompilerNode,
-    local_variable: LocalVariable,
-    global_variable: GlobalVariable,
-    output_node: OutputNode,
-};
-
-const edgeTypes = {
-    customEdge: CustomEdge,
-};
-
-type ConnectedEdge = {
-    source: string | string[];
-    target: string | string[];
-};
 
 let id = 0;
 const getId = () => `dndnode_${id++}`;
 
-const DnDFlow: React.FC = () => {
+const Conditional: React.FC = () => {
     const reactFlowWrapper = useRef<HTMLDivElement>(null);
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -65,40 +40,52 @@ const DnDFlow: React.FC = () => {
     const [folderdata, setFolderData] = useState<any[]>([]);
     const variableEntries = Object.entries(folderdata);
 
+    const nodeTypes = useMemo(() => ({
+        variables: VariableNode,
+        local_variable: LocalVariable,
+        global_variable: GlobalVariable,
+        output_node: OutputNode,
+        conditional: ConditionalNode,
+    }), []);
+
+    const edgeTypes = useMemo(() => ({
+        customEdge: CustomEdge,
+    }), []);
+
     const onConnect = useCallback(
         (params: Edge | Connection) => {
-          const sourceNode = nodes.find((node) => node.id === params.source);
-          const targetNode = nodes.find((node) => node.id === params.target);
+            const sourceNode = nodes.find((node) => node.id === params.source);
+            const targetNode = nodes.find((node) => node.id === params.target);
 
-          if (!sourceNode?.data?.variableType) {
-            message.error("Cannot connect a node without entering a value.");
-            return;
-          }
+            if (!sourceNode?.data?.variableType) {
+                message.error("Cannot connect a node without entering a value.");
+                return;
+            }
 
-          if (params.source === params.target) {
-            message.error("Self-connections are not allowed.");
-            return;
-          }
-      
-          setNodes((nds) =>
-            nds.map((node) =>
-              node.id === targetNode?.id
-                ? {
-                    ...node,
-                    data: {
-                      ...node.data,
-                      variableType: sourceNode.data.variableType,
-                    },
-                  }
-                : node
-            )
-          );
+            if (params.source === params.target) {
+                message.error("Self-connections are not allowed.");
+                return;
+            }
 
-          setEdges((eds) => addEdge({ ...params, type: "customEdge" }, eds));
+            setNodes((nds) =>
+                nds.map((node) =>
+                    node.id === targetNode?.id
+                        ? {
+                            ...node,
+                            data: {
+                                ...node.data,
+                                variableType: sourceNode.data.variableType,
+                            },
+                        }
+                        : node
+                )
+            );
+
+            setEdges((eds) => addEdge({ ...params, type: "customEdge" }, eds));
         },
         [nodes, setEdges, setNodes]
-      );  
-      
+    );
+
     const onDragOver = useCallback((event: React.DragEvent) => {
         event.preventDefault();
         event.dataTransfer.dropEffect = 'move';
@@ -134,11 +121,10 @@ const DnDFlow: React.FC = () => {
     };
 
     const handleSave = () => {
-        let outputNodeName = "";
+        let outputNodeName = '';
 
-        // Identify the output node and extract its name
         nodes.forEach((node) => {
-            if (node.type === "output_node" && node.data.outputName) {
+            if (node.type === 'output_node' && node.data.outputName) {
                 outputNodeName = node.data.outputName;
             }
         });
@@ -152,10 +138,10 @@ const DnDFlow: React.FC = () => {
 
             edges.forEach((edge) => {
                 if (edge.source === node.id) {
-                    targetConnections.push(edge.target || "");
+                    targetConnections.push(edge.target || '');
                 }
                 if (edge.target === node.id) {
-                    sourceConnections.push(edge.source || "");
+                    sourceConnections.push(edge.source || '');
                 }
             });
 
@@ -163,8 +149,18 @@ const DnDFlow: React.FC = () => {
 
             if (sourceConnections.length || targetConnections.length) {
                 connectedEdges.push({
-                    source: sourceConnections.length === 1 ? (sourceConnections[0] || "") : (sourceConnections.length ? sourceConnections : ""),
-                    target: targetConnections.length === 1 ? (targetConnections[0] || "") : (targetConnections.length ? targetConnections : "")
+                    source:
+                        sourceConnections.length === 1
+                            ? sourceConnections[0] || ''
+                            : sourceConnections.length
+                                ? sourceConnections
+                                : '',
+                    target:
+                        targetConnections.length === 1
+                            ? targetConnections[0] || ''
+                            : targetConnections.length
+                                ? targetConnections
+                                : '',
                 });
             }
 
@@ -181,9 +177,8 @@ const DnDFlow: React.FC = () => {
             nodes: cleanedNodes,
         };
 
-        console.log("Output Json Data",JSON.stringify(finalWorkflowData, null, 2));
+        console.log('Output Json Data', JSON.stringify(finalWorkflowData, null, 2));
     };
-
 
 
     return (
@@ -213,12 +208,12 @@ const DnDFlow: React.FC = () => {
     );
 };
 
-const DnDFlowApp: React.FC = () => (
+const ConditionalOperation: React.FC = () => (
     <ReactFlowProvider>
         <DnDProvider>
-            <DnDFlow />
+            <Conditional />
         </DnDProvider>
     </ReactFlowProvider>
 );
 
-export default DnDFlowApp;
+export default ConditionalOperation;

@@ -10,7 +10,7 @@ import classes from "@/app/assets/css/pages.module.css";
 import { Button, Dropdown, message, Empty } from "antd";
 import type { MenuProps } from "antd";
 import Image from "next/image";
-import folderIcon from "@/app/assets/images/table.svg";
+import folderIcon from "@/app/assets/images/table.png";
 import { BiDotsVerticalRounded } from "react-icons/bi";
 import BreadCrumb from "@/app/components/Breadcrumbs/breadcrumb";
 import { useEmail } from "@/app/context/emailContext";

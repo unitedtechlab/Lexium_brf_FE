@@ -11,7 +11,6 @@ const VariableNode: React.FC<NodeProps<any>> = ({ id, data, type }) => {
     const [fields, setFields] = useState<any[]>([{ type: 'variable', selectedVariable: '' }]);
     const [availableColumns, setAvailableColumns] = useState<string[]>([]);
 
-    // Effect to load available columns from data passed into the node
     useEffect(() => {
         if (data && data.folderdata) {
             const columns = Object.keys(data.folderdata || {}).filter((key) => {
@@ -22,7 +21,6 @@ const VariableNode: React.FC<NodeProps<any>> = ({ id, data, type }) => {
         }
     }, [data]);
 
-    // Memo to track selected variables to disable already selected ones in the dropdown
     const selectedVariables = useMemo(() => {
         return fields.map((field) => field.selectedVariable);
     }, [fields]);
@@ -68,7 +66,7 @@ const VariableNode: React.FC<NodeProps<any>> = ({ id, data, type }) => {
     return (
         <div>
             <div className={styles['nodeBox']} style={{ maxWidth: "300px" }}>
-                <Form name="custom-value" layout="vertical">
+                <Form name="variable_form" layout="vertical">
                     <div className={`flex gap-1 ${styles['node-main']}`}>
                         <div className={`flex gap-1 ${styles['node']}`}>
                             <div className={`flex gap-1 ${styles['nodewrap']}`}>
