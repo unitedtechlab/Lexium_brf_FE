@@ -6,7 +6,7 @@ import Image from 'next/image';
 import TableImage from '../../assets/images/layout.svg';
 import { FiMinusCircle, FiPlusCircle } from "react-icons/fi";
 import { message } from 'antd';
-//
+
 const AdditionSubNode = ({ id, data }: NodeProps<any>) => {
     const { getEdges, getNode, setNodes } = useReactFlow();
     const [connectedValues, setConnectedValues] = useState<any>({
@@ -24,27 +24,28 @@ const AdditionSubNode = ({ id, data }: NodeProps<any>) => {
         let firstConnectedType: string | null = null;
         let sourceIds: string[] = [];
 
-		edges.forEach((edge) => {
-			const sourceNode = getNode(edge.source);
-			const sourceNodeData = sourceNode?.data;
-			if (!firstConnectedType && sourceNodeData?.variableType) {
-				firstConnectedType = sourceNodeData.variableType;
-			}
-			if (edge.targetHandle === 'target1' && sourceNode) {
-				additionNodeValues.push({ id: sourceNode.id });
-				sourceIds.push(sourceNode.id);
-			}
+        edges.forEach((edge) => {
+            const sourceNode = getNode(edge.source);
+            const sourceNodeData = sourceNode?.data;
+            if (!firstConnectedType && sourceNodeData?.variableType) {
+                firstConnectedType = sourceNodeData.variableType;
+            }
 
-			if (edge.targetHandle === 'target2' && sourceNode) {
-				substractionNodeValues.push({ id: sourceNode.id });
-				sourceIds.push(sourceNode.id);
-			}
-		});
+            if (edge.targetHandle === 'target1' && sourceNode) {
+                additionNodeValues.push({ id: sourceNode.id });
+                sourceIds.push(sourceNode.id);
+            }
+
+            if (edge.targetHandle === 'target2' && sourceNode) {
+                substractionNodeValues.push({ id: sourceNode.id });
+                sourceIds.push(sourceNode.id);
+            }
+        });
 
         setConnectedValues({ additionNodeValues, substractionNodeValues });
         if (data.variableType) {
             setFirstConnectedNodeType(data.variableType);
-          }
+        }
 
         setNodes((nodes) =>
             nodes.map((node) =>
@@ -63,7 +64,7 @@ const AdditionSubNode = ({ id, data }: NodeProps<any>) => {
                     : node
             )
         );
-	}, [getEdges, getNode, id, setNodes, data.variableType]);
+    }, [getEdges, getNode, id, setNodes, data.variableType]);
 
     const showMessageOnce = (msg: string) => {
         if (!messageShownRef.current) {
