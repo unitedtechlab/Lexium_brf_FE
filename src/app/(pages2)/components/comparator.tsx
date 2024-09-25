@@ -10,30 +10,26 @@ const { Option } = Select;
 
 const ConditionalNode = ({ id, data }: NodeProps<any>) => {
     const { getEdges, getNode, setNodes } = useReactFlow();
-    const [selectedOperator, setSelectedOperator] = useState(data.gateOperator || 'Equal to');
-    const [lhsValue, setLhsValue] = useState<string | null>(null);
-    const [rhsValue, setRhsValue] = useState<string | null>(null);
+    const [selectedOperator, setSelectedOperator] = useState(data.gateOperator);
     const [lhsType, setLhsType] = useState<string | null>(null);
     const [rhsType, setRhsType] = useState<string | null>(null);
     const errorShownRef = useRef({ target1: false, target2: false });
 
-    // Effect to fetch node values for LHS and RHS whenever connections change
-    useEffect(() => {
-        const edges = getEdges().filter(edge => edge.target === id);
-        edges.forEach((edge) => {
-            const connectedNode = getNode(edge.source);
-            if (edge.targetHandle === 'target1' && connectedNode) {
-                setLhsValue(connectedNode.data.value);
-                setLhsType(connectedNode.data.variableType);
-            }
-            if (edge.targetHandle === 'target2' && connectedNode) {
-                setRhsValue(connectedNode.data.value);
-                setRhsType(connectedNode.data.variableType);
-            }
-        });
-    }, [getEdges, getNode, id]);
+    // useEffect(() => {
+    //     const edges = getEdges().filter(edge => edge.target === id);
+    //     edges.forEach((edge) => {
+    //         const connectedNode = getNode(edge.source);
+    //         if (edge.targetHandle === 'target1' && connectedNode) {
+    //             setLhsValue(connectedNode.data.value);
+    //             setLhsType(connectedNode.data.variableType);
+    //         }
+    //         if (edge.targetHandle === 'target2' && connectedNode) {
+    //             setRhsValue(connectedNode.data.value);
+    //             setRhsType(connectedNode.data.variableType);
+    //         }
+    //     });
+    // }, [getEdges, getNode, id]);
 
-    // Update the operator and ensure the nodes reflect the change
     const handleOperatorChange = (value: string) => {
         setSelectedOperator(value);
         setNodes((nodes) =>
@@ -71,7 +67,6 @@ const ConditionalNode = ({ id, data }: NodeProps<any>) => {
         return true;
     };
 
-    // Handle delete node
     const handleDeleteNode = () => {
         setNodes((nds) => nds.filter((node) => node.id !== id));
         message.success('Node deleted successfully');
@@ -84,18 +79,6 @@ const ConditionalNode = ({ id, data }: NodeProps<any>) => {
             onClick: handleDeleteNode
         }
     ];
-
-    // Function to dynamically return the text showing the LHS, operator, and RHS values
-    const getDynamicText = () => {
-        if (lhsValue !== null && rhsValue !== null) {
-            return `${lhsValue} ${selectedOperator} ${rhsValue}`;
-        } else if (lhsValue !== null) {
-            return `${lhsValue} ${selectedOperator} RHS`;
-        } else if (rhsValue !== null) {
-            return `LHS ${selectedOperator} ${rhsValue}`;
-        }
-        return 'LHS value operator RHS value';
-    };
 
     return (
         <div>
@@ -139,7 +122,7 @@ const ConditionalNode = ({ id, data }: NodeProps<any>) => {
                                     <Option value="Less than or equal to">Less than or equal to</Option>
                                 </Select>
                             </Form.Item>
-                            <span>{getDynamicText()}</span>
+                            <span>LHS value operator RHS value</span>
                         </div>
 
                         <div className={styles['rhs-point-label']}>
