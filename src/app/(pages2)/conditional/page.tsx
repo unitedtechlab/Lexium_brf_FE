@@ -26,6 +26,8 @@ import RightSideBar from '../components/right-sidebar';
 import OutputNode from '../components/Output';
 import GlobalVariable from '../components/globalVariable';
 import ConditionalNode from '../components/ConditionalNode'
+import GateNode from '../components/AndOrGate';
+import Constants from '../components/constants';
 import { message } from 'antd';
 
 let id = 0;
@@ -42,10 +44,12 @@ const Conditional: React.FC = () => {
 
     const nodeTypes = useMemo(() => ({
         variables: VariableNode,
+        constants: Constants,
         local_variable: LocalVariable,
         global_variable: GlobalVariable,
         output_node: OutputNode,
         conditional: ConditionalNode,
+        gate_node:GateNode,
     }), []);
 
     const edgeTypes = useMemo(() => ({
@@ -80,7 +84,7 @@ const Conditional: React.FC = () => {
                         : node
                 )
             );
-
+            console.log("nodes", nodes)
             setEdges((eds) => addEdge({ ...params, type: "customEdge" }, eds));
         },
         [nodes, setEdges, setNodes]
@@ -110,7 +114,7 @@ const Conditional: React.FC = () => {
                 position,
                 data: { label: type.titleName, folderdata },
             };
-
+            console.log("newNode", newNode)
             setNodes((nds) => nds.concat(newNode));
         },
         [screenToFlowPosition, type, setNodes, folderdata]

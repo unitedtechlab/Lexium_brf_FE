@@ -6,6 +6,7 @@ import { BiGridVertical } from 'react-icons/bi';
 import { Button, Select, message } from 'antd';
 import { HiOutlineEye, HiOutlineEyeOff } from 'react-icons/hi';
 import { MdOutlineDelete } from 'react-icons/md';
+import { usePathname } from 'next/navigation';
 
 interface RightSideBarProps {
     variableEntries: [string, string][];
@@ -22,6 +23,7 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
     const [variableType, setVariableType] = useState<string>('');
     const [globalVariables, setGlobalVariables] = useState<any[]>([]);
     const [visibleVariables, setVisibleVariables] = useState<number[]>([]);
+    const pathname = usePathname();
 
     useEffect(() => {
         const storedLocalVariables = JSON.parse(localStorage.getItem('localVariables') || '[]');

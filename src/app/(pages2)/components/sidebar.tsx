@@ -12,6 +12,7 @@ import { useEmail } from '@/app/context/emailContext';
 import { AiOutlineNumber, AiOutlineGlobal } from "react-icons/ai";
 import { SiLocal } from "react-icons/si";
 import { usePathname } from 'next/navigation';
+import { GiLogicGateNand, GiMagicGate } from 'react-icons/gi';
 
 const { Search } = Input;
 
@@ -200,24 +201,6 @@ const Sidebar: React.FC<{ setFolderData: (data: any[]) => void }> = ({ setFolder
                 <IconComponent icon={<TbMathXDivideY2 />} />
                 <h6 className={styles.titleName}>Multiplication / Division</h6>
               </div>
-
-              <div
-                className={`flex gap-1 ${styles.sidebardragDrop}`}
-                onDragStart={(event) => onDragStart(event, 'modifier_type', 'Modifier')}
-                draggable
-              >
-                <IconComponent icon={<TbMathIntegralX />} />
-                <h6 className={styles.titleName}>Modifier</h6>
-              </div>
-
-              <div
-                className={`flex gap-1 ${styles.sidebardragDrop}`}
-                onDragStart={(event) => onDragStart(event, 'compiler_type', 'Compiler')}
-                draggable
-              >
-                <IconComponent icon={<TbMathMaxMin />} />
-                <h6 className={styles.titleName}>Compiler</h6>
-              </div>
             </>
           )}
 
@@ -231,6 +214,14 @@ const Sidebar: React.FC<{ setFolderData: (data: any[]) => void }> = ({ setFolder
               >
                 <IconComponent icon={<MdOutlineSelectAll />} />
                 <h6 className={styles.titleName}>Variables</h6>
+              </div>
+              <div
+                className={`flex gap-1 ${styles.sidebardragDrop}`}
+                onDragStart={(event) => onDragStart(event, 'constants', 'Constants')}
+                draggable
+              >
+                <IconComponent icon={<MdOutlineSelectAll />} />
+                <h6 className={styles.titleName}>Constants</h6>
               </div>
 
               <div
@@ -263,16 +254,49 @@ const Sidebar: React.FC<{ setFolderData: (data: any[]) => void }> = ({ setFolder
             <IconComponent icon={<AiOutlineGlobal />} />
             <h6>Global Variable</h6>
           </div>
-
-          {/* Output Node */}
           <div
             className={`flex gap-1 ${styles.sidebardragDrop}`}
-            onDragStart={(event) => onDragStart(event, 'output_node', 'Output Node')}
+            onDragStart={(event) => onDragStart(event, 'modifier_type', 'Modifier')}
             draggable
           >
-            <IconComponent icon={<MdOutlineOutput />} />
-            <h6>Output Node</h6>
+            <IconComponent icon={<TbMathIntegralX />} />
+            <h6 className={styles.titleName}>Modifier</h6>
           </div>
+
+          <div
+            className={`flex gap-1 ${styles.sidebardragDrop}`}
+            onDragStart={(event) => onDragStart(event, 'compiler_type', 'Compiler')}
+            draggable
+          >
+            <IconComponent icon={<TbMathMaxMin />} />
+            <h6 className={styles.titleName}>Compiler</h6>
+          </div>
+          {pathname === '/arithmetic' && (
+            <>
+              {/* Output Node */}
+              <div
+                className={`flex gap-1 ${styles.sidebardragDrop}`}
+                onDragStart={(event) => onDragStart(event, 'output_node', 'Output Node')}
+                draggable
+              >
+                <IconComponent icon={<MdOutlineOutput />} />
+                <h6>Output Node</h6>
+              </div>
+            </>
+          )}
+          {pathname === '/conditional' && (
+            <>
+              {/* Gate Node */}
+              <div
+                className={`flex gap-1 ${styles.sidebardragDrop}`}
+                onDragStart={(event) => onDragStart(event, 'gate_node', 'Gate Node')}
+                draggable
+              >
+                <IconComponent icon={<GiLogicGateNand />} />
+                <h6>Gate (AND/OR)</h6>
+              </div>
+            </>
+          )}
 
         </div>
       </div>
