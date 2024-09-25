@@ -200,11 +200,11 @@ const Sidebar: React.FC<{ setFolderData: (data: any[]) => void }> = ({ setFolder
               <h6>Conditional Operators</h6>
               <div
                 className={`flex gap-1 ${styles.sidebardragDrop}`}
-                onDragStart={(event) => onDragStart(event, 'conditional', 'Conditional Operator')}
+                onDragStart={(event) => onDragStart(event, 'conditional', 'Comparator')}
                 draggable
               >
                 <IconComponent icon={<MdOutlineAccountTree />} />
-                <h6 className={styles.titleName}>Conditional Operator</h6>
+                <h6 className={styles.titleName}>Comparator</h6>
               </div>
 
               <div

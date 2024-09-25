@@ -1,12 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Handle, NodeProps, Position, useReactFlow } from 'reactflow';
-import { Dropdown, Form, Input, message, Select } from 'antd';
+import { Form, Input, Dropdown, message } from 'antd';
 import 'reactflow/dist/style.css';
 import styles from '@/app/assets/css/workflow.module.css';
-import { PiFlagCheckered } from "react-icons/pi";
-import { usePathname } from 'next/navigation';
-const { Option } = Select;
-import 'reactflow/dist/style.css';
 import { AiOutlineNumber } from "react-icons/ai";
 import { BsThreeDots } from "react-icons/bs";
 import SaveGlobalVariableModal from '../modals/GlobalVariableModal';
@@ -15,21 +11,6 @@ const ConstantNode = ({ id, data, type }: NodeProps<any>) => {
     const { getEdges, getNodes, setNodes } = useReactFlow();
     const [inputValue, setInputValue] = useState<string>('');
     const [valueType, setValueType] = useState<string | null>(null);
-    const [selectedCondition, setselectedCondition] = useState<string | null>(null);
-    const [selectedGate, setSelectedGate] = useState<string | null>(null);
-    const pathname = usePathname();
-
-    const handleSelectChange = (value: string, type: 'condition' | 'option') => {
-        if (type === 'condition') {
-            setselectedCondition(value);
-        } else if (type === 'option') {
-            setSelectedGate(value);
-        }
-    };
-
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setInputValue(e.target.value);
-    };
     const [isModalVisible, setIsModalVisible] = useState(false);
 
     const determineValueType = (value: string) => {
@@ -40,7 +21,7 @@ const ConstantNode = ({ id, data, type }: NodeProps<any>) => {
         }
     };
 
-    const handleGateInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
 
         if (/^-?\d*\.?\d*$/.test(value)) {
@@ -131,7 +112,7 @@ const ConstantNode = ({ id, data, type }: NodeProps<any>) => {
                         </div>
 
                         <div className={`flex gap-1 ${styles.formInput}`}>
-                        {pathname === '/arithmetic' && ( <Form.Item
+                            <Form.Item
                                 className={`nodrag ${styles.widthInput} ${styles.fullwidth} customselect`}
                             >
                                 <Input
@@ -141,29 +122,6 @@ const ConstantNode = ({ id, data, type }: NodeProps<any>) => {
                                     onChange={handleInputChange}
                                 />
                             </Form.Item>
-                        )}
-                            {pathname === '/conditional' && (
-                                <Form.Item className={`nodrag ${styles.widthInput} ${styles.fullwidth} customselect`}>
-                                    <Input
-                                        className={`nodrag ${styles.inputField}`}
-                                        placeholder="Enter Constant value"
-                                        value={inputValue}
-                                        onChange={handleGateInputChange}
-                                    />
-                                    <Select
-                                        className={`nodrag ${styles.inputField}`}
-                                        placeholder="Select Option"
-                                        value={selectedGate}
-                                        onChange={(value) => handleSelectChange(value, 'option')}
-                                    >
-                                        <Option value="greater-than"> &gt; </Option>
-                                        <Option value="less-than"> 	&lt; </Option>
-                                        <Option value="greater-than-equalto"> =&gt;</Option>
-                                        <Option value="less-than-equalto"> 	&lt;= </Option>
-                                        <Option value="equalto">=</Option>
-                                    </Select>
-                                </Form.Item>
-                            )}
                         </div>
                         <Handle type="source" position={Position.Right} />
                     </div>

@@ -25,7 +25,7 @@ import LocalVariable from '../components/localVariable';
 import RightSideBar from '../components/right-sidebar';
 import EndNode from '../components/EndNode';
 import GlobalVariable from '../components/globalVariable';
-import ConditionalNode from '../components/ConditionalNode';
+import ConditionalNode from '../components/comparator';
 import Constants from "../components/constants";
 import GateNode from '../components/GateNode'
 import { message } from 'antd';
