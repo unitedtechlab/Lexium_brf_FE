@@ -1,15 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Handle, Position, NodeProps, useReactFlow, Connection, Edge } from 'reactflow';
-import { Select, message } from 'antd';
+import { Handle, Position, NodeProps, useReactFlow, Connection } from 'reactflow';
+import { Select, Dropdown, message } from 'antd';
 import 'reactflow/dist/style.css';
 import styles from '@/app/assets/css/workflow.module.css';
-import Image from 'next/image';
-import TableImage from '@/app/assets/images/layout.png';
+import { TbMathMaxMin } from "react-icons/tb";
+import { BsThreeDots } from "react-icons/bs";
+import SaveGlobalVariableModal from '../modals/GlobalVariableModal';
 
 const CompilerNode = ({ id, data, type }: NodeProps<any>) => {
     const { getEdges, setNodes } = useReactFlow();
-    const [operation, setOperation] = useState<string>(data.operation || 'min');
+    const [operation, setOperation] = useState<string>(data.operation);
     const errorShownRef = useRef({ target: false, source: false });
+    const [isModalVisible, setIsModalVisible] = useState(false);
 
     const showErrorOnce = (msg: string, type: 'source' | 'target') => {
         if (!errorShownRef.current[type]) {
@@ -61,18 +63,70 @@ const CompilerNode = ({ id, data, type }: NodeProps<any>) => {
         return true;
     };
 
+    const handleDeleteNode = () => {
+        setNodes((nodes) => nodes.filter(node => node.id !== id));
+        message.success('Node deleted successfully.');
+    };
+
+    const openGlobalVariableModal = () => {
+        setIsModalVisible(true);
+    };
+
+    const handleSaveAsGlobalVariable = (globalVariableName: string) => {
+        if (!operation) {
+            message.error("No operation to save as a global variable.");
+            return;
+        }
+
+        const globalVariables = JSON.parse(localStorage.getItem('GlobalVariables') || '[]');
+        const newGlobalVariable = {
+            GlobalVariableName: globalVariableName,
+            type: 'compiler_type',
+            nodeID: id,
+            operation,
+        };
+
+        globalVariables.push(newGlobalVariable);
+        localStorage.setItem('GlobalVariables', JSON.stringify(globalVariables));
+
+        message.success('Compiler operation saved as global variable.');
+        window.dispatchEvent(new Event('globalVariableUpdated'));
+        setIsModalVisible(false);
+    };
+
+    const menuItems = [
+        {
+            label: 'Delete Node',
+            key: '0',
+            onClick: handleDeleteNode
+        },
+        {
+            label: 'Save as a Global Variable',
+            key: '1',
+            onClick: openGlobalVariableModal
+        }
+    ];
+
     return (
         <div>
-            <div className={styles['nodeBox']}>
+            <div className={`${styles['nodeBox']} ${styles.compiler}`}>
                 <div className={`flex gap-1 ${styles['node-main']}`}>
                     <div className={`flex gap-1 ${styles['node']}`}>
                         <div className={`flex gap-1 ${styles['nodewrap']}`}>
-                            <Image src={TableImage} alt='Table Image' width={32} height={32} />
+                            <TbMathMaxMin className={styles.iconFlag} />
                             <div className={styles['node-text']}>
                                 <h6>{data.label || 'Compiler'}</h6>
                                 <span>{type || 'Node type not found'}</span>
                             </div>
                         </div>
+                        <Dropdown
+                            menu={{ items: menuItems }}
+                            trigger={['click']}
+                        >
+                            <a onClick={(e) => e.preventDefault()} className='iconFont'>
+                                <BsThreeDots />
+                            </a>
+                        </Dropdown>
                     </div>
                     <div style={{ width: '100%' }}>
                         <Select
@@ -105,6 +159,12 @@ const CompilerNode = ({ id, data, type }: NodeProps<any>) => {
                 position={Position.Right}
                 id="source"
                 isValidConnection={isValidConnection}
+            />
+
+            <SaveGlobalVariableModal
+                visible={isModalVisible}
+                onCancel={() => setIsModalVisible(false)}
+                onSave={handleSaveAsGlobalVariable}
             />
         </div>
     );

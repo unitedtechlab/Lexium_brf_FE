@@ -3,16 +3,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Select, Input, message } from 'antd';
 import { useDnD } from './DnDContext';
-import { fetchWorkspaces, fetchFolders, fetchFolderData } from '@/app/API/api';
 import styles from '@/app/assets/css/workflow.module.css';
+import { fetchWorkspaces, fetchFolders, fetchFolderData } from '@/app/API/api';
+import { useEmail } from '@/app/context/emailContext';
 import { PiMathOperationsBold } from "react-icons/pi";
 import { TbMathXDivideY2, TbMathIntegralX, TbMathMaxMin } from "react-icons/tb";
 import { MdOutlineSelectAll, MdOutlineOutput, MdOutlineAccountTree } from "react-icons/md";
-import { useEmail } from '@/app/context/emailContext';
 import { AiOutlineNumber, AiOutlineGlobal } from "react-icons/ai";
+import { GiLogicGateNand } from "react-icons/gi";
 import { SiLocal } from "react-icons/si";
 import { usePathname } from 'next/navigation';
-import { GiLogicGateNand, GiMagicGate } from 'react-icons/gi';
 
 const { Search } = Input;
 
@@ -168,24 +168,6 @@ const Sidebar: React.FC<{ setFolderData: (data: any[]) => void }> = ({ setFolder
               <h6>Arithmetic Operators</h6>
               <div
                 className={`flex gap-1 ${styles.sidebardragDrop}`}
-                onDragStart={(event) => onDragStart(event, 'constant', 'Constants')}
-                draggable
-              >
-                <IconComponent icon={<AiOutlineNumber />} />
-                <h6>Constants</h6>
-              </div>
-
-              <div
-                className={`flex gap-1 ${styles.sidebardragDrop}`}
-                onDragStart={(event) => onDragStart(event, 'variables', 'Variables')}
-                draggable
-              >
-                <IconComponent icon={<MdOutlineSelectAll />} />
-                <h6 className={styles.titleName}>Variables</h6>
-              </div>
-
-              <div
-                className={`flex gap-1 ${styles.sidebardragDrop}`}
                 onDragStart={(event) => onDragStart(event, 'add_sub_type', 'Addition / Subtraction')}
                 draggable
               >
@@ -201,6 +183,15 @@ const Sidebar: React.FC<{ setFolderData: (data: any[]) => void }> = ({ setFolder
                 <IconComponent icon={<TbMathXDivideY2 />} />
                 <h6 className={styles.titleName}>Multiplication / Division</h6>
               </div>
+
+              <div
+                className={`flex gap-1 ${styles.sidebardragDrop}`}
+                onDragStart={(event) => onDragStart(event, 'modifier_type', 'Modifier')}
+                draggable
+              >
+                <IconComponent icon={<TbMathIntegralX />} />
+                <h6 className={styles.titleName}>Modifier</h6>
+              </div>
             </>
           )}
 
@@ -209,31 +200,50 @@ const Sidebar: React.FC<{ setFolderData: (data: any[]) => void }> = ({ setFolder
               <h6>Conditional Operators</h6>
               <div
                 className={`flex gap-1 ${styles.sidebardragDrop}`}
-                onDragStart={(event) => onDragStart(event, 'variables', 'Variables')}
-                draggable
-              >
-                <IconComponent icon={<MdOutlineSelectAll />} />
-                <h6 className={styles.titleName}>Variables</h6>
-              </div>
-              <div
-                className={`flex gap-1 ${styles.sidebardragDrop}`}
-                onDragStart={(event) => onDragStart(event, 'constants', 'Constants')}
-                draggable
-              >
-                <IconComponent icon={<MdOutlineSelectAll />} />
-                <h6 className={styles.titleName}>Constants</h6>
-              </div>
-
-              <div
-                className={`flex gap-1 ${styles.sidebardragDrop}`}
                 onDragStart={(event) => onDragStart(event, 'conditional', 'Conditional Operator')}
                 draggable
               >
                 <IconComponent icon={<MdOutlineAccountTree />} />
                 <h6 className={styles.titleName}>Conditional Operator</h6>
               </div>
+
+              <div
+                className={`flex gap-1 ${styles.sidebardragDrop}`}
+                onDragStart={(event) => onDragStart(event, 'gates', 'Gate operator')}
+                draggable
+              >
+                <IconComponent icon={<GiLogicGateNand />} />
+                <h6 className={styles.titleName}>Gate operator</h6>
+              </div>
             </>
           )}
+
+          <div
+            className={`flex gap-1 ${styles.sidebardragDrop}`}
+            onDragStart={(event) => onDragStart(event, 'variables', 'Variables')}
+            draggable
+          >
+            <IconComponent icon={<MdOutlineSelectAll />} />
+            <h6 className={styles.titleName}>Variables</h6>
+          </div>
+
+          <div
+            className={`flex gap-1 ${styles.sidebardragDrop}`}
+            onDragStart={(event) => onDragStart(event, 'constant', 'Constant')}
+            draggable
+          >
+            <IconComponent icon={<AiOutlineNumber />} />
+            <h6>Constant</h6>
+          </div>
+
+          <div
+            className={`flex gap-1 ${styles.sidebardragDrop}`}
+            onDragStart={(event) => onDragStart(event, 'compiler_type', 'Compiler')}
+            draggable
+          >
+            <IconComponent icon={<TbMathMaxMin />} />
+            <h6 className={styles.titleName}>Compiler</h6>
+          </div>
 
           {/* Local Variable Node */}
           <div
@@ -254,13 +264,15 @@ const Sidebar: React.FC<{ setFolderData: (data: any[]) => void }> = ({ setFolder
             <IconComponent icon={<AiOutlineGlobal />} />
             <h6>Global Variable</h6>
           </div>
+
+          {/* End Node */}
           <div
             className={`flex gap-1 ${styles.sidebardragDrop}`}
-            onDragStart={(event) => onDragStart(event, 'modifier_type', 'Modifier')}
+            onDragStart={(event) => onDragStart(event, 'end_node', 'End Node')}
             draggable
           >
-            <IconComponent icon={<TbMathIntegralX />} />
-            <h6 className={styles.titleName}>Modifier</h6>
+            <IconComponent icon={<MdOutlineOutput />} />
+            <h6>End Node</h6>
           </div>
 
           <div

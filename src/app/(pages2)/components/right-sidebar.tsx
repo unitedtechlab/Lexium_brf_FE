@@ -15,38 +15,35 @@ interface RightSideBarProps {
 const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [isSidebarVisible, setIsSidebarVisible] = useState(true);
-    const [isClicked, setIsClicked] = useState(false);
     const [localVariables, setLocalVariables] = useState<any[]>([]);
     const [selectedVariable, setSelectedVariable] = useState<string[]>([]);
     const [variableName, setVariableName] = useState<string>('');
-    const [variableValue, setVariableValue] = useState<string>('5000');
     const [variableType, setVariableType] = useState<string>('');
     const [globalVariables, setGlobalVariables] = useState<any[]>([]);
     const [visibleVariables, setVisibleVariables] = useState<number[]>([]);
     const pathname = usePathname();
 
-    useEffect(() => {
+    const loadVariablesFromStorage = () => {
         const storedLocalVariables = JSON.parse(localStorage.getItem('localVariables') || '[]');
         const storedGlobalVariables = JSON.parse(localStorage.getItem('GlobalVariables') || '[]');
-
         setLocalVariables(storedLocalVariables);
         setGlobalVariables(storedGlobalVariables);
+    };
+
+    useEffect(() => {
+        loadVariablesFromStorage();
+
         const handleGlobalVariableUpdate = () => {
             const updatedGlobalVariables = JSON.parse(localStorage.getItem('GlobalVariables') || '[]');
             setGlobalVariables(updatedGlobalVariables);
         };
 
         window.addEventListener('globalVariableUpdated', handleGlobalVariableUpdate);
+
         return () => {
             window.removeEventListener('globalVariableUpdated', handleGlobalVariableUpdate);
         };
-
     }, []);
-
-    const refreshVariables = () => {
-        const updatedGlobalVariables = JSON.parse(localStorage.getItem('GlobalVariables') || '[]');
-        setGlobalVariables(updatedGlobalVariables);
-    };
 
     const openModal = () => {
         setIsModalVisible(true);
@@ -56,7 +53,6 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
         setIsModalVisible(false);
         setSelectedVariable([]);
         setVariableName('');
-        setVariableValue('5000');
         setVariableType('');
     };
 
@@ -92,12 +88,12 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
         message.success('Variable added successfully!');
     };
 
-    // Function to delete the variable (local or global)
     const handleDeleteVariable = (index: number, isGlobal: boolean) => {
         if (isGlobal) {
             const updatedGlobalVariables = globalVariables.filter((_, i) => i !== index);
             localStorage.setItem('GlobalVariables', JSON.stringify(updatedGlobalVariables));
             setGlobalVariables(updatedGlobalVariables);
+            window.dispatchEvent(new Event('globalVariableUpdated'));
             message.success('Global variable deleted successfully!');
         } else {
             const updatedLocalVariables = localVariables.filter((_, i) => i !== index);
@@ -139,7 +135,7 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
                         <div className={styles.customvariable}>
                             <div className={styles.variables}>
                                 <h6>Local Variables</h6>
-                                <div className={isClicked ? styles.iconClicked : styles.icon} onClick={openModal}>
+                                <div onClick={openModal} className={styles.icon}>
                                     <IconComponent icon={<TbPlus size={18} />} />
                                 </div>
                             </div>
@@ -155,13 +151,13 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
                                                     <h6>{variable.name}</h6>
                                                 </div>
                                                 <div className='flex gap-1'>
-                                                    <div className={"styles.iconWrapper"} onClick={() => toggleVisibility(index)}>
+                                                    <button className='nostyle' onClick={() => toggleVisibility(index)}>
                                                         {visibleVariables.includes(index) ? (
                                                             <HiOutlineEyeOff size={18} />
                                                         ) : (
                                                             <HiOutlineEye size={18} />
                                                         )}
-                                                    </div>
+                                                    </button>
                                                     <button onClick={() => handleDeleteVariable(index, false)} className='nostyle'>
                                                         <MdOutlineDelete style={{ fontSize: "18px", color: "red" }} />
                                                     </button>
@@ -199,7 +195,7 @@ const RightSideBar: React.FC<RightSideBarProps> = ({ variableEntries }) => {
                                                 <div className={styles.iconWrapper}>
                                                     <BiGridVertical size={18} />
                                                 </div>
-                                                <h6>{variable.outputName || 'Unnamed Variable'}</h6>
+                                                <h6>{variable.GlobalVariableName || 'Unnamed Variable'}</h6>
                                             </div>
                                             <button onClick={() => handleDeleteVariable(index, true)} className='nostyle'>
                                                 <MdOutlineDelete style={{ fontSize: "18px", color: "red" }} />

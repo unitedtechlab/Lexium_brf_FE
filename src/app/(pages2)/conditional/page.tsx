@@ -23,11 +23,11 @@ import Topbar from '../components/topbar';
 import CustomEdge from "../components/customEdge";
 import LocalVariable from '../components/localVariable';
 import RightSideBar from '../components/right-sidebar';
-import OutputNode from '../components/Output';
+import EndNode from '../components/EndNode';
 import GlobalVariable from '../components/globalVariable';
-import ConditionalNode from '../components/ConditionalNode'
-import GateNode from '../components/AndOrGate';
-import Constants from '../components/constants';
+import ConditionalNode from '../components/ConditionalNode';
+import Constants from "../components/constants";
+import GateNode from '../components/GateNode'
 import { message } from 'antd';
 
 let id = 0;
@@ -44,12 +44,12 @@ const Conditional: React.FC = () => {
 
     const nodeTypes = useMemo(() => ({
         variables: VariableNode,
-        constants: Constants,
+        constant: Constants,
         local_variable: LocalVariable,
         global_variable: GlobalVariable,
-        output_node: OutputNode,
+        end_node: EndNode,
         conditional: ConditionalNode,
-        gate_node:GateNode,
+        gates: GateNode,
     }), []);
 
     const edgeTypes = useMemo(() => ({

@@ -1,15 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Handle, Position, NodeProps, useReactFlow, Connection, Edge } from 'reactflow';
-import { Select, message } from 'antd';
+import { Select, message, Dropdown } from 'antd';
 import 'reactflow/dist/style.css';
 import styles from '@/app/assets/css/workflow.module.css';
-import Image from 'next/image';
-import TableImage from '@/app/assets/images/layout.png';
+import { TbMathIntegralX } from "react-icons/tb";
+import { BsThreeDots } from "react-icons/bs";
+import SaveGlobalVariableModal from '../modals/GlobalVariableModal';
 
 const ModifierNode = ({ id, data, type }: NodeProps<any>) => {
-    const { getEdges, setNodes } = useReactFlow();
+    const { getEdges, getNodes, setNodes } = useReactFlow();
     const [operation, setOperation] = useState<string>(data.operation || 'absolute');
     const [firstConnectedNodeType, setFirstConnectedNodeType] = useState<string | null>(null);
+    const [isModalVisible, setIsModalVisible] = useState(false);
     const errorShownRef = useRef({ target: false, source: false });
 
     const showErrorOnce = (msg: string, type: 'source' | 'target') => {
@@ -66,18 +68,67 @@ const ModifierNode = ({ id, data, type }: NodeProps<any>) => {
         return true;
     };
 
+    const handleDeleteNode = () => {
+        setNodes((nds) => nds.filter(node => node.id !== id));
+        message.success('Node deleted successfully');
+    };
+
+    const openGlobalVariableModal = () => {
+        setIsModalVisible(true);
+    };
+
+    const handleSaveAsGlobalVariable = (globalVariableName: string) => {
+        const globalVariables = JSON.parse(localStorage.getItem('GlobalVariables') || '[]');
+        const newGlobalVariable = {
+            GlobalVariableName: globalVariableName,
+            nodeID: id,
+            type: 'modifier_node',
+            operation: operation,
+            variableType: firstConnectedNodeType || 'unknown',
+        };
+
+        globalVariables.push(newGlobalVariable);
+        localStorage.setItem('GlobalVariables', JSON.stringify(globalVariables));
+
+        message.success('Node saved as a global variable.');
+        window.dispatchEvent(new Event('globalVariableUpdated'));
+        setIsModalVisible(false);
+    };
+
+    // Dropdown menu for delete and save as global variable
+    const menuItems = [
+        {
+            label: 'Delete Node',
+            key: '0',
+            onClick: handleDeleteNode
+        },
+        {
+            label: 'Save as Global Variable',
+            key: '1',
+            onClick: openGlobalVariableModal
+        }
+    ];
+
     return (
         <div>
-            <div className={styles['nodeBox']}>
+            <div className={`${styles['nodeBox']} ${styles.modifier}`} style={{ maxWidth: "300px" }}>
                 <div className={`flex gap-1 ${styles['node-main']}`}>
                     <div className={`flex gap-1 ${styles['node']}`}>
                         <div className={`flex gap-1 ${styles['nodewrap']}`}>
-                            <Image src={TableImage} alt='Table Image' width={32} height={32} />
+                            <TbMathIntegralX className={styles.iconFlag} />
                             <div className={styles['node-text']}>
                                 <h6>{data.label || 'Modifier'}</h6>
                                 <span>{firstConnectedNodeType ? `Type: ${firstConnectedNodeType}` : "No Type Connected"}</span>
                             </div>
                         </div>
+                        <Dropdown
+                            menu={{ items: menuItems }}
+                            trigger={['click']}
+                        >
+                            <a onClick={(e) => e.preventDefault()} className='iconFont'>
+                                <BsThreeDots />
+                            </a>
+                        </Dropdown>
                     </div>
                     <div style={{ width: '100%' }}>
                         <Select
@@ -94,7 +145,6 @@ const ModifierNode = ({ id, data, type }: NodeProps<any>) => {
                 </div>
             </div>
 
-            {/* Target Handle */}
             <Handle
                 type="target"
                 position={Position.Left}
@@ -102,12 +152,17 @@ const ModifierNode = ({ id, data, type }: NodeProps<any>) => {
                 isValidConnection={isValidConnection}
             />
 
-            {/* Source Handle */}
             <Handle
                 type="source"
                 position={Position.Right}
                 id="source"
                 isValidConnection={isValidConnection}
+            />
+
+            <SaveGlobalVariableModal
+                visible={isModalVisible}
+                onCancel={() => setIsModalVisible(false)}
+                onSave={handleSaveAsGlobalVariable}
             />
         </div>
     );

@@ -566,4 +566,5 @@ span.ant-select-selection-placeholder {
     margin: 0;
     background: transparent;
     border: 0;
+    cursor: pointer;
 }
