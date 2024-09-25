@@ -2,18 +2,20 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Handle, NodeProps, Position, useReactFlow, Connection } from 'reactflow';
 import 'reactflow/dist/style.css';
 import styles from '@/app/assets/css/workflow.module.css';
-import { FiDivideCircle, FiPlusCircle } from "react-icons/fi";
-import { message } from 'antd';
-import { TbMathXDivideY2 } from "react-icons/tb";
+import { FiMinusCircle, FiPlusCircle } from "react-icons/fi";
+import { message, Dropdown } from 'antd';
+import { PiMathOperationsBold } from "react-icons/pi";
+import { BsThreeDots } from "react-icons/bs";
+import SaveGlobalVariableModal from '../modals/GlobalVariableModal';
 
-const DivisionMultiply = ({ id, data }: NodeProps<any>) => {
+const MultiplyDivide = ({ id, data }: NodeProps<any>) => {
     const { getEdges, getNode, setNodes } = useReactFlow();
     const [connectedValues, setConnectedValues] = useState<any>({
         multiplyValues: [],
         divideValues: [],
     });
     const [firstConnectedNodeType, setFirstConnectedNodeType] = useState<string | null>(null);
-
+    const [isModalVisible, setIsModalVisible] = useState(false);
     const messageShownRef = useRef(false);
 
     useEffect(() => {
@@ -27,7 +29,6 @@ const DivisionMultiply = ({ id, data }: NodeProps<any>) => {
         edges.forEach((edge) => {
             const sourceNode = getNode(edge.source);
             const sourceNodeData = sourceNode?.data;
-
             if (!firstConnectedType && sourceNodeData?.variableType) {
                 firstConnectedType = sourceNodeData.variableType;
             }
@@ -59,7 +60,7 @@ const DivisionMultiply = ({ id, data }: NodeProps<any>) => {
                             divideValues,
                         },
                         connectedEdges: sourceIds.length > 0
-                            ? [{ source: sourceIds.length === 1 ? sourceIds[0] : sourceIds, target: '' }]
+                            ? [{ source: sourceIds, target: '' }]
                             : [],
                     }
                     : node
@@ -79,26 +80,54 @@ const DivisionMultiply = ({ id, data }: NodeProps<any>) => {
 
     const isValidConnection = (connection: Connection) => {
         const edges = getEdges().filter((edge) => edge.source === id);
-        console.log("connection", connection)
-        console.log("connectedValues", connectedValues)
+
         if (edges.length >= 1 && connection.sourceHandle === 'source') {
             showMessageOnce('Only one outgoing connection is allowed from the source.');
             return false;
         }
-        const existingConnections = getEdges().filter((edge) => edge.target === id);
-
-        const hasTarget1Connection = existingConnections.some(edge => edge.targetHandle === 'target1');
-        const hasTarget2Connection = existingConnections.some(edge => edge.targetHandle === 'target2');
-        if (connection.targetHandle === 'target1' && hasTarget1Connection) {
-            showMessageOnce('Only one connection is allowed.')
-            return false;
-        }
-        if (connection.targetHandle === 'target2' && hasTarget2Connection) {
-            showMessageOnce('Only one connection is allowed.');
-            return false;
-        }
         return true;
     };
+
+    const handleDeleteNode = () => {
+        setNodes((nds) => nds.filter(node => node.id !== id));
+        message.success('Node deleted successfully');
+    };
+
+    const openGlobalVariableModal = () => {
+        setIsModalVisible(true);
+    };
+
+    const handleSaveAsGlobalVariable = (globalVariableName: string) => {
+        const globalVariables = JSON.parse(localStorage.getItem('GlobalVariables') || '[]');
+        const newGlobalVariable = {
+            GlobalVariableName: globalVariableName,
+            nodeID: id,
+            type: 'multiply_divide_type',
+            multiplyValues: connectedValues.multiplyValues,
+            divideValues: connectedValues.divideValues,
+            variableType: firstConnectedNodeType || 'unknown',
+        };
+
+        globalVariables.push(newGlobalVariable);
+        localStorage.setItem('GlobalVariables', JSON.stringify(globalVariables));
+
+        message.success('Node saved as a global variable.');
+        window.dispatchEvent(new Event('globalVariableUpdated'));
+        setIsModalVisible(false);
+    };
+
+    const menuItems = [
+        {
+            label: 'Delete Node',
+            key: '0',
+            onClick: handleDeleteNode
+        },
+        {
+            label: 'Save as a Global Variable',
+            key: '1',
+            onClick: openGlobalVariableModal
+        }
+    ];
 
     return (
         <div>
@@ -109,17 +138,25 @@ const DivisionMultiply = ({ id, data }: NodeProps<any>) => {
                 <div className={`flex gap-1 ${styles['node-main']}`}>
                     <div className={`flex gap-1 ${styles['node']}`}>
                         <div className={`flex gap-1 ${styles['nodewrap']}`}>
-                            <TbMathXDivideY2 className={styles.iconFlag} />
+                            <PiMathOperationsBold className={styles.iconFlag} />
                             <div className={styles['node-text']}>
                                 <h6>{data.label || "Multiplication / Division"}</h6>
                                 <span>{firstConnectedNodeType ? `Type: ${firstConnectedNodeType}` : "No Type Connected"}</span>
                             </div>
                         </div>
+                        <Dropdown
+                            menu={{ items: menuItems }}
+                            trigger={['click']}
+                        >
+                            <a onClick={(e) => e.preventDefault()} className='iconFont'>
+                                <BsThreeDots />
+                            </a>
+                        </Dropdown>
                     </div>
                 </div>
             </div>
             <div className={styles['minus-point-label']}>
-                <FiDivideCircle />
+                <FiMinusCircle />
             </div>
 
             <Handle
@@ -142,8 +179,14 @@ const DivisionMultiply = ({ id, data }: NodeProps<any>) => {
                 id="source"
                 isValidConnection={isValidConnection}
             />
+
+            <SaveGlobalVariableModal
+                visible={isModalVisible}
+                onCancel={() => setIsModalVisible(false)}
+                onSave={handleSaveAsGlobalVariable}
+            />
         </div>
     );
 };
 
-export default DivisionMultiply;
+export default MultiplyDivide;

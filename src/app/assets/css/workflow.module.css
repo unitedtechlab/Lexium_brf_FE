@@ -899,7 +899,7 @@
 }
 
 .multidivide .iconFlag {
-    fill: #1677ff;
+    color: #1677ff;
 }
 
 .toppoint {
@@ -926,4 +926,74 @@
 
 .endnode .iconFlag {
     fill: #02619b;
+}
+
+.localVariable {
+    border-color: #008a6c;
+    background: #e9fdf9;
+}
+
+.localVariable .node-text h6,
+.localVariable .node-text span {
+    color: #008a6c;
+}
+
+.localVariable .iconFlag {
+    fill: #008a6c;
+}
+
+.globalVariable {
+    border-color: #51029b;
+    background: #f5edfd;
+}
+
+.globalVariable .node-text h6,
+.globalVariable .node-text span {
+    color: #51029b;
+}
+
+.globalVariable .iconFlag {
+    fill: #51029b;
+}
+
+.compiler {
+    border-color: #849b02;
+    background: #fdffef;
+}
+
+.compiler .node-text h6,
+.compiler .node-text span {
+    color: #849b02;
+}
+
+.compiler .iconFlag {
+    color: #849b02;
+}
+
+.modifier {
+    border-color: #02519b;
+    background: #f6fbff;
+}
+
+.modifier .node-text h6,
+.modifier .node-text span {
+    color: #02519b;
+}
+
+.modifier .iconFlag {
+    color: #02519b;
+}
+
+.gateOperator {
+    border-color: #9b4702;
+    background: #fffaf5;
+}
+
+.gateOperator .node-text h6,
+.gateOperator .node-text span {
+    color: #9b4702;
+}
+
+.gateOperator .iconFlag {
+    color: #9b4702;
 }

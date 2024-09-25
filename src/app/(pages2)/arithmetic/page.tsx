@@ -28,7 +28,7 @@ import CompilerNode from '../components/Compiler';
 import Constants from "../components/constants";
 import LocalVariable from '../components/localVariable';
 import RightSideBar from '../components/right-sidebar';
-import EndNode from '../components/Output';
+import EndNode from '../components/EndNode';
 import GlobalVariable from '../components/globalVariable';
 import { message } from 'antd';
 
