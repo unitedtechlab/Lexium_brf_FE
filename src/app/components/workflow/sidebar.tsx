@@ -59,7 +59,6 @@ const renderSidebarItems = (items: SidebarItem[]) => {
     return items.map(item => {
         const IconComponent = iconComponents[item.icon];
         const itemClassName = item.enabled ? styles.sidebardragDrop : styles.sidebardragDropDisabled;
-console.log("item.title", item.title)
         return (
             <div
                 key={item.id}

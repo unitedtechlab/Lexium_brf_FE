@@ -45,8 +45,6 @@ const Workflow: React.FC = () => {
     useEffect(() => {
         if (workspaceId && email) {
             console.log("Fetching available workflows for workspace:", { email, workspaceId });
-
-
         }
     }, [workspaceId, email]);
 

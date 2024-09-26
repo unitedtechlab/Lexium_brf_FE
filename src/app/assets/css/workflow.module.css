@@ -1020,13 +1020,13 @@
     left: calc(20% + 13px);
 }
 
-.leftpoint {
+.toppoint1 {
     top: -35px;
     left: 25%;
     transform: translateX(-50%);
 }
 
-.rightpoint {
+.toppoint2 {
     top: -35px;
     left: 75%;
     transform: translateX(-50%);

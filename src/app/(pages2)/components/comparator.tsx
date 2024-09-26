@@ -1,34 +1,32 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Handle, NodeProps, Position, useReactFlow, Connection } from 'reactflow';
+import React, { useState, useEffect } from 'react';
+import { NodeProps, useReactFlow, Position, Handle, Edge } from 'reactflow';
 import { Form, Select, Dropdown, message } from 'antd';
 import 'reactflow/dist/style.css';
 import styles from '@/app/assets/css/workflow.module.css';
-import { GiLogicGateNand } from "react-icons/gi";
+import { GiLogicGateNand } from 'react-icons/gi';
 import { BsThreeDots } from 'react-icons/bs';
+import CustomHandle from './CustomHandle';
 
 const { Option } = Select;
 
-const ConditionalNode = ({ id, data }: NodeProps<any>) => {
-    const { getEdges, getNode, setNodes } = useReactFlow();
-    const [selectedOperator, setSelectedOperator] = useState(data.gateOperator);
-    const [lhsType, setLhsType] = useState<string | null>(null);
-    const [rhsType, setRhsType] = useState<string | null>(null);
-    const errorShownRef = useRef({ target1: false, target2: false });
+const ConditionalNode: React.FC<NodeProps<any>> = ({ id, data }) => {
+    const { getEdges, setEdges, setNodes } = useReactFlow();
+    const [selectedOperator, setSelectedOperator] = useState(data.gateOperator || 'Equal to');
 
-    // useEffect(() => {
-    //     const edges = getEdges().filter(edge => edge.target === id);
-    //     edges.forEach((edge) => {
-    //         const connectedNode = getNode(edge.source);
-    //         if (edge.targetHandle === 'target1' && connectedNode) {
-    //             setLhsValue(connectedNode.data.value);
-    //             setLhsType(connectedNode.data.variableType);
-    //         }
-    //         if (edge.targetHandle === 'target2' && connectedNode) {
-    //             setRhsValue(connectedNode.data.value);
-    //             setRhsType(connectedNode.data.variableType);
-    //         }
-    //     });
-    // }, [getEdges, getNode, id]);
+    useEffect(() => {
+        const updateConnections = () => {
+            const edges = getEdges();
+            const lhsConnections = edges.filter(
+                (edge: Edge) => edge.target === id && edge.targetHandle === 'target1'
+            );
+            const rhsConnections = edges.filter(
+                (edge: Edge) => edge.target === id && edge.targetHandle === 'target2'
+            );
+            console.log(`LHS Connections: ${lhsConnections.length}, RHS Connections: ${rhsConnections.length}`);
+        };
+
+        updateConnections();
+    }, [getEdges, id]);
 
     const handleOperatorChange = (value: string) => {
         setSelectedOperator(value);
@@ -39,68 +37,32 @@ const ConditionalNode = ({ id, data }: NodeProps<any>) => {
         );
     };
 
-    const isValidConnection = (connection: Connection) => {
-        const edges = getEdges().filter((edge) => edge.target === id);
-
-        if (connection.targetHandle === 'target1' && edges.some(edge => edge.targetHandle === 'target1')) {
-            if (!errorShownRef.current.target1) {
-                message.error('Only one connection is allowed on LHS (target1).');
-                errorShownRef.current.target1 = true;
-                setTimeout(() => {
-                    errorShownRef.current.target1 = false;
-                }, 2000);
-            }
-            return false;
-        }
-
-        if (connection.targetHandle === 'target2' && edges.some(edge => edge.targetHandle === 'target2')) {
-            if (!errorShownRef.current.target2) {
-                message.error('Only one connection is allowed on RHS (target2).');
-                errorShownRef.current.target2 = true;
-                setTimeout(() => {
-                    errorShownRef.current.target2 = false;
-                }, 2000);
-            }
-            return false;
-        }
-
-        return true;
-    };
-
     const handleDeleteNode = () => {
         setNodes((nds) => nds.filter((node) => node.id !== id));
+        setEdges((eds) => eds.filter((edge) => edge.source !== id && edge.target !== id));
         message.success('Node deleted successfully');
     };
 
     const menuItems = [
-        {
-            label: 'Delete Node',
-            key: '0',
-            onClick: handleDeleteNode
-        }
+        { label: 'Delete Node', key: '0', onClick: handleDeleteNode },
     ];
 
     return (
         <div>
-            <div className={styles['lhs-point-label']}>
-                LHS
-            </div>
-            <div className={`${styles['nodeBox']} ${styles.gateOperator}`} style={{ maxWidth: "300px" }}>
+            <div className={styles['lhs-point-label']}>LHS</div>
+            <div className={`${styles['nodeBox']} ${styles.gateOperator}`} style={{ maxWidth: '300px' }}>
                 <Form name="gate-operator" layout="vertical">
                     <div className={`flex gap-1 ${styles['node-main']}`}>
                         <div className={`flex gap-1 ${styles['node']}`}>
                             <div className={`flex gap-1 ${styles['nodewrap']}`}>
                                 <GiLogicGateNand className={styles.iconFlag} />
                                 <div className={styles['node-text']}>
-                                    <h6>{data.label || "Conditional Node"}</h6>
-                                    <span>{lhsType || rhsType ? `Type: ${lhsType || rhsType}` : "No Type Connected"}</span>
+                                    <h6>{data.label || 'Conditional Node'}</h6>
+                                    <span>{'No Type Connected'}</span>
                                 </div>
                             </div>
-                            <Dropdown
-                                menu={{ items: menuItems }}
-                                trigger={['click']}
-                            >
-                                <a onClick={(e) => e.preventDefault()} className='iconFont'>
+                            <Dropdown menu={{ items: menuItems }} trigger={['click']}>
+                                <a onClick={(e) => e.preventDefault()} className="iconFont">
                                     <BsThreeDots />
                                 </a>
                             </Dropdown>
@@ -125,26 +87,25 @@ const ConditionalNode = ({ id, data }: NodeProps<any>) => {
                             <span>LHS value operator RHS value</span>
                         </div>
 
-                        <div className={styles['rhs-point-label']}>
-                            RHS
-                        </div>
+                        <div className={styles['rhs-point-label']}>RHS</div>
 
-                        <Handle
+                        <CustomHandle
+                            id="target1"
                             type="target"
                             position={Position.Left}
-                            id="target1"
-                            className={styles.leftpoint}
-                            isValidConnection={isValidConnection}
+                            connectionCount={1}
+                            className={styles.toppoint1}
                         />
-                        <Handle
+
+                        <CustomHandle
                             type="target"
                             position={Position.Left}
                             id="target2"
-                            className={styles.rightpoint}
-                            isValidConnection={isValidConnection}
+                            connectionCount={1}
+                            className={styles.toppoint2}
                         />
-                        <Handle type="source" id="source1" position={Position.Right} />
-                        <Handle type="source" id="source2" position={Position.Bottom} />
+                        <Handle type="source" id="if_source" position={Position.Right} />
+                        <Handle type="source" id="else_source" position={Position.Bottom} />
                     </div>
                 </Form>
             </div>

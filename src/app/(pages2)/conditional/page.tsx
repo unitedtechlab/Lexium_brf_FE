@@ -27,7 +27,8 @@ import EndNode from '../components/EndNode';
 import GlobalVariable from '../components/globalVariable';
 import ConditionalNode from '../components/comparator';
 import Constants from "../components/constants";
-import GateNode from '../components/GateNode'
+import GateNode from '../components/GateNode';
+import CompilerNode from '../components/Compiler'
 import { message } from 'antd';
 
 let id = 0;
@@ -49,6 +50,7 @@ const Conditional: React.FC = () => {
         global_variable: GlobalVariable,
         end_node: EndNode,
         conditional: ConditionalNode,
+        compiler_type: CompilerNode,
         gates: GateNode,
     }), []);
 
@@ -84,8 +86,7 @@ const Conditional: React.FC = () => {
                         : node
                 )
             );
-            console.log("nodes", nodes)
-            setEdges((eds) => addEdge({ ...params, type: "customEdge" }, eds));
+            setEdges((eds) => addEdge({ ...params, id: `${params.source}-${params.target}-${Date.now()}`, type: "customEdge" }, eds));
         },
         [nodes, setEdges, setNodes]
     );
@@ -114,7 +115,6 @@ const Conditional: React.FC = () => {
                 position,
                 data: { label: type.titleName, folderdata },
             };
-            console.log("newNode", newNode)
             setNodes((nds) => nds.concat(newNode));
         },
         [screenToFlowPosition, type, setNodes, folderdata]
