@@ -11,7 +11,7 @@ const { Option } = Select;
 const LocalVariableNode = ({ id, data, type }: NodeProps<any>) => {
     const { setNodes } = useReactFlow();
     const [localVariables, setLocalVariables] = useState<any[]>([]);
-    const [selectedVariable, setSelectedVariable] = useState<string | null>(data.selectedVariable || null);
+    const [variables, setvariables] = useState<string | null>(data.variables || null);
     const [variableValue, setVariableValue] = useState<string>(data.value || '');
     const [valueType, setValueType] = useState<string | null>(data.variableType || null);
 
@@ -21,14 +21,14 @@ const LocalVariableNode = ({ id, data, type }: NodeProps<any>) => {
     }, []);
 
     const handleSelectChange = (value: string) => {
-        setSelectedVariable(value);
+        setvariables(value);
         const foundVariable = localVariables.find(variable => variable.name === value);
         if (foundVariable) {
             setVariableValue(foundVariable.value || '');
             setValueType(foundVariable.type || 'number');
         }
 
-        data.selectedVariable = foundVariable?.name;
+        data.variables = foundVariable?.name;
         data.value = foundVariable?.value;
         data.variableType = foundVariable?.type;
     };
@@ -77,7 +77,7 @@ const LocalVariableNode = ({ id, data, type }: NodeProps<any>) => {
                                     className={`nodrag ${styles.inputField}`}
                                     placeholder="Select a Variable"
                                     onChange={handleSelectChange}
-                                    value={selectedVariable}
+                                    value={variables}
                                 >
                                     {localVariables.map((variable, index) => (
                                         <Option key={index} value={variable.name}>

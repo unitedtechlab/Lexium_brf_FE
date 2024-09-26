@@ -6,13 +6,13 @@ interface CustomHandleProps {
     id: string;
     type: 'source' | 'target';
     position: Position;
-    connectionCount: number;
+    connectioncount: number;
     className?: string;
 }
 
 const CustomHandle: React.FC<CustomHandleProps> = (props) => {
     const { getEdges } = useReactFlow();
-    const [connectionCount, setConnectionCount] = useState(0);
+    const [connectioncount, setConnectionCount] = useState(0);
 
     const updateConnectionCount = () => {
         const edges = getEdges();
@@ -33,7 +33,7 @@ const CustomHandle: React.FC<CustomHandleProps> = (props) => {
         <Handle
             {...props}
             className={props.className}
-            isConnectable={connectionCount < props.connectionCount}
+            isConnectable={connectioncount < props.connectioncount}
         />
     );
 };

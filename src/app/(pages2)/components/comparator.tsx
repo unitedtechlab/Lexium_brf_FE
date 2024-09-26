@@ -10,23 +10,59 @@ import CustomHandle from './CustomHandle';
 const { Option } = Select;
 
 const ConditionalNode: React.FC<NodeProps<any>> = ({ id, data }) => {
-    const { getEdges, setEdges, setNodes } = useReactFlow();
-    const [selectedOperator, setSelectedOperator] = useState(data.gateOperator || 'Equal to');
+    const { getEdges, getNode, setEdges, setNodes } = useReactFlow();
+    const [selectedOperator, setSelectedOperator] = useState(data.gateOperator);
+    const [lhsType, setLhsType] = useState<string | null>(null);
+    const [rhsType, setRhsType] = useState<string | null>(null);
+    const [lhsValue, setLhsValue] = useState<string | null>(null);
+    const [rhsValue, setRhsValue] = useState<string | null>(null);
+    const [expression, setExpression] = useState<string>('LHS value operator RHS value');
+
+    // Function to update connections and fetch values from connected nodes
+    const updateConnections = () => {
+        const edges = getEdges();
+        const lhsConnection = edges.find((edge: Edge) => edge.target === id && edge.targetHandle === 'target1');
+        const rhsConnection = edges.find((edge: Edge) => edge.target === id && edge.targetHandle === 'target2');
+
+        // Get the LHS node and its value
+        if (lhsConnection) {
+            const connectedNode = getNode(lhsConnection.source);
+            if (connectedNode && connectedNode.data) {
+                setLhsValue(connectedNode.data.value || connectedNode.data.variables || 'LHS');  // Use `value` or `label`
+                setLhsType(connectedNode.data.variableType || 'Unknown Type');
+            }
+        } else {
+            setLhsValue(null);
+            setLhsType(null);
+        }
+
+        // Get the RHS node and its value
+        if (rhsConnection) {
+            const connectedNode = getNode(rhsConnection.source);
+            if (connectedNode && connectedNode.data) {
+                setRhsValue(connectedNode.data.value || connectedNode.data.variables || 'RHS');  // Use `value` or `label`
+                setRhsType(connectedNode.data.variableType || 'Unknown Type');
+            }
+        } else {
+            setRhsValue(null);
+            setRhsType(null);
+        }
+    };
 
     useEffect(() => {
-        const updateConnections = () => {
-            const edges = getEdges();
-            const lhsConnections = edges.filter(
-                (edge: Edge) => edge.target === id && edge.targetHandle === 'target1'
-            );
-            const rhsConnections = edges.filter(
-                (edge: Edge) => edge.target === id && edge.targetHandle === 'target2'
-            );
-            console.log(`LHS Connections: ${lhsConnections.length}, RHS Connections: ${rhsConnections.length}`);
-        };
-
         updateConnections();
-    }, [getEdges, id]);
+        const interval = setInterval(updateConnections, 100); // Continuously check for updates
+
+        return () => clearInterval(interval); // Cleanup the interval on unmount
+    }, [getEdges, getNode, id]);
+
+    useEffect(() => {
+        if (lhsValue && rhsValue) {
+            setExpression(`${lhsValue} ${selectedOperator} ${rhsValue}`);
+        } else {
+            setExpression('LHS value operator RHS value');
+        }
+    }, [lhsValue, rhsValue, selectedOperator]);
 
     const handleOperatorChange = (value: string) => {
         setSelectedOperator(value);
@@ -58,7 +94,7 @@ const ConditionalNode: React.FC<NodeProps<any>> = ({ id, data }) => {
                                 <GiLogicGateNand className={styles.iconFlag} />
                                 <div className={styles['node-text']}>
                                     <h6>{data.label || 'Conditional Node'}</h6>
-                                    <span>{'No Type Connected'}</span>
+                                    <span>{`LHS Type: ${lhsType || 'No Type'}`} | {`RHS Type: ${rhsType || 'No Type'}`}</span>
                                 </div>
                             </div>
                             <Dropdown menu={{ items: menuItems }} trigger={['click']}>
@@ -84,7 +120,7 @@ const ConditionalNode: React.FC<NodeProps<any>> = ({ id, data }) => {
                                     <Option value="Less than or equal to">Less than or equal to</Option>
                                 </Select>
                             </Form.Item>
-                            <span>LHS value operator RHS value</span>
+                            <span>{expression}</span>
                         </div>
 
                         <div className={styles['rhs-point-label']}>RHS</div>
@@ -93,7 +129,7 @@ const ConditionalNode: React.FC<NodeProps<any>> = ({ id, data }) => {
                             id="target1"
                             type="target"
                             position={Position.Left}
-                            connectionCount={1}
+                            connectioncount={1}
                             className={styles.toppoint1}
                         />
 
@@ -101,7 +137,7 @@ const ConditionalNode: React.FC<NodeProps<any>> = ({ id, data }) => {
                             type="target"
                             position={Position.Left}
                             id="target2"
-                            connectionCount={1}
+                            connectioncount={1}
                             className={styles.toppoint2}
                         />
                         <Handle type="source" id="if_source" position={Position.Right} />

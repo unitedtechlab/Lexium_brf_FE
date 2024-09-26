@@ -10,7 +10,7 @@ const { Option } = Select;
 const GlobalVariableNode = ({ id, data, type }: NodeProps<any>) => {
     const { setNodes } = useReactFlow();
     const [globalVariables, setGlobalVariables] = useState<any[]>([]);
-    const [selectedVariable, setSelectedVariable] = useState<string | null>(data.selectedVariable || null);
+    const [variables, setvariables] = useState<string | null>(data.variables || null);
     const [variableValue, setVariableValue] = useState<string>(data.value || '');
     const [variableType, setVariableType] = useState<string | null>(data.variableType || 'unknown');
 
@@ -22,14 +22,14 @@ const GlobalVariableNode = ({ id, data, type }: NodeProps<any>) => {
     }, []);
 
     const handleSelectChange = (value: string) => {
-        setSelectedVariable(value);
+        setvariables(value);
         const foundVariable = globalVariables.find(variable => variable.GlobalVariableName === value);
         if (foundVariable) {
             setVariableValue(foundVariable.value || '');
             setVariableType(foundVariable.variableType || 'unknown');
         }
 
-        data.selectedVariable = foundVariable?.GlobalVariableName;
+        data.variables = foundVariable?.GlobalVariableName;
         data.value = foundVariable?.value;
         data.variableType = foundVariable?.variableType || 'unknown';
     };
@@ -77,7 +77,7 @@ const GlobalVariableNode = ({ id, data, type }: NodeProps<any>) => {
                                     className={`nodrag ${styles.inputField}`}
                                     placeholder="Select a Variable"
                                     onChange={handleSelectChange}
-                                    value={selectedVariable}
+                                    value={variables}
                                 >
                                     {globalVariables.map((variable, index) => (
                                         <Option key={index} value={variable.GlobalVariableName}>
