@@ -1,66 +1,47 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Handle, Position, NodeProps, useReactFlow, Connection } from 'reactflow';
+import { NodeProps, useReactFlow, Position } from 'reactflow';
 import { Select, Dropdown, message } from 'antd';
 import 'reactflow/dist/style.css';
 import styles from '@/app/assets/css/workflow.module.css';
 import { TbMathMaxMin } from "react-icons/tb";
 import { BsThreeDots } from "react-icons/bs";
+import CustomHandle from './CustomHandle';
 import SaveGlobalVariableModal from '../modals/GlobalVariableModal';
 
 const CompilerNode = ({ id, data, type }: NodeProps<any>) => {
-    const { getEdges, setNodes } = useReactFlow();
+    const { getEdges, setNodes, getNode } = useReactFlow();
     const [operation, setOperation] = useState<string>(data.operation);
-    const errorShownRef = useRef({ target: false, source: false });
+    const [connectedVariableType, setConnectedVariableType] = useState<string | null>(null);
     const [isModalVisible, setIsModalVisible] = useState(false);
 
-    const showErrorOnce = (msg: string, type: 'source' | 'target') => {
-        if (!errorShownRef.current[type]) {
-            message.error(msg);
-            errorShownRef.current[type] = true;
-            setTimeout(() => {
-                errorShownRef.current[type] = false;
-            }, 2000);
+    const fetchConnectedVariableType = () => {
+        const edges = getEdges();
+        const incomingEdge = edges.find((edge) => edge.target === id);
+
+        if (incomingEdge) {
+            const connectedNode = getNode(incomingEdge.source);
+            if (connectedNode?.data?.variableType) {
+                setConnectedVariableType(connectedNode.data.variableType);
+            }
+        } else {
+            setConnectedVariableType(null);
         }
     };
 
     useEffect(() => {
-        setNodes((nodes) =>
-            nodes.map((node) =>
-                node.id === id ? { ...node, data: { ...node.data, operation } } : node
-            )
-        );
-    }, [operation, id, setNodes]);
+        fetchConnectedVariableType();
+        const interval = setInterval(fetchConnectedVariableType, 500);
+
+        return () => clearInterval(interval);
+    }, [getEdges, getNode, id]);
 
     const handleOperationChange = (value: string) => {
         setOperation(value);
-    };
-
-    const isValidTargetConnection = (connection: Connection) => {
-        const edges = getEdges().filter((edge) => edge.target === id);
-        if (edges.length >= 1) {
-            showErrorOnce('Only one incoming connection is allowed to the target.', 'target');
-            return false;
-        }
-        return true;
-    };
-
-    const isValidSourceConnection = (connection: Connection) => {
-        const edges = getEdges().filter((edge) => edge.source === id);
-        if (edges.length >= 1) {
-            showErrorOnce('Only one outgoing connection is allowed from the source.', 'source');
-            return false;
-        }
-        return true;
-    };
-
-    const isValidConnection = (connection: Connection) => {
-        if (connection.target === id && connection.targetHandle === 'input') {
-            return isValidTargetConnection(connection);
-        }
-        if (connection.source === id && connection.sourceHandle === 'source') {
-            return isValidSourceConnection(connection);
-        }
-        return true;
+        setNodes((nodes) =>
+            nodes.map((node) =>
+                node.id === id ? { ...node, data: { ...node.data, operation: value } } : node
+            )
+        );
     };
 
     const handleDeleteNode = () => {
@@ -116,7 +97,7 @@ const CompilerNode = ({ id, data, type }: NodeProps<any>) => {
                             <TbMathMaxMin className={styles.iconFlag} />
                             <div className={styles['node-text']}>
                                 <h6>{data.label || 'Compiler'}</h6>
-                                <span>{type || 'Node type not found'}</span>
+                                {connectedVariableType && <span>Type: {connectedVariableType}</span>}
                             </div>
                         </div>
                         <Dropdown
@@ -145,20 +126,20 @@ const CompilerNode = ({ id, data, type }: NodeProps<any>) => {
                 </div>
             </div>
 
-            {/* Target Handle */}
-            <Handle
+            <CustomHandle
+                nodeId={id}
+                id="input"
                 type="target"
                 position={Position.Left}
-                id="input"
-                isValidConnection={isValidConnection}
+                connectioncount={1}
             />
 
-            {/* Source Handle */}
-            <Handle
+            <CustomHandle
+                nodeId={id}
+                id="source"
                 type="source"
                 position={Position.Right}
-                id="source"
-                isValidConnection={isValidConnection}
+                connectioncount={1}
             />
 
             <SaveGlobalVariableModal

@@ -18,17 +18,15 @@ const ConditionalNode: React.FC<NodeProps<any>> = ({ id, data }) => {
     const [rhsValue, setRhsValue] = useState<string | null>(null);
     const [expression, setExpression] = useState<string>('LHS value operator RHS value');
 
-    // Function to update connections and fetch values from connected nodes
     const updateConnections = () => {
         const edges = getEdges();
         const lhsConnection = edges.find((edge: Edge) => edge.target === id && edge.targetHandle === 'target1');
         const rhsConnection = edges.find((edge: Edge) => edge.target === id && edge.targetHandle === 'target2');
 
-        // Get the LHS node and its value
         if (lhsConnection) {
             const connectedNode = getNode(lhsConnection.source);
             if (connectedNode && connectedNode.data) {
-                setLhsValue(connectedNode.data.value || connectedNode.data.variables || 'LHS');  // Use `value` or `label`
+                setLhsValue(connectedNode.data.value || connectedNode.data.variables || 'LHS');
                 setLhsType(connectedNode.data.variableType || 'Unknown Type');
             }
         } else {
@@ -36,11 +34,10 @@ const ConditionalNode: React.FC<NodeProps<any>> = ({ id, data }) => {
             setLhsType(null);
         }
 
-        // Get the RHS node and its value
         if (rhsConnection) {
             const connectedNode = getNode(rhsConnection.source);
             if (connectedNode && connectedNode.data) {
-                setRhsValue(connectedNode.data.value || connectedNode.data.variables || 'RHS');  // Use `value` or `label`
+                setRhsValue(connectedNode.data.value || connectedNode.data.variables || 'RHS');
                 setRhsType(connectedNode.data.variableType || 'Unknown Type');
             }
         } else {
@@ -51,9 +48,9 @@ const ConditionalNode: React.FC<NodeProps<any>> = ({ id, data }) => {
 
     useEffect(() => {
         updateConnections();
-        const interval = setInterval(updateConnections, 100); // Continuously check for updates
+        const interval = setInterval(updateConnections, 100);
 
-        return () => clearInterval(interval); // Cleanup the interval on unmount
+        return () => clearInterval(interval);
     }, [getEdges, getNode, id]);
 
     useEffect(() => {
@@ -87,7 +84,7 @@ const ConditionalNode: React.FC<NodeProps<any>> = ({ id, data }) => {
         <div>
             <div className={styles['lhs-point-label']}>LHS</div>
             <div className={`${styles['nodeBox']} ${styles.gateOperator}`} style={{ maxWidth: '300px' }}>
-                <Form name="gate-operator" layout="vertical">
+                <Form name={`compare-form-${id}`} layout="vertical">
                     <div className={`flex gap-1 ${styles['node-main']}`}>
                         <div className={`flex gap-1 ${styles['node']}`}>
                             <div className={`flex gap-1 ${styles['nodewrap']}`}>
@@ -122,26 +119,27 @@ const ConditionalNode: React.FC<NodeProps<any>> = ({ id, data }) => {
                             </Form.Item>
                             <span>{expression}</span>
                         </div>
-
                         <div className={styles['rhs-point-label']}>RHS</div>
 
                         <CustomHandle
+                            nodeId={id}
                             id="target1"
                             type="target"
                             position={Position.Left}
                             connectioncount={1}
-                            className={styles.toppoint1}
+                            className={styles.leftpoint1}
                         />
 
                         <CustomHandle
+                            nodeId={id}
                             type="target"
                             position={Position.Left}
                             id="target2"
                             connectioncount={1}
-                            className={styles.toppoint2}
+                            className={styles.leftpoint2}
                         />
-                        <Handle type="source" id="if_source" position={Position.Right} />
-                        <Handle type="source" id="else_source" position={Position.Bottom} />
+
+                        <Handle type="source" id="source" position={Position.Right} />
                     </div>
                 </Form>
             </div>

@@ -1,8 +1,8 @@
-// CustomHandle.tsx
 import React, { useEffect, useState } from 'react';
 import { Handle, useReactFlow, Position } from 'reactflow';
 
 interface CustomHandleProps {
+    nodeId: string; // Add nodeId to differentiate between nodes
     id: string;
     type: 'source' | 'target';
     position: Position;
@@ -12,12 +12,16 @@ interface CustomHandleProps {
 
 const CustomHandle: React.FC<CustomHandleProps> = (props) => {
     const { getEdges } = useReactFlow();
-    const [connectioncount, setConnectionCount] = useState(0);
+    const [connectionCount, setConnectionCount] = useState(0);
 
     const updateConnectionCount = () => {
         const edges = getEdges();
         const count = edges.filter(
-            (edge) => edge.targetHandle === props.id || edge.sourceHandle === props.id
+            (edge) =>
+            (props.type === 'target' ?
+                edge.target === props.nodeId && edge.targetHandle === props.id :
+                edge.source === props.nodeId && edge.sourceHandle === props.id
+            )
         ).length;
         setConnectionCount(count);
     };
@@ -27,13 +31,13 @@ const CustomHandle: React.FC<CustomHandleProps> = (props) => {
         const interval = setInterval(updateConnectionCount, 100);
 
         return () => clearInterval(interval);
-    }, [getEdges, props.id]);
+    }, [getEdges, props.nodeId, props.id]);
 
     return (
         <Handle
             {...props}
             className={props.className}
-            isConnectable={connectioncount < props.connectioncount}
+            isConnectable={connectionCount < props.connectioncount}
         />
     );
 };

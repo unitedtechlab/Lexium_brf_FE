@@ -1,5 +1,5 @@
 "use client";
-import React, { useRef, useCallback, useState, useEffect, useMemo } from 'react';
+import React, { useRef, useCallback, useState, useMemo } from 'react';
 import {
     ReactFlow,
     ReactFlowProvider,
@@ -137,8 +137,8 @@ const Conditional: React.FC = () => {
             const { data, type } = node;
             const { folderdata, label, ...cleanedData } = data;
 
-            const sourceConnections: string[] = [];
-            const targetConnections: string[] = [];
+            const sourceConnections: any[] = [];
+            const targetConnections: any[] = [];
 
             edges.forEach((edge) => {
                 if (edge.source === node.id) {
@@ -149,30 +149,34 @@ const Conditional: React.FC = () => {
                 }
             });
 
-            const connectedEdges = [];
 
-            if (sourceConnections.length || targetConnections.length) {
-                connectedEdges.push({
-                    source:
-                        sourceConnections.length === 1
-                            ? sourceConnections[0] || ''
-                            : sourceConnections.length
-                                ? sourceConnections
-                                : '',
-                    target:
-                        targetConnections.length === 1
-                            ? targetConnections[0] || ''
-                            : targetConnections.length
-                                ? targetConnections
-                                : '',
-                });
+            let connectedEdges = {};
+
+            if (node.type === 'conditional') {
+                const lhsConnection = edges.find((edge) => edge.target === node.id && edge.targetHandle === 'target1');
+                const rhsConnection = edges.find((edge) => edge.target === node.id && edge.targetHandle === 'target2');
+
+                connectedEdges = {
+                    source: [
+                        {
+                            LHS: lhsConnection?.source || '',
+                            RHS: rhsConnection?.source || '',
+                        },
+                    ],
+                    target: targetConnections.length === 1 ? targetConnections[0] : targetConnections.length ? targetConnections : '',
+                };
+            } else {
+                connectedEdges = {
+                    source: sourceConnections.length === 1 ? sourceConnections[0] : sourceConnections.length ? sourceConnections : '',
+                    target: targetConnections.length === 1 ? targetConnections[0] : targetConnections.length ? targetConnections : '',
+                };
             }
 
             return {
                 id: node.id,
                 type,
                 data: { ...cleanedData },
-                connectedEdges: connectedEdges.length > 0 ? connectedEdges : undefined,
+                connectedEdges: connectedEdges,
             };
         });
 
@@ -181,7 +185,7 @@ const Conditional: React.FC = () => {
             nodes: cleanedNodes,
         };
 
-        console.log('Output Json Data', JSON.stringify(finalWorkflowData, null, 2));
+        console.log('Output JSON Data:', JSON.stringify(finalWorkflowData, null, 2));
     };
 
 

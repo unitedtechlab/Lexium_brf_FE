@@ -275,41 +275,6 @@ const Sidebar: React.FC<{ setFolderData: (data: any[]) => void }> = ({ setFolder
             <h6>End Node</h6>
           </div>
 
-          <div
-            className={`flex gap-1 ${styles.sidebardragDrop}`}
-            onDragStart={(event) => onDragStart(event, 'compiler_type', 'Compiler')}
-            draggable
-          >
-            <IconComponent icon={<TbMathMaxMin />} />
-            <h6 className={styles.titleName}>Compiler</h6>
-          </div>
-          {pathname === '/arithmetic' && (
-            <>
-              {/* Output Node */}
-              <div
-                className={`flex gap-1 ${styles.sidebardragDrop}`}
-                onDragStart={(event) => onDragStart(event, 'output_node', 'Output Node')}
-                draggable
-              >
-                <IconComponent icon={<MdOutlineOutput />} />
-                <h6>Output Node</h6>
-              </div>
-            </>
-          )}
-          {pathname === '/conditional' && (
-            <>
-              {/* Gate Node */}
-              <div
-                className={`flex gap-1 ${styles.sidebardragDrop}`}
-                onDragStart={(event) => onDragStart(event, 'gate_node', 'Gate Node')}
-                draggable
-              >
-                <IconComponent icon={<GiLogicGateNand />} />
-                <h6>Gate (AND/OR)</h6>
-              </div>
-            </>
-          )}
-
         </div>
       </div>
     </aside>

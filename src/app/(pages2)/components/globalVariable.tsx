@@ -50,7 +50,7 @@ const GlobalVariableNode = ({ id, data, type }: NodeProps<any>) => {
     return (
         <div>
             <div className={`${styles['nodeBox']} ${styles.globalVariable}`} style={{ maxWidth: "340px" }}>
-                <Form name="global-variable" layout="vertical">
+                <Form name={`global-form-${id}`} layout="vertical">
                     <div className={`flex gap-1 ${styles['node-main']}`}>
                         <div className={`flex gap-1 ${styles['node']}`}>
                             <div className={`flex gap-1 ${styles['nodewrap']}`}>

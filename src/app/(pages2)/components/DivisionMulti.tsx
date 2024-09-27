@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Handle, NodeProps, Position, useReactFlow, Connection } from 'reactflow';
+import { NodeProps, useReactFlow, Position, Handle } from 'reactflow';
 import 'reactflow/dist/style.css';
 import styles from '@/app/assets/css/workflow.module.css';
 import { FiMinusCircle, FiPlusCircle } from "react-icons/fi";
@@ -7,6 +7,7 @@ import { message, Dropdown } from 'antd';
 import { PiMathOperationsBold } from "react-icons/pi";
 import { BsThreeDots } from "react-icons/bs";
 import SaveGlobalVariableModal from '../modals/GlobalVariableModal';
+import CustomHandle from './CustomHandle'; // Import CustomHandle
 
 const MultiplyDivide = ({ id, data }: NodeProps<any>) => {
     const { getEdges, getNode, setNodes } = useReactFlow();
@@ -67,26 +68,6 @@ const MultiplyDivide = ({ id, data }: NodeProps<any>) => {
             )
         );
     }, [getEdges, getNode, id, setNodes, data.variableType]);
-
-    const showMessageOnce = (msg: string) => {
-        if (!messageShownRef.current) {
-            message.error(msg);
-            messageShownRef.current = true;
-            setTimeout(() => {
-                messageShownRef.current = false;
-            }, 2000);
-        }
-    };
-
-    const isValidConnection = (connection: Connection) => {
-        const edges = getEdges().filter((edge) => edge.source === id);
-
-        if (edges.length >= 1 && connection.sourceHandle === 'source') {
-            showMessageOnce('Only one outgoing connection is allowed from the source.');
-            return false;
-        }
-        return true;
-    };
 
     const handleDeleteNode = () => {
         setNodes((nds) => nds.filter(node => node.id !== id));
@@ -163,21 +144,21 @@ const MultiplyDivide = ({ id, data }: NodeProps<any>) => {
                 type="target"
                 position={Position.Left}
                 id="target1"
-                isValidConnection={isValidConnection}
                 className={styles.toppoint}
             />
             <Handle
                 type="target"
                 position={Position.Left}
                 id="target2"
-                isValidConnection={isValidConnection}
                 className={styles.bottompoint}
             />
-            <Handle
+
+            <CustomHandle
+                nodeId={id}
+                id="source"
                 type="source"
                 position={Position.Right}
-                id="source"
-                isValidConnection={isValidConnection}
+                connectioncount={1}
             />
 
             <SaveGlobalVariableModal

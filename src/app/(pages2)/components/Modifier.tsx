@@ -6,6 +6,7 @@ import styles from '@/app/assets/css/workflow.module.css';
 import { TbMathIntegralX } from "react-icons/tb";
 import { BsThreeDots } from "react-icons/bs";
 import SaveGlobalVariableModal from '../modals/GlobalVariableModal';
+import CustomHandle from './CustomHandle';
 
 const ModifierNode = ({ id, data, type }: NodeProps<any>) => {
     const { getEdges, getNodes, setNodes } = useReactFlow();
@@ -38,34 +39,6 @@ const ModifierNode = ({ id, data, type }: NodeProps<any>) => {
 
     const handleOperationChange = (value: string) => {
         setOperation(value);
-    };
-
-    const isValidTargetConnection = (connection: Connection) => {
-        const edges = getEdges().filter((edge) => edge.target === id);
-        if (edges.length >= 1) {
-            showErrorOnce('Only one incoming connection is allowed to the target.', 'target');
-            return false;
-        }
-        return true;
-    };
-
-    const isValidSourceConnection = (connection: Connection) => {
-        const edges = getEdges().filter((edge) => edge.source === id);
-        if (edges.length >= 1) {
-            showErrorOnce('Only one outgoing connection is allowed from the source.', 'source');
-            return false;
-        }
-        return true;
-    };
-
-    const isValidConnection = (connection: Connection) => {
-        if (connection.target === id && connection.targetHandle === 'target') {
-            return isValidTargetConnection(connection);
-        }
-        if (connection.source === id && connection.sourceHandle === 'source') {
-            return isValidSourceConnection(connection);
-        }
-        return true;
     };
 
     const handleDeleteNode = () => {
@@ -145,18 +118,20 @@ const ModifierNode = ({ id, data, type }: NodeProps<any>) => {
                 </div>
             </div>
 
-            <Handle
+            <CustomHandle
+                nodeId={id}
+                id="target"
                 type="target"
                 position={Position.Left}
-                id="target"
-                isValidConnection={isValidConnection}
+                connectioncount={1}
             />
 
-            <Handle
+            <CustomHandle
+                nodeId={id}
+                id="source"
                 type="source"
                 position={Position.Right}
-                id="source"
-                isValidConnection={isValidConnection}
+                connectioncount={1}
             />
 
             <SaveGlobalVariableModal

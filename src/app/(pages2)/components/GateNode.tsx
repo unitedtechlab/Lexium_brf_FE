@@ -5,12 +5,40 @@ import 'reactflow/dist/style.css';
 import styles from '@/app/assets/css/workflow.module.css';
 import { GiLogicGateNand } from "react-icons/gi";
 import { BsThreeDots } from 'react-icons/bs';
+import CustomHandle from './CustomHandle';
 
 const { Option } = Select;
 
 const GateOperator = ({ id, data }: NodeProps<any>) => {
-    const { setNodes } = useReactFlow();
-    const [selectedOperator, setSelectedOperator] = useState(data.gateOperator);
+    const { setNodes, getEdges, getNode } = useReactFlow();
+    const [selectedOperator, setSelectedOperator] = useState(data.gateOperator || '');
+    const [connectedVariableType, setConnectedVariableType] = useState<string | null>(null);
+
+    const fetchConnectedVariableType = () => {
+        const edges = getEdges();
+        const incomingEdge = edges.find(edge => edge.target === id);
+
+        if (incomingEdge) {
+            const connectedNode = getNode(incomingEdge.source);
+            if (connectedNode?.data?.variableType) {
+                setConnectedVariableType(connectedNode.data.variableType);
+                setNodes((nodes) =>
+                    nodes.map((node) =>
+                        node.id === id ? { ...node, data: { ...node.data, variableType: connectedNode.data.variableType } } : node
+                    )
+                );
+            }
+        } else {
+            setConnectedVariableType(null);
+        }
+    };
+
+    useEffect(() => {
+        fetchConnectedVariableType();
+        const interval = setInterval(fetchConnectedVariableType, 500);
+
+        return () => clearInterval(interval);
+    }, [getEdges]);
 
     const handleOperatorChange = (value: string) => {
         setSelectedOperator(value);
@@ -37,13 +65,14 @@ const GateOperator = ({ id, data }: NodeProps<any>) => {
     return (
         <div>
             <div className={`${styles['nodeBox']} ${styles.gateOperator}`} style={{ maxWidth: "300px" }}>
-                <Form name="gate-operator" layout="vertical">
+                <Form name={`gate-form-${id}`} layout="vertical">
                     <div className={`flex gap-1 ${styles['node-main']}`}>
                         <div className={`flex gap-1 ${styles['node']}`}>
                             <div className={`flex gap-1 ${styles['nodewrap']}`}>
                                 <GiLogicGateNand className={styles.iconFlag} />
                                 <div className={styles['node-text']}>
                                     <h6>{data.label || "Gate Operator"}</h6>
+                                    {connectedVariableType && <span>Type: {connectedVariableType}</span>}
                                 </div>
                             </div>
                             <Dropdown
@@ -71,7 +100,15 @@ const GateOperator = ({ id, data }: NodeProps<any>) => {
                         </div>
 
                         <Handle type="target" position={Position.Left} />
-                        <Handle type="source" position={Position.Right} />
+
+                        <CustomHandle
+                            nodeId={id}
+                            id="source"
+                            type="source"
+                            position={Position.Right}
+                            connectioncount={1}
+                            className={styles.customHandle}
+                        />
                     </div>
                 </Form>
             </div>
