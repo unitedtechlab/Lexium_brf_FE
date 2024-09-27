@@ -28,7 +28,7 @@ import GlobalVariable from '../components/globalVariable';
 import ConditionalNode from '../components/comparator';
 import Constants from "../components/constants";
 import GateNode from '../components/GateNode';
-import CompilerNode from '../components/Compiler'
+import CompilerNode from '../components/Compiler';
 import { message } from 'antd';
 
 let id = 0;
@@ -41,6 +41,7 @@ const Conditional: React.FC = () => {
     const { screenToFlowPosition } = useReactFlow();
     const { type } = useDnD();
     const [folderdata, setFolderData] = useState<any[]>([]);
+    const [operationName, setOperationName] = useState<string>('');
     const variableEntries = Object.entries(folderdata);
 
     const nodeTypes = useMemo(() => ({
@@ -125,14 +126,6 @@ const Conditional: React.FC = () => {
     };
 
     const handleSave = () => {
-        let outputNodeName = '';
-
-        nodes.forEach((node) => {
-            if (node.type === 'output_node' && node.data.outputName) {
-                outputNodeName = node.data.outputName;
-            }
-        });
-
         const cleanedNodes = nodes.map((node) => {
             const { data, type } = node;
             const { folderdata, label, ...cleanedData } = data;
@@ -148,7 +141,6 @@ const Conditional: React.FC = () => {
                     sourceConnections.push(edge.source || '');
                 }
             });
-
 
             let connectedEdges = {};
 
@@ -181,17 +173,16 @@ const Conditional: React.FC = () => {
         });
 
         const finalWorkflowData = {
-            OutputName: outputNodeName,
+            ruleName: operationName, // Use the operationName in the output
             nodes: cleanedNodes,
         };
 
         console.log('Output JSON Data:', JSON.stringify(finalWorkflowData, null, 2));
     };
 
-
     return (
         <div className={classes.workflowPage}>
-            <Topbar onSave={handleSave} />
+            <Topbar onSave={handleSave} setOperationName={setOperationName} />
             <div className={classes.workflowWrapper}>
                 <Sidebar setFolderData={handleFolderData} />
                 <div className={classes.reactflowMain} ref={reactFlowWrapper}>

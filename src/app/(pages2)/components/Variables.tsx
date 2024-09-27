@@ -7,6 +7,7 @@ import { MdDeleteOutline, MdOutlineSelectAll } from "react-icons/md";
 import { FiPlus } from "react-icons/fi";
 import { BsThreeDots } from "react-icons/bs";
 import SaveGlobalVariableModal from '../modals/GlobalVariableModal';
+import { usePathname } from 'next/navigation';
 
 const getConnectedNode = (nodeId: string, allEdges: any[], allNodes: any[]) => {
     const connectedEdges = allEdges.filter(edge => edge.source === nodeId);
@@ -25,6 +26,8 @@ const VariableNode: React.FC<NodeProps<any>> = ({ id, data, type }) => {
     const [availableColumns, setAvailableColumns] = useState<string[]>([]);
     const [variableType, setVariableType] = useState<string | null>(null);
     const [isModalVisible, setIsModalVisible] = useState(false);
+    const pathname = usePathname();
+
 
     useEffect(() => {
         if (data && data.folderdata) {
@@ -157,9 +160,11 @@ const VariableNode: React.FC<NodeProps<any>> = ({ id, data, type }) => {
                                 </div>
                             </div>
                             <div className='flex gap-1'>
-                                <Button onClick={addVariableField} disabled={!areAllFieldsSelected} className={styles.addBtn}>
-                                    <FiPlus />
-                                </Button>
+                                {pathname !== '/conditional' && (
+                                    <Button onClick={addVariableField} disabled={!areAllFieldsSelected} className={styles.addBtn}>
+                                        <FiPlus />
+                                    </Button>
+                                )}
                                 <Dropdown
                                     menu={{ items: menuItems }}
                                     trigger={['click']}

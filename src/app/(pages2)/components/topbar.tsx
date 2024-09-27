@@ -1,13 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styles from '@/app/assets/css/workflow.module.css';
 import { Button, message } from 'antd';
 import Image from 'next/image';
 import Logo from '@/app/assets/images/logo.png';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 
-const Topbar = ({ onSave }: { onSave: () => void }) => {
-    const pathname = usePathname();
+const Topbar = ({ onSave, setOperationName }: { onSave: () => void, setOperationName: (name: string) => void }) => {
+    const [isSaved, setIsSaved] = useState(false);
+
+    const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const name = event.target.value.trim();
+        if (name === '') {
+            setIsSaved(false);
+        }
+    };
 
     return (
         <div className={styles.topbarWrapper}>
@@ -18,10 +24,12 @@ const Topbar = ({ onSave }: { onSave: () => void }) => {
                     </Link>
                 </div>
                 <div className={styles.workspaceName}>
-                    <h6 style={{ margin: 0 }}>
-                        {pathname === '/conditional' && <>Conditional Operation</>}
-                        {pathname === '/arithmetic' && <>Arithmetic Operation</>}
-                    </h6>
+                    <input
+                        type="text"
+                        placeholder='Operation Name'
+                        onChange={handleInputChange}
+                        readOnly={isSaved}
+                    />
                 </div>
 
                 <div className={`flex gap-1 ${styles.rightButtons}`}>
