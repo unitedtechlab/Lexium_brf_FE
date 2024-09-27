@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Handle, NodeProps, Position, useReactFlow, Connection } from 'reactflow';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Handle, NodeProps, Position, useReactFlow, Connection, Edge, addEdge } from 'reactflow';
 import { Form, Select, Dropdown, message } from 'antd';
 import 'reactflow/dist/style.css';
 import styles from '@/app/assets/css/workflow.module.css';
@@ -9,26 +9,75 @@ import { BsThreeDots } from 'react-icons/bs';
 const { Option } = Select;
 
 const ConditionalNode = ({ id, data }: NodeProps<any>) => {
-    const { getEdges, getNode, setNodes } = useReactFlow();
+    const { getEdges, setNodes, setEdges, project } = useReactFlow();
     const [selectedOperator, setSelectedOperator] = useState(data.gateOperator);
     const [lhsType, setLhsType] = useState<string | null>(null);
     const [rhsType, setRhsType] = useState<string | null>(null);
-    const errorShownRef = useRef({ target1: false, target2: false });
-
-    // useEffect(() => {
-    //     const edges = getEdges().filter(edge => edge.target === id);
-    //     edges.forEach((edge) => {
-    //         const connectedNode = getNode(edge.source);
-    //         if (edge.targetHandle === 'target1' && connectedNode) {
-    //             setLhsValue(connectedNode.data.value);
-    //             setLhsType(connectedNode.data.variableType);
-    //         }
-    //         if (edge.targetHandle === 'target2' && connectedNode) {
-    //             setRhsValue(connectedNode.data.value);
-    //             setRhsType(connectedNode.data.variableType);
-    //         }
-    //     });
-    // }, [getEdges, getNode, id]);
+    const [lhsValue, setLhsValue] = useState<string | null>(null);
+    const [rhsValue, setRhsValue] = useState<string | null>(null);
+    useEffect(() => {
+        const edges = getEdges();
+    
+        const isLHSConnected = edges.some(edge => edge.targetHandle === 'target1' && edge.target === id);
+        const isRHSConnected = edges.some(edge => edge.targetHandle === 'target2' && edge.target === id);
+    
+        if (isLHSConnected && isRHSConnected) {
+            const newDummyNode1 = {
+                id: 'dummy1',
+                type: 'bezier',
+                label: 'bezier',
+                position: { x: 500, y: 400 }, 
+                data: { label: '' },
+                style: { opacity: 0 }, 
+            };
+    
+            const newDummyNode2 = {
+                id: 'dummy2',
+                type: 'bezier',
+                label: 'bezier',
+                position: { x: 700, y: 700 }, 
+                data: { label: '' },
+                style: { opacity: 0 }, 
+            };
+    
+            const newEdges: Edge[] = [
+                {
+                    id: `${id}-source1-edge`,
+                    source: id,
+                    sourceHandle: 'source1',
+                    target: newDummyNode1.id,
+                    targetHandle: null,
+                    type: 'smoothstep',
+                    animated: true,
+                    data: { 
+                        label: '', 
+                        handles: [<Handle type="source" position={Position.Right} style={{ backgroundColor: 'black' }} />]
+                    },
+                    style: { stroke: 'gray', strokeWidth: 2, strokeDasharray: 0 },
+                },
+                {
+                    id: `${id}-source2-edge`,
+                    source: id,
+                    sourceHandle: 'source2',
+                    target: newDummyNode2.id,
+                    targetHandle: null,
+                    type: 'smoothstep',
+                    animated: true,
+                    data: { 
+                        label: '', 
+                        handles: [<Handle type="source" position={Position.Right} style={{ backgroundColor: 'black' }} />]
+                    },
+                    style: { stroke: 'gray', strokeWidth: 2, strokeDasharray: 0 },
+                }
+            ];
+    
+            setNodes((nds) => [...nds, newDummyNode1, newDummyNode2]);
+            setEdges((eds) => [...eds, ...newEdges]); 
+        }
+    
+        setLhsValue(data.lhsValue);
+        setRhsValue(data.rhsValue);
+    }, [data, getEdges, id, setEdges, setNodes]);    
 
     const handleOperatorChange = (value: string) => {
         setSelectedOperator(value);
@@ -37,34 +86,6 @@ const ConditionalNode = ({ id, data }: NodeProps<any>) => {
                 node.id === id ? { ...node, data: { ...node.data, gateOperator: value } } : node
             )
         );
-    };
-
-    const isValidConnection = (connection: Connection) => {
-        const edges = getEdges().filter((edge) => edge.target === id);
-
-        if (connection.targetHandle === 'target1' && edges.some(edge => edge.targetHandle === 'target1')) {
-            if (!errorShownRef.current.target1) {
-                message.error('Only one connection is allowed on LHS (target1).');
-                errorShownRef.current.target1 = true;
-                setTimeout(() => {
-                    errorShownRef.current.target1 = false;
-                }, 2000);
-            }
-            return false;
-        }
-
-        if (connection.targetHandle === 'target2' && edges.some(edge => edge.targetHandle === 'target2')) {
-            if (!errorShownRef.current.target2) {
-                message.error('Only one connection is allowed on RHS (target2).');
-                errorShownRef.current.target2 = true;
-                setTimeout(() => {
-                    errorShownRef.current.target2 = false;
-                }, 2000);
-            }
-            return false;
-        }
-
-        return true;
     };
 
     const handleDeleteNode = () => {
@@ -122,7 +143,7 @@ const ConditionalNode = ({ id, data }: NodeProps<any>) => {
                                     <Option value="Less than or equal to">Less than or equal to</Option>
                                 </Select>
                             </Form.Item>
-                            <span>LHS value operator RHS value</span>
+                            <span>{lhsValue && rhsValue ? `${lhsValue} ${selectedOperator} ${rhsValue}` : 'Connect nodes to see values'}</span>
                         </div>
 
                         <div className={styles['rhs-point-label']}>
@@ -134,14 +155,12 @@ const ConditionalNode = ({ id, data }: NodeProps<any>) => {
                             position={Position.Left}
                             id="target1"
                             className={styles.leftpoint}
-                            isValidConnection={isValidConnection}
                         />
                         <Handle
                             type="target"
                             position={Position.Left}
                             id="target2"
                             className={styles.rightpoint}
-                            isValidConnection={isValidConnection}
                         />
                         <Handle type="source" id="source1" position={Position.Right} />
                         <Handle type="source" id="source2" position={Position.Bottom} />

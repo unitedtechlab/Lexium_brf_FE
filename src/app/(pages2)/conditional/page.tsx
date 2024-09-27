@@ -56,39 +56,64 @@ const Conditional: React.FC = () => {
         customEdge: CustomEdge,
     }), []);
 
-    const onConnect = useCallback(
-        (params: Edge | Connection) => {
-            const sourceNode = nodes.find((node) => node.id === params.source);
-            const targetNode = nodes.find((node) => node.id === params.target);
-
-            if (!sourceNode?.data?.variableType) {
-                message.error("Cannot connect a node without entering a value.");
-                return;
+const onConnect = useCallback(
+    (params: Edge | Connection) => {
+      const sourceNode = nodes.find((node) => node.id === params.source);
+      const targetNode = nodes.find((node) => node.id === params.target);
+  
+      if (!sourceNode?.data?.variableType) {
+        message.error("Cannot connect a node without entering a value.");
+        return;
+      }
+  
+      if (params.source === params.target) {
+        message.error("Self-connections are not allowed.");
+        return;
+      }
+  
+      const updatedNodes = nodes.map((node) => {
+        console.log("node", node.id)
+        console.log("targetNode?.id", targetNode?.id)
+        if (node.id === targetNode?.id) {
+            console.log("prijnt")
+          const updatedData = { ...node.data };
+  console.log("updatedData",updatedData)
+          // Check if the source or target nodes are constants or variables
+          const isSourceConstant = sourceNode.type === 'constant';
+          const isTargetConstant = targetNode.type === 'constant';
+          const isSourceVariable = sourceNode.type === 'variables';
+          const isTargetVariable = targetNode.type === 'variables';
+  console.log("isSourceConstant",isSourceConstant, isTargetConstant)
+  console.log("isSourceVariable",isSourceVariable, isTargetVariable)
+          // If either node is constant or variable, set lhs and rhs values accordingly
+          if ((isSourceConstant && isTargetVariable) || (isSourceVariable && isTargetConstant)) {
+            // Compare the node ids to determine lhs and rhs
+            if (sourceNode.id < targetNode.id) {
+                console.log("in if", sourceNode.data,targetNode.data)
+              updatedData.lhsValue = sourceNode.data.value || sourceNode.data.variables;
+              updatedData.lhsType = sourceNode.data.variableType || sourceNode.data.lhsType;
+              updatedData.rhsValue = targetNode.data.value || targetNode.data.variables;
+              updatedData.rhsType = targetNode.data.variableType || targetNode.data.rhsType;
+            } else {
+                console.log("in ifelse", sourceNode.data,targetNode.data)
+              updatedData.lhsValue = targetNode.data.value || targetNode.data.variables;
+              updatedData.lhsType = targetNode.data.variableType || targetNode.data.lhsType;
+              updatedData.rhsValue = sourceNode.data.value || sourceNode.data.variables;
+              updatedData.rhsType = sourceNode.data.variableType || sourceNode.data.rhsType;
             }
-
-            if (params.source === params.target) {
-                message.error("Self-connections are not allowed.");
-                return;
-            }
-
-            setNodes((nds) =>
-                nds.map((node) =>
-                    node.id === targetNode?.id
-                        ? {
-                            ...node,
-                            data: {
-                                ...node.data,
-                                variableType: sourceNode.data.variableType,
-                            },
-                        }
-                        : node
-                )
-            );
-            console.log("nodes", nodes)
-            setEdges((eds) => addEdge({ ...params, type: "customEdge" }, eds));
-        },
-        [nodes, setEdges, setNodes]
-    );
+          }
+  
+          return { ...node, data: updatedData };
+        }
+        return node;
+      });
+  
+      setNodes(updatedNodes);
+      setEdges((eds) => addEdge({ ...params, type: "customEdge" }, eds));
+    },
+    [nodes, setEdges, setNodes]
+  );
+   
 
     const onDragOver = useCallback((event: React.DragEvent) => {
         event.preventDefault();
@@ -117,7 +142,7 @@ const Conditional: React.FC = () => {
             console.log("newNode", newNode)
             setNodes((nds) => nds.concat(newNode));
         },
-        [screenToFlowPosition, type, setNodes, folderdata]
+        [screenToFlowPosition, type, setNodes, folderdata, nodes]
     );
 
     const handleFolderData = (data: any) => {
