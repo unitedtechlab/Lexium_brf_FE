@@ -192,6 +192,15 @@ const Sidebar: React.FC<{ setFolderData: (data: any[]) => void }> = ({ setFolder
                 <IconComponent icon={<TbMathIntegralX />} />
                 <h6 className={styles.titleName}>Modifier</h6>
               </div>
+
+              <div
+                className={`flex gap-1 ${styles.sidebardragDrop}`}
+                onDragStart={(event) => onDragStart(event, 'end_node', 'End Node')}
+                draggable
+              >
+                <IconComponent icon={<MdOutlineOutput />} />
+                <h6>End Node</h6>
+              </div>
             </>
           )}
 
@@ -263,16 +272,6 @@ const Sidebar: React.FC<{ setFolderData: (data: any[]) => void }> = ({ setFolder
           >
             <IconComponent icon={<AiOutlineGlobal />} />
             <h6>Global Variable</h6>
-          </div>
-
-          {/* End Node */}
-          <div
-            className={`flex gap-1 ${styles.sidebardragDrop}`}
-            onDragStart={(event) => onDragStart(event, 'end_node', 'End Node')}
-            draggable
-          >
-            <IconComponent icon={<MdOutlineOutput />} />
-            <h6>End Node</h6>
           </div>
 
         </div>
