@@ -188,10 +188,72 @@ const Arithmetic: React.FC = () => {
         console.log('Output Json Data', JSON.stringify(finalWorkflowData, null, 2));
     };
 
+    const handleFormatHorizonatal = useCallback(() => {
+        const startX = 200;
+        const startY = 200;
+        const horizontalSpacing = 400;
+        const verticalSpacing = 200;
+        let currentX = startX;
+        let currentYForVertical = startY;
+        let maxVerticalY = currentYForVertical;
+        let verticalNodeCount = 0;
+
+        let currentYForAddSubType = startY;
+        let lastXForHorizontal = currentX + horizontalSpacing;
+
+        const updatedNodes = nodes.map((node) => {
+            if (node.type === 'variables' || node.type === 'constant') {
+                verticalNodeCount += 1;
+                const newNode = {
+                    ...node,
+                    position: {
+                        x: startX,
+                        y: currentYForVertical,
+                    },
+                };
+                currentYForVertical += verticalSpacing;
+                maxVerticalY = currentYForVertical;
+                return newNode;
+            }
+            return node;
+        });
+        const centerYForHorizontalNodes = startY + ((currentYForVertical - startY) - verticalSpacing) / 2;
+        currentX += horizontalSpacing;
+
+        const updatedNodesWithHorizontal = updatedNodes.map((node) => {
+            if (node.type !== 'variables' && node.type !== 'constant') {
+                if (node.type === 'add_sub_type') {
+                    const newNode = {
+                        ...node,
+                        position: {
+                            x: currentX,
+                            y: currentYForAddSubType,
+                        },
+                    };
+                    currentYForAddSubType += verticalSpacing;
+                    lastXForHorizontal = currentX + horizontalSpacing;
+                    return newNode;
+                } else {
+                    const newNode = {
+                        ...node,
+                        position: {
+                            x: lastXForHorizontal,
+                            y: centerYForHorizontalNodes,
+                        },
+                    };
+                    lastXForHorizontal += horizontalSpacing;
+                    return newNode;
+                }
+            }
+            return node;
+        });
+
+        setNodes(updatedNodesWithHorizontal);
+    }, [nodes, edges, setNodes]);
 
     return (
         <div className={classes.workflowPage}>
-            <Topbar onSave={handleSave} />
+            <Topbar onSave={handleSave} onFormat={handleFormatHorizonatal} />
             <div className={classes.workflowWrapper}>
                 <Sidebar setFolderData={handleFolderData} />
                 <div className={classes.reactflowMain} ref={reactFlowWrapper}>

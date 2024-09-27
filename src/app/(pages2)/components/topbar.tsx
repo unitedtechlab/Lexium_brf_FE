@@ -6,7 +6,7 @@ import Logo from '@/app/assets/images/logo.png';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-const Topbar = ({ onSave }: { onSave: () => void }) => {
+const Topbar = ({ onSave, onFormat }: { onSave: () => void, onFormat: () => void }) => {
     const pathname = usePathname();
 
     return (
@@ -31,7 +31,7 @@ const Topbar = ({ onSave }: { onSave: () => void }) => {
                     <Link className="btn btn-outline" href="/dashboard">
                         Discard
                     </Link>
-                    <Button className='btn btn-outline'>
+                    <Button className='btn btn-outline' onClick={onFormat}>
                         Format
                     </Button>
                 </div>
