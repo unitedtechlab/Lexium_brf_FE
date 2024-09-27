@@ -5,9 +5,8 @@ import Image from 'next/image';
 import Logo from '@/app/assets/images/logo.png';
 import Link from 'next/link';
 
-const Topbar = ({ onSave, setOperationName }: { onSave: () => void, setOperationName: (name: string) => void }) => {
+const Topbar = ({ onSave, setOperationName, onFormat }: { onSave: () => void, setOperationName: (name: string) => void, onFormat: () => void }) => {
     const [isSaved, setIsSaved] = useState(false);
-
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const name = event.target.value.trim();
         if (name === '') {
@@ -39,7 +38,7 @@ const Topbar = ({ onSave, setOperationName }: { onSave: () => void, setOperation
                     <Link className="btn btn-outline" href="/dashboard">
                         Discard
                     </Link>
-                    <Button className='btn btn-outline'>
+                    <Button className='btn btn-outline' onClick={onFormat}>
                         Format
                     </Button>
                 </div>
