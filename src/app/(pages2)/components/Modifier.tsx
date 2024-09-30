@@ -123,7 +123,7 @@ const ModifierNode = ({ id, data, type }: NodeProps<any>) => {
                 id="target"
                 type="target"
                 position={Position.Left}
-                connectioncount={1}
+                connectioncount={Infinity}
             />
 
             <CustomHandle

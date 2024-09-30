@@ -43,6 +43,7 @@ const Arithmetic: React.FC = () => {
     const { type } = useDnD();
     const [folderdata, setFolderData] = useState<any[]>([]);
     const variableEntries = Object.entries(folderdata);
+    const [operationName, setOperationName] = useState<string>('');
 
     const nodeTypes = useMemo(() => ({
         variables: VariableNode,
@@ -129,14 +130,6 @@ const Arithmetic: React.FC = () => {
     };
 
     const handleSave = () => {
-        let outputNodeName = '';
-
-        nodes.forEach((node) => {
-            if (node.type === 'output_node' && node.data.outputName) {
-                outputNodeName = node.data.outputName;
-            }
-        });
-
         const cleanedNodes = nodes.map((node) => {
             const { data, type } = node;
             const { folderdata, label, ...cleanedData } = data;
@@ -181,7 +174,7 @@ const Arithmetic: React.FC = () => {
         });
 
         const finalWorkflowData = {
-            OutputName: outputNodeName,
+            ruleName: operationName,
             nodes: cleanedNodes,
         };
 
@@ -194,7 +187,7 @@ const Arithmetic: React.FC = () => {
         const horizontalSpacing = 450;
         const verticalSpacing = 200;
         let currentYForVertical = startY;
-    
+
         const initialNodes = nodes.filter((node) => node.type === 'variables' || node.type === 'constant');
         const updatedNodes = initialNodes.map((node) => {
             const newNode = {
@@ -204,21 +197,21 @@ const Arithmetic: React.FC = () => {
                     y: currentYForVertical,
                 },
             };
-            currentYForVertical += verticalSpacing; 
+            currentYForVertical += verticalSpacing;
             return newNode;
         });
-    
+
         let currentXForHorizontal = startX + horizontalSpacing;
         let placedNodes = new Set(initialNodes.map(node => node.id));
-    
-        const otherNodesPosition = (parentNode: any, currentX:any) => {
-            let parentY = parentNode.position.y; 
+
+        const otherNodesPosition = (parentNode: any, currentX: any) => {
+            let parentY = parentNode.position.y;
             const childNodes = nodes.filter((childNode) => {
                 return edges.some((edge) => edge.source === parentNode.id && edge.target === childNode.id);
             });
-    
-            let currentYForChildren = parentY; 
-                childNodes.forEach((childNode) => {
+
+            let currentYForChildren = parentY;
+            childNodes.forEach((childNode) => {
                 if (placedNodes.has(childNode.id)) {
                     return;
                 }
@@ -229,7 +222,7 @@ const Arithmetic: React.FC = () => {
                         y: currentYForChildren,
                     },
                 };
-                placedNodes.add(childNode.id); 
+                placedNodes.add(childNode.id);
                 updatedNodes.push(newNode);
                 currentYForChildren += verticalSpacing;
                 otherNodesPosition(newNode, currentX + horizontalSpacing);
@@ -238,15 +231,15 @@ const Arithmetic: React.FC = () => {
         initialNodes.forEach((node) => {
             otherNodesPosition(node, currentXForHorizontal);
         });
-    
+
         setNodes(updatedNodes);
     }, [nodes, edges, setNodes]);
-    
-    
+
+
 
     return (
         <div className={classes.workflowPage}>
-            <Topbar onSave={handleSave} onFormat={handleFormatHorizonatal} />
+            <Topbar onSave={handleSave} setOperationName={setOperationName} onFormat={handleFormatHorizonatal} />
             <div className={classes.workflowWrapper}>
                 <Sidebar setFolderData={handleFolderData} />
                 <div className={classes.reactflowMain} ref={reactFlowWrapper}>
