@@ -191,65 +191,58 @@ const Arithmetic: React.FC = () => {
     const handleFormatHorizonatal = useCallback(() => {
         const startX = 200;
         const startY = 200;
-        const horizontalSpacing = 400;
+        const horizontalSpacing = 450;
         const verticalSpacing = 200;
-        let currentX = startX;
         let currentYForVertical = startY;
-        let maxVerticalY = currentYForVertical;
-        let verticalNodeCount = 0;
-
-        let currentYForAddSubType = startY;
-        let lastXForHorizontal = currentX + horizontalSpacing;
-
-        const updatedNodes = nodes.map((node) => {
-            if (node.type === 'variables' || node.type === 'constant') {
-                verticalNodeCount += 1;
+    
+        const initialNodes = nodes.filter((node) => node.type === 'variables' || node.type === 'constant');
+        const updatedNodes = initialNodes.map((node) => {
+            const newNode = {
+                ...node,
+                position: {
+                    x: startX,
+                    y: currentYForVertical,
+                },
+            };
+            currentYForVertical += verticalSpacing; 
+            return newNode;
+        });
+    
+        let currentXForHorizontal = startX + horizontalSpacing;
+        let placedNodes = new Set(initialNodes.map(node => node.id));
+    
+        const otherNodesPosition = (parentNode: any, currentX:any) => {
+            let parentY = parentNode.position.y; 
+            const childNodes = nodes.filter((childNode) => {
+                return edges.some((edge) => edge.source === parentNode.id && edge.target === childNode.id);
+            });
+    
+            let currentYForChildren = parentY; 
+                childNodes.forEach((childNode) => {
+                if (placedNodes.has(childNode.id)) {
+                    return;
+                }
                 const newNode = {
-                    ...node,
+                    ...childNode,
                     position: {
-                        x: startX,
-                        y: currentYForVertical,
+                        x: currentX,
+                        y: currentYForChildren,
                     },
                 };
-                currentYForVertical += verticalSpacing;
-                maxVerticalY = currentYForVertical;
-                return newNode;
-            }
-            return node;
+                placedNodes.add(childNode.id); 
+                updatedNodes.push(newNode);
+                currentYForChildren += verticalSpacing;
+                otherNodesPosition(newNode, currentX + horizontalSpacing);
+            });
+        };
+        initialNodes.forEach((node) => {
+            otherNodesPosition(node, currentXForHorizontal);
         });
-        const centerYForHorizontalNodes = startY + ((currentYForVertical - startY) - verticalSpacing) / 2;
-        currentX += horizontalSpacing;
-
-        const updatedNodesWithHorizontal = updatedNodes.map((node) => {
-            if (node.type !== 'variables' && node.type !== 'constant') {
-                if (node.type === 'add_sub_type') {
-                    const newNode = {
-                        ...node,
-                        position: {
-                            x: currentX,
-                            y: currentYForAddSubType,
-                        },
-                    };
-                    currentYForAddSubType += verticalSpacing;
-                    lastXForHorizontal = currentX + horizontalSpacing;
-                    return newNode;
-                } else {
-                    const newNode = {
-                        ...node,
-                        position: {
-                            x: lastXForHorizontal,
-                            y: centerYForHorizontalNodes,
-                        },
-                    };
-                    lastXForHorizontal += horizontalSpacing;
-                    return newNode;
-                }
-            }
-            return node;
-        });
-
-        setNodes(updatedNodesWithHorizontal);
+    
+        setNodes(updatedNodes);
     }, [nodes, edges, setNodes]);
+    
+    
 
     return (
         <div className={classes.workflowPage}>
