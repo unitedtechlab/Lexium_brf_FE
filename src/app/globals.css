@@ -183,18 +183,39 @@ aside.ant-layout-sider.ant-layout-sider-collapsed .menuSider {
     background: var(--blue-color);
 }
 
-.not-found {
+/* not found page css */
+.error_page {
     text-align: center;
-    padding: 20px;
-    box-shadow: 0 0 14px 4px var(--tertiary-400);
     width: 100%;
-    border-radius: 8px;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
 }
 
-.not-found p {
-    font-weight: var(--font-weight-500);
-    font-size: var(--font-sm);
+.error_page::after {
+    content: "";
+    width: 300px;
+    height: 300px;
+    background: var(--black-color);
+    position: absolute;
+    bottom: -100px;
+    right: -150px;
+    border-radius: 100%;
 }
+
+.error_page_wrapper h1 {
+    font-size: clamp(100px, 10.417vw, 200px);
+    margin: 0;
+    line-height: 1;
+}
+
+.error_image {
+    padding: 20px 0;
+}
+
 
 /* table design antd */
 .ant-table-content table {

@@ -540,6 +540,7 @@
     padding: 8px;
     background-color: var(--tertiary-200);
     border-radius: 6px;
+    min-width: 42px;
 }
 
 .addBtn {

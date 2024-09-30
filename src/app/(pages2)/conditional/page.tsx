@@ -173,7 +173,7 @@ const Conditional: React.FC = () => {
         });
 
         const finalWorkflowData = {
-            ruleName: operationName, // Use the operationName in the output
+            ruleName: operationName, // Use operationName in the final output
             nodes: cleanedNodes,
         };
 

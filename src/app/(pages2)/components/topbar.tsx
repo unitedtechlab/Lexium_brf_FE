@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
 import styles from '@/app/assets/css/workflow.module.css';
-import { Button, message } from 'antd';
+import { Button } from 'antd';
 import Image from 'next/image';
 import Logo from '@/app/assets/images/logo.png';
 import Link from 'next/link';
 
 const Topbar = ({ onSave, setOperationName, onFormat }: { onSave: () => void, setOperationName: (name: string) => void, onFormat: () => void }) => {
     const [isSaved, setIsSaved] = useState(false);
+
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const name = event.target.value.trim();
         if (name === '') {
             setIsSaved(false);
+        } else {
+            setOperationName(name);
         }
     };
 
