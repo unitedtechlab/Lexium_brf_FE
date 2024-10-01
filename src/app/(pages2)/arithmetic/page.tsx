@@ -43,6 +43,7 @@ const Arithmetic: React.FC = () => {
     const { type } = useDnD();
     const [folderdata, setFolderData] = useState<any[]>([]);
     const variableEntries = Object.entries(folderdata);
+    const [operationName, setOperationName] = useState<string>('');
 
     const nodeTypes = useMemo(() => ({
         variables: VariableNode,
@@ -129,14 +130,6 @@ const Arithmetic: React.FC = () => {
     };
 
     const handleSave = () => {
-        let outputNodeName = '';
-
-        nodes.forEach((node) => {
-            if (node.type === 'output_node' && node.data.outputName) {
-                outputNodeName = node.data.outputName;
-            }
-        });
-
         const cleanedNodes = nodes.map((node) => {
             const { data, type } = node;
             const { folderdata, label, ...cleanedData } = data;
@@ -181,7 +174,7 @@ const Arithmetic: React.FC = () => {
         });
 
         const finalWorkflowData = {
-            OutputName: outputNodeName,
+            ruleName: operationName,
             nodes: cleanedNodes,
         };
 

@@ -131,7 +131,7 @@ const CompilerNode = ({ id, data, type }: NodeProps<any>) => {
                 id="input"
                 type="target"
                 position={Position.Left}
-                connectioncount={1}
+                connectioncount={Infinity}
             />
 
             <CustomHandle

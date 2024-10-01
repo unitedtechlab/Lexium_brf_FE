@@ -589,3 +589,19 @@ span.ant-select-selection-placeholder {
     border: 0;
     cursor: pointer;
 }
+
+.react-flow__node .react-flow__handle {
+    width: 8px;
+    height: 8px;
+}
+
+.react-flow__node .react-flow__handle:after {
+    content: "";
+    width: 15px;
+    height: 30px;
+    position: absolute;
+    display: inline-block;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+}

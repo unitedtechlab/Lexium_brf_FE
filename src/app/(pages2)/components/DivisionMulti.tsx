@@ -2,12 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { NodeProps, useReactFlow, Position, Handle } from 'reactflow';
 import 'reactflow/dist/style.css';
 import styles from '@/app/assets/css/workflow.module.css';
-import { FiMinusCircle, FiPlusCircle } from "react-icons/fi";
 import { message, Dropdown } from 'antd';
 import { PiMathOperationsBold } from "react-icons/pi";
 import { BsThreeDots } from "react-icons/bs";
 import SaveGlobalVariableModal from '../modals/GlobalVariableModal';
-import CustomHandle from './CustomHandle'; // Import CustomHandle
+import CustomHandle from './CustomHandle';
 
 const MultiplyDivide = ({ id, data }: NodeProps<any>) => {
     const { getEdges, getNode, setNodes } = useReactFlow();
@@ -113,7 +112,7 @@ const MultiplyDivide = ({ id, data }: NodeProps<any>) => {
     return (
         <div>
             <div className={styles['plus-point-label']}>
-                <FiPlusCircle />
+                <span className={`${styles.iconD} ${styles.divideicon}`}>*</span>
             </div>
             <div className={`${styles['nodeBox']} ${styles.multidivide}`}>
                 <div className={`flex gap-1 ${styles['node-main']}`}>
@@ -137,7 +136,7 @@ const MultiplyDivide = ({ id, data }: NodeProps<any>) => {
                 </div>
             </div>
             <div className={styles['minus-point-label']}>
-                <FiMinusCircle />
+                <span className={styles.iconD}>/</span>
             </div>
 
             <Handle

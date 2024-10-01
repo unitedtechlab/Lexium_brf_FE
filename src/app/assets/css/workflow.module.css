@@ -1035,3 +1035,18 @@
     top: 75%;
     transform: translateX(-50%);
 }
+
+.iconD {
+    width: 18px;
+    height: 18px;
+    border: 1px solid;
+    border-radius: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.divideicon {
+    font-size: 20px;
+    align-items: flex-start;
+}
