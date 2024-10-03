@@ -1,4 +1,5 @@
-"use client";
+"use client"
+
 import React, { useRef, useCallback, useState, useEffect, useMemo } from 'react';
 import {
     ReactFlow,
@@ -15,7 +16,6 @@ import {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import classes from '@/app/assets/css/workflow.module.css';
-
 import Sidebar from '../components/sidebar';
 import { DnDProvider, useDnD } from '../components/DnDContext';
 import VariableNode from '../components/Variables';
@@ -234,8 +234,6 @@ const Arithmetic: React.FC = () => {
 
         setNodes(updatedNodes);
     }, [nodes, edges, setNodes]);
-
-
 
     return (
         <div className={classes.workflowPage}>

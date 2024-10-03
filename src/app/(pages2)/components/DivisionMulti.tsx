@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { NodeProps, useReactFlow, Position, Handle } from 'reactflow';
+import React, { useState, useEffect } from 'react';
+import { NodeProps, useReactFlow, Handle, Position } from 'reactflow';
 import 'reactflow/dist/style.css';
 import styles from '@/app/assets/css/workflow.module.css';
 import { message, Dropdown } from 'antd';
@@ -8,68 +8,75 @@ import { BsThreeDots } from "react-icons/bs";
 import SaveGlobalVariableModal from '../modals/GlobalVariableModal';
 import CustomHandle from './CustomHandle';
 
+// Define the type for connected values
+type ConnectedValues = {
+    multiplyValues: string[],
+    divideValues: string[],
+};
+
 const MultiplyDivide = ({ id, data }: NodeProps<any>) => {
     const { getEdges, getNode, setNodes } = useReactFlow();
-    const [connectedValues, setConnectedValues] = useState<any>({
+    const [isModalVisible, setIsModalVisible] = useState(false);
+
+    // Explicitly type connectedValues
+    const [connectedValues, setConnectedValues] = useState<ConnectedValues>({
         multiplyValues: [],
         divideValues: [],
     });
-    const [firstConnectedNodeType, setFirstConnectedNodeType] = useState<string | null>(null);
-    const [isModalVisible, setIsModalVisible] = useState(false);
-    const messageShownRef = useRef(false);
 
+    // Update connectedValues based on current edges
     useEffect(() => {
-        const edges = getEdges().filter((edge) => edge.target === id);
+        const updateConnectedValues = () => {
+            const edges = getEdges().filter((edge) => edge.target === id);
 
-        let multiplyValues: any[] = [];
-        let divideValues: any[] = [];
-        let firstConnectedType: string | null = null;
-        let sourceIds: string[] = [];
+            const multiplyValues: string[] = [];
+            const divideValues: string[] = [];
 
-        edges.forEach((edge) => {
-            const sourceNode = getNode(edge.source);
-            const sourceNodeData = sourceNode?.data;
-            if (!firstConnectedType && sourceNodeData?.variableType) {
-                firstConnectedType = sourceNodeData.variableType;
-            }
-
-            if (edge.targetHandle === 'target1' && sourceNode) {
-                multiplyValues.push({ id: sourceNode.id });
-                sourceIds.push(sourceNode.id);
-            }
-
-            if (edge.targetHandle === 'target2' && sourceNode) {
-                divideValues.push({ id: sourceNode.id });
-                sourceIds.push(sourceNode.id);
-            }
-        });
-
-        setConnectedValues({ multiplyValues, divideValues });
-        if (data.variableType) {
-            setFirstConnectedNodeType(data.variableType);
-        }
-
-        setNodes((nodes) =>
-            nodes.map((node) =>
-                node.id === id
-                    ? {
-                        ...node,
-                        data: {
-                            ...node.data,
-                            multiplyValues,
-                            divideValues,
-                        },
-                        connectedEdges: sourceIds.length > 0
-                            ? [{ source: sourceIds, target: '' }]
-                            : [],
+            edges.forEach((edge) => {
+                const sourceNode = getNode(edge.source);
+                if (sourceNode) {
+                    // If connected to target1 (multiply), add to multiplyValues
+                    if (edge.targetHandle === 'target1') {
+                        multiplyValues.push(sourceNode.id);
                     }
-                    : node
-            )
-        );
-    }, [getEdges, getNode, id, setNodes, data.variableType]);
+                    // If connected to target2 (divide), add to divideValues
+                    if (edge.targetHandle === 'target2') {
+                        divideValues.push(sourceNode.id);
+                    }
+                }
+            });
+
+            setConnectedValues({ multiplyValues, divideValues });
+
+            // Update the node in ReactFlow
+            setNodes((nodes) =>
+                nodes.map((node) =>
+                    node.id === id
+                        ? {
+                            ...node,
+                            data: {
+                                ...node.data,
+                                multiplyValues,
+                                divideValues,
+                            },
+                        }
+                        : node
+                )
+            );
+        };
+
+        // Call on component mount to ensure initial connection values are set
+        updateConnectedValues();
+
+        // Listen for real-time changes in edges
+        const edges = getEdges();
+        if (edges.length > 0) {
+            updateConnectedValues(); // Trigger whenever an edge changes
+        }
+    }, [getEdges, getNode, id, setNodes]);
 
     const handleDeleteNode = () => {
-        setNodes((nds) => nds.filter(node => node.id !== id));
+        setNodes((nds) => nds.filter((node) => node.id !== id));
         message.success('Node deleted successfully');
     };
 
@@ -85,7 +92,7 @@ const MultiplyDivide = ({ id, data }: NodeProps<any>) => {
             type: 'multiply_divide_type',
             multiplyValues: connectedValues.multiplyValues,
             divideValues: connectedValues.divideValues,
-            variableType: firstConnectedNodeType || 'unknown',
+            variableType: data.variableType || 'unknown',
         };
 
         globalVariables.push(newGlobalVariable);
@@ -100,17 +107,18 @@ const MultiplyDivide = ({ id, data }: NodeProps<any>) => {
         {
             label: 'Delete Node',
             key: '0',
-            onClick: handleDeleteNode
+            onClick: handleDeleteNode,
         },
         {
             label: 'Save as a Global Variable',
             key: '1',
-            onClick: openGlobalVariableModal
-        }
+            onClick: openGlobalVariableModal,
+        },
     ];
 
     return (
         <div>
+            {/* Node's UI */}
             <div className={styles['plus-point-label']}>
                 <span className={`${styles.iconD} ${styles.divideicon}`}>*</span>
             </div>
@@ -121,7 +129,7 @@ const MultiplyDivide = ({ id, data }: NodeProps<any>) => {
                             <PiMathOperationsBold className={styles.iconFlag} />
                             <div className={styles['node-text']}>
                                 <h6>{data.label || "Multiplication / Division"}</h6>
-                                <span>{firstConnectedNodeType ? `Type: ${firstConnectedNodeType}` : "No Type Connected"}</span>
+                                <span>{data.variableType ? `Type: ${data.variableType}` : "No Type Connected"}</span>
                             </div>
                         </div>
                         <Dropdown
@@ -139,12 +147,14 @@ const MultiplyDivide = ({ id, data }: NodeProps<any>) => {
                 <span className={styles.iconD}>/</span>
             </div>
 
+            {/* Multiply Handle */}
             <Handle
                 type="target"
                 position={Position.Left}
                 id="target1"
                 className={styles.toppoint}
             />
+            {/* Divide Handle */}
             <Handle
                 type="target"
                 position={Position.Left}
@@ -152,6 +162,7 @@ const MultiplyDivide = ({ id, data }: NodeProps<any>) => {
                 className={styles.bottompoint}
             />
 
+            {/* Source Handle */}
             <CustomHandle
                 nodeId={id}
                 id="source"
@@ -160,6 +171,7 @@ const MultiplyDivide = ({ id, data }: NodeProps<any>) => {
                 connectioncount={1}
             />
 
+            {/* Modal for saving global variable */}
             <SaveGlobalVariableModal
                 visible={isModalVisible}
                 onCancel={() => setIsModalVisible(false)}
