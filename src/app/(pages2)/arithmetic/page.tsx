@@ -182,12 +182,11 @@ const Arithmetic: React.FC = () => {
     };
 
     const handleFormatHorizonatal = useCallback(() => {
-        const startX = 200;
-        const startY = 200;
-        const horizontalSpacing = 450;
-        const verticalSpacing = 120;
-        const secLevelVerSpacing = 120;
-        let currentYVertical = startY;
+    const startX = 100;
+    const startY = 100;
+    const horizontalSpacing = 500; 
+    const verticalSpacing = 250;   
+    let currentYVertical = startY;
 
         const nodesPostion = new Set();
         const updatedNodes: any[] = [];
@@ -228,17 +227,17 @@ const Arithmetic: React.FC = () => {
                 return;
             let currentYChild = parentY;
 
-            childNodes.forEach((childNode) => {
-                if (nodesPostion.has(childNode.id)) {
-                    return;
-                }
-                currentYChild += (level === 2 ? secLevelVerSpacing : verticalSpacing);
-                updatedNodes.push(
-                    placeNode(childNode, currentX, currentYChild)
-                );
-                childNodesPosition(childNode, currentX + horizontalSpacing, currentYChild, level + 1);
-            });
-        };
+        childNodes.forEach((childNode) => {
+            if (nodesPostion.has(childNode.id)) {
+                return;
+            }
+            currentYChild += verticalSpacing;
+            updatedNodes.push(
+                placeNode(childNode, currentX, currentYChild)
+            );
+            childNodesPosition(childNode, currentX + horizontalSpacing, currentYChild, level + 1);
+        });
+    };
 
         initialNodes.forEach((node) => {
             childNodesPosition(node, startX + horizontalSpacing, node.position.y, 1);
@@ -259,14 +258,14 @@ const Arithmetic: React.FC = () => {
                     edges.some((edge) => edge.source === parent.id && edge.target === node.id)
                 );
 
-                if (parentNode) {
-                    updatedNodes.push(
-                        placeNode(node, parentNode.position.x + horizontalSpacing, parentNode.position.y)
-                    );
-                    childNodesPosition(node, parentNode.position.x + (2 * horizontalSpacing), parentNode.position.y, 2);
-                }
+            if (parentNode) {
+                updatedNodes.push(
+                    placeNode(node, parentNode.position.x + horizontalSpacing, parentNode.position.y)
+                );
+                childNodesPosition(node, parentNode.position.x + (2 * horizontalSpacing), parentNode.position.y, 2);
             }
-        });
+        }
+    });
 
         setNodes(updatedNodes);
     }, [nodes, edges, setNodes]);

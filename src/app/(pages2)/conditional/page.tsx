@@ -181,65 +181,93 @@ const Conditional: React.FC = () => {
     };
 
     const handleFormatHorizonatal = useCallback(() => {
-        const startX = 600;
-        const startY = 500;
-        const horizontalSpacing = 500;
-        const verticalSpacing = 250;
-        let currentX = startX;
-        let currentYForVertical = startY;
-        let maxVerticalY = currentYForVertical;
-        let verticalNodeCount = 0;
-
-        const updatedNodes = nodes.map((node) => {
-            if (node.type === 'variables' || node.type === 'constant') {
-                verticalNodeCount += 1;
-                const newNode = {
-                    ...node,
-                    position: {
-                        x: startX,
-                        y: currentYForVertical,
-                    },
-                };
-                currentYForVertical += verticalSpacing;
-                maxVerticalY = currentYForVertical;
-                return newNode;
-            }
-            return node;
-        });
-
-        const centerYForHorizontalNodes = startY + ((currentYForVertical - startY) - verticalSpacing) / 2;
-        currentX += horizontalSpacing;
-        const updatedNodesWithHorizontal = updatedNodes.map((node) => {
-            if (node.type !== 'variables' && node.type !== 'constant') {
-                if (node.type === 'conditional') {
-
-                    const newNode = {
-                        ...node,
-                        position: {
-                            x: currentX,
-                            y: centerYForHorizontalNodes,
-                        },
-                    };
-                    currentX += horizontalSpacing;
-                    return newNode;
-                } else {
-
-                    const newNode = {
-                        ...node,
-                        position: {
-                            x: currentX,
-                            y: centerYForHorizontalNodes,
-                        },
-                    };
-                    currentX += horizontalSpacing;
-                    return newNode;
+        const startX = 100;
+        const startY = 100;
+        const horizontalSpacing = 500; 
+        const verticalSpacing = 250;   
+        let currentYVertical = startY;
+    
+            const nodesPostion = new Set();
+            const updatedNodes: any[] = [];
+            const placeNode = (node: any, x: number, y: number) => {
+                nodesPostion.add(node.id);
+                return { ...node, position: { x, y } };
+            };
+            const getConnectedEdges = (nodeId: string) => {
+                const sourceConnections = edges.filter(edge => edge.source === nodeId);
+                const targetConnections = edges.filter(edge => edge.target === nodeId);
+                return { sourceConnections, targetConnections };
+            };
+    
+            const initialNodes = nodes.filter(node => {
+                const { sourceConnections, targetConnections } = getConnectedEdges(node.id);
+                return (
+                    (node.type === 'variables' ||
+                        node.type === 'constant' ||
+                        node.type === 'local_variable' ||
+                        node.type === 'global_variable') &&
+                    sourceConnections.length > 0 &&
+                    targetConnections.length === 0
+                );
+            });
+    
+            initialNodes.forEach((node) => {
+                updatedNodes.push(placeNode(node, startX, currentYVertical));
+                currentYVertical += verticalSpacing;
+            });
+    
+            const childNodesPosition = (parentNode: any, currentX: number, parentY: number, level: number) => {
+                const { sourceConnections } = getConnectedEdges(parentNode.id);
+                const childNodes = nodes.filter((childNode) =>
+                    sourceConnections.some((edge) => edge.target === childNode.id)
+                );
+    
+                if (childNodes.length === 0)
+                    return;
+                let currentYChild = parentY;
+    
+            childNodes.forEach((childNode) => {
+                if (nodesPostion.has(childNode.id)) {
+                    return;
+                }
+                currentYChild += verticalSpacing;
+                updatedNodes.push(
+                    placeNode(childNode, currentX, currentYChild)
+                );
+                childNodesPosition(childNode, currentX + horizontalSpacing, currentYChild, level + 1);
+            });
+        };
+    
+            initialNodes.forEach((node) => {
+                childNodesPosition(node, startX + horizontalSpacing, node.position.y, 1);
+            });
+    
+            const inBetweenNodes = nodes.filter(node => {
+                const { sourceConnections, targetConnections } = getConnectedEdges(node.id);
+                return (
+                    (node.type === 'local_variable' || node.type === 'global_variable') &&
+                    sourceConnections.length > 0 &&
+                    targetConnections.length > 0
+                );
+            });
+    
+            inBetweenNodes.forEach((node) => {
+                if (!nodesPostion.has(node.id)) {
+                    const parentNode = nodes.find((parent) =>
+                        edges.some((edge) => edge.source === parent.id && edge.target === node.id)
+                    );
+    
+                if (parentNode) {
+                    updatedNodes.push(
+                        placeNode(node, parentNode.position.x + horizontalSpacing, parentNode.position.y)
+                    );
+                    childNodesPosition(node, parentNode.position.x + (2 * horizontalSpacing), parentNode.position.y, 2);
                 }
             }
-            return node;
         });
-
-        setNodes(updatedNodesWithHorizontal);
-    }, [nodes, edges, setNodes]);
+    
+            setNodes(updatedNodes);
+        }, [nodes, edges, setNodes]);
 
     return (
         <div className={classes.workflowPage}>
