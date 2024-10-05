@@ -29,7 +29,7 @@ export default function Dashboard() {
           <Image src={welcomeImg} alt="Welcome Image" width={200} height={200} loading="lazy" />
         </div>
         <div className={dashbaord.welcomeText}>
-          <h4>Welcome to your Bird Eye Workspace!</h4>
+          <h4>Welcome to your Lexium BRF Workspace!</h4>
           <h5>Upload a file, connect to a database, or explore sample datasets to get familiar with Bird Eye's powerful features.</h5>
           <Link href="/create-workspace" className="btn-blue">
             Let's start
