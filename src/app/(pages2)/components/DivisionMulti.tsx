@@ -34,16 +34,13 @@ const MultiplyDivide = ({ id, data }: NodeProps<any>) => {
 
             edges.forEach((edge) => {
                 const sourceNode = getNode(edge.source);
-                if (sourceNode) {
                     // If connected to target1 (multiply), add to multiplyValues
-                    if (edge.targetHandle === 'target1') {
-                        multiplyValues.push(sourceNode.id);
-                    }
                     // If connected to target2 (divide), add to divideValues
-                    if (edge.targetHandle === 'target2') {
+                    if (edge.targetHandle === 'target1' && sourceNode) {
+                        multiplyValues.push(sourceNode.id);
+                    } else if (edge.targetHandle === 'target2' && sourceNode) {
                         divideValues.push(sourceNode.id);
                     }
-                }
             });
 
             setConnectedValues({ multiplyValues, divideValues });

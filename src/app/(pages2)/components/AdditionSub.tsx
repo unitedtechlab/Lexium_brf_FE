@@ -17,7 +17,7 @@ const AdditionSubNode = ({ id, data }: NodeProps<any>) => {
     });
     const [firstConnectedNodeType, setFirstConnectedNodeType] = useState<string | null>(null);
     const [isModalVisible, setIsModalVisible] = useState(false);
-
+    //
     useEffect(() => {
         const edges = getEdges().filter((edge) => edge.target === id);
 
@@ -32,18 +32,14 @@ const AdditionSubNode = ({ id, data }: NodeProps<any>) => {
             if (!firstConnectedType && sourceNodeData?.variableType) {
                 firstConnectedType = sourceNodeData.variableType;
             }
-
             if (edge.targetHandle === 'target1' && sourceNode) {
                 additionNodeValues.push({ id: sourceNode.id });
                 sourceIds.push(sourceNode.id);
-            }
-
-            if (edge.targetHandle === 'target2' && sourceNode) {
+            } else if (edge.targetHandle === 'target2' && sourceNode) {
                 substractionNodeValues.push({ id: sourceNode.id });
                 sourceIds.push(sourceNode.id);
             }
         });
-
         setConnectedValues({ additionNodeValues, substractionNodeValues });
         if (data.variableType) {
             setFirstConnectedNodeType(data.variableType);
@@ -158,8 +154,7 @@ const AdditionSubNode = ({ id, data }: NodeProps<any>) => {
                 type="source"
                 position={Position.Right}
                 connectioncount={1}
-                className={styles.customHandle}
-            />
+                className={styles.customHandle} nodeId={''} />
 
             <SaveGlobalVariableModal
                 visible={isModalVisible}
