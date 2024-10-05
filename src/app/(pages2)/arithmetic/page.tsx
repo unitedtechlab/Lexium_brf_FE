@@ -235,7 +235,7 @@ const Arithmetic: React.FC = () => {
             updatedNodes.push(
                 placeNode(childNode, currentX, currentYChild)
             );
-            childNodesPosition(childNode, currentX + horizontalSpacing, currentYChild, level + 1);
+            childNodesPosition(childNode, currentX + horizontalSpacing, currentYChild, level );
         });
     };
 
@@ -260,9 +260,9 @@ const Arithmetic: React.FC = () => {
 
             if (parentNode) {
                 updatedNodes.push(
-                    placeNode(node, parentNode.position.x + horizontalSpacing, parentNode.position.y)
+                    placeNode(node, parentNode.position.x , parentNode.position.y)
                 );
-                childNodesPosition(node, parentNode.position.x + (2 * horizontalSpacing), parentNode.position.y, 2);
+                childNodesPosition(node, parentNode.position.x + ( horizontalSpacing), parentNode.position.y, 1);
             }
         }
     });
