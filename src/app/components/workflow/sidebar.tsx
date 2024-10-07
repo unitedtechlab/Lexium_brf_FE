@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import styles from '../workflow.module.css';
+import styles from '@/app/assets/css/workflow.module.css';
 import { MdOutlineFilterAlt, MdOutlineSelectAll, MdOutlinePivotTableChart, MdOutlineJoinInner, MdOutlineScreenSearchDesktop } from 'react-icons/md';
 import { FaSortAlphaDown, FaProjectDiagram } from 'react-icons/fa';
 import { TbMathSymbols } from "react-icons/tb";
@@ -59,7 +59,6 @@ const renderSidebarItems = (items: SidebarItem[]) => {
     return items.map(item => {
         const IconComponent = iconComponents[item.icon];
         const itemClassName = item.enabled ? styles.sidebardragDrop : styles.sidebardragDropDisabled;
-
         return (
             <div
                 key={item.id}

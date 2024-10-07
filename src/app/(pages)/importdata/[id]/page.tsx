@@ -8,7 +8,7 @@ import classes from "@/app/assets/css/pages.module.css";
 import { Button, Dropdown, message, Empty, Tooltip } from "antd";
 import type { MenuProps } from "antd";
 import Image from "next/image";
-import fileIcon from "@/app/assets/images/file.svg";
+import fileIcon from "@/app/assets/images/file.png";
 import { BiDotsVerticalRounded } from "react-icons/bi";
 import BreadCrumb from "@/app/components/Breadcrumbs/breadcrumb";
 import { useEmail } from "@/app/context/emailContext";

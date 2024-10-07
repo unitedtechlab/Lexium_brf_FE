@@ -7,7 +7,7 @@ import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import { useEmail } from '@/app/context/emailContext';
 import classes from '@/app/assets/css/pages.module.css';
-import folder from '../../assets/images/database.svg';
+import folder from '../../assets/images/Database.png';
 import { fetchWorkspaces } from '@/app/API/api';
 import { Workspace } from '@/app/types/interface';
 import BreadCrumb from "@/app/components/Breadcrumbs/breadcrumb";

@@ -12,8 +12,8 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import Xarrow, { Xwrapper } from 'react-xarrows';
 import classes from './column.module.css';
 import Image from 'next/image';
-import layoutImage from '../../assets/images/layout.svg';
-import tableImage from '../../assets/images/table.svg';
+import layoutImage from '../../assets/images/layout.png';
+import tableImage from '../../assets/images/table.png';
 import Loader from '@/app/loading';
 import { getToken } from '@/utils/auth';
 

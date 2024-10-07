@@ -5,8 +5,8 @@ import { Col, Row, Divider, Form, Input, Button, message, Checkbox } from "antd"
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import GoogleImg from "@/app/assets/images/google.svg";
-import MicrosoftImg from "@/app/assets/images/Microsoft.svg";
+import GoogleImg from "@/app/assets/images/google.png";
+import MicrosoftImg from "@/app/assets/images/Microsoft.png";
 import classes from "../auth.module.css";
 import Content from "@/app/components/AuthContent/content";
 import { BaseURL } from "@/app/constants/index";

@@ -7,7 +7,7 @@ import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import { useEmail } from '@/app/context/emailContext';
 import classes from '@/app/assets/css/pages.module.css';
-import wireFrameIcon from "@/app/assets/images/wireframe.svg";
+import wireFrameIcon from "@/app/assets/images/wireframe.png";
 import { BiDotsVerticalRounded } from 'react-icons/bi';
 import BreadCrumb from "@/app/components/Breadcrumbs/breadcrumb";
 import { useParams } from "next/navigation";
@@ -172,7 +172,7 @@ const WorkflowsList = () => {
                     {filteredWorkflows.map((workflow) => (
                         <div key={workflow.id} className={`${classes.workspacebox}`}>
                             <div className={`flex gap-1 alinc ${classes.link}`}>
-                                <Link href={`/workflow/${workflow.id}?workspaceId=${id}`}>
+                                <Link href={`/view_workflow/${workflow.id}?workspaceId=${id}`}>
                                     <div className={`${classes.workspaceName} flex gap-1`}>
                                         <Image src={wireFrameIcon} alt="Workflow Icon" width={32} height={32} />
                                         <p>

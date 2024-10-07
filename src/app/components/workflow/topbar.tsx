@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
-import styles from '../workflow.module.css';
+import styles from '@/app/assets/css/workflow.module.css';
 import { Button, message } from 'antd';
-import { runWorkflow } from '@/app/API/api';
-import { useEmail } from '@/app/context/emailContext';
 
 interface TopbarProps {
     onSaveClick: () => Promise<boolean>;
@@ -11,6 +9,8 @@ interface TopbarProps {
     workspaceId?: string | null;
     setWorkflowOutput: (output: any) => void;
     setIsRunClicked: (isRun: boolean) => void;
+    onRunClick: () => Promise<void>;
+    isRunLoading: boolean;
 }
 
 const Topbar: React.FC<TopbarProps> = ({
@@ -19,14 +19,14 @@ const Topbar: React.FC<TopbarProps> = ({
     workflowName,
     workspaceId,
     setWorkflowOutput,
-    setIsRunClicked
+    setIsRunClicked,
+    onRunClick,
+    isRunLoading
 }) => {
     const [isRunEnabled, setIsRunEnabled] = useState(false);
     const [isSaved, setIsSaved] = useState(false);
     const [isSaving, setIsSaving] = useState<boolean>(false);
-    const [isLoading, setIsLoading] = useState<boolean>(false);
     const [isWorkflowNameEmpty, setIsWorkflowNameEmpty] = useState<boolean>(true);
-    const { email } = useEmail();
 
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const name = event.target.value.trim();
@@ -55,54 +55,16 @@ const Topbar: React.FC<TopbarProps> = ({
             if (success) {
                 setIsSaved(true);
                 setIsRunEnabled(true);
-                // message.success('Workflow saved successfully!');
             } else {
                 setIsRunEnabled(false);
                 message.error('Failed to save workflow.');
             }
         } catch (error) {
             setIsRunEnabled(false);
-            // message.error('An error occurred while saving the workflow.');
         } finally {
             setIsSaving(false);
         }
     };
-
-    const handleRunClick = async () => {
-        if (!email) {
-            message.error('User email is missing.');
-            return;
-        }
-        if (!workspaceId) {
-            message.error('Workspace ID is missing.');
-            return;
-        }
-        if (!workflowName.trim()) {
-            message.error('Workflow name is missing.');
-            return;
-        }
-
-        setIsLoading(true);
-        try {
-            const workflowData = await runWorkflow(email, workspaceId, workflowName);
-
-            if (workflowData) {
-                setWorkflowOutput(workflowData);
-                setIsRunClicked(true);
-                message.success('Workflow run successfully!');
-                console.log("workflowData", workflowData);
-            } else {
-                message.error('No output nodes found in the workflow.');
-            }
-        } catch (error: any) {
-            const errorMessage = error?.response?.data?.message || error.message || 'Failed to run workflow.';
-            message.error(errorMessage);
-            console.error('Error running workflow:', error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
 
     return (
         <div className={styles.topbarWrapper}>
@@ -129,10 +91,10 @@ const Topbar: React.FC<TopbarProps> = ({
                     </Button>
                     <Button
                         className='btn'
-                        onClick={handleRunClick}
-                        disabled={!isRunEnabled || isLoading}
+                        onClick={onRunClick}
+                        disabled={!isRunEnabled || isRunLoading}
                     >
-                        {isLoading ? 'Running...' : 'Run'}
+                        {isRunLoading ? 'Running...' : 'Run'}
                     </Button>
                 </div>
             </div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Modal, Select, Button, Form, Row, Col, Tabs, Input, Checkbox, message } from 'antd';
-import Classes from '../workflow.module.css';
+import Classes from '@/app/assets/css/workflow.module.css';
 import { BiSearch } from "react-icons/bi";
 import { CloseOutlined } from '@ant-design/icons';
 import { fetchFolderData } from '@/app/API/api';

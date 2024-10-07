@@ -7,13 +7,13 @@ import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import { useEmail } from '@/app/context/emailContext';
 import classes from '@/app/assets/css/pages.module.css';
-import folder from '../../assets/images/database.svg';
+import folder from '../../assets/images/Database.png';
 import { fetchWorkspaces } from '@/app/API/api';
 import { Workspace } from '@/app/types/interface';
 import BreadCrumb from "@/app/components/Breadcrumbs/breadcrumb";
 
-const Searchbar = dynamic(() => import('../../components/Searchbar/search'), { ssr: false });
-const View = dynamic(() => import('../../components/GridListView/view'), { ssr: false });
+const Searchbar = dynamic(() => import('../../components/Searchbar/search'), { ssr: false, loading: () => <p>Loading Searchbar...</p> });
+const View = dynamic(() => import('../../components/GridListView/view'), { ssr: false, loading: () => <p>Loading View...</p> });
 const Loader = dynamic(() => import('@/app/loading'), { ssr: false });
 
 export default function WorkflowsWorkspaces() {
@@ -42,15 +42,15 @@ export default function WorkflowsWorkspaces() {
             message.error('Failed to fetch workspaces.');
             console.error("Failed to fetch workspaces:", error);
         } finally {
-            if (isLoading) setIsLoading(false);  // Ensure setIsLoading is called only if necessary
+            setIsLoading(false); // Set loading to false after fetch completes
         }
-    }, [email, isLoading]);
+    }, [email]);
 
     useEffect(() => {
-        loadWorkspaces();
-        setBreadcrumbs([
-            { href: `/data-storage`, label: `Data Storage` }
-        ]);
+        if (email) {
+            loadWorkspaces();
+        }
+        setBreadcrumbs([{ href: `/data-storage`, label: `Data Storage` }]);
     }, [email, loadWorkspaces]);
 
     const filteredWorkspaces = useMemo(() => {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Select, Button, Form, Row, Col, message, Input } from 'antd';
 import { CloseOutlined } from '@ant-design/icons';
-import classes from '../workflow.module.css';
+import classes from '@/app/assets/css/workflow.module.css';
 
 interface ArithmeticModalProps {
     isModalVisible: boolean;

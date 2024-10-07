@@ -183,18 +183,39 @@ aside.ant-layout-sider.ant-layout-sider-collapsed .menuSider {
     background: var(--blue-color);
 }
 
-.not-found {
+/* not found page css */
+.error_page {
     text-align: center;
-    padding: 20px;
-    box-shadow: 0 0 14px 4px var(--tertiary-400);
     width: 100%;
-    border-radius: 8px;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
 }
 
-.not-found p {
-    font-weight: var(--font-weight-500);
-    font-size: var(--font-sm);
+.error_page::after {
+    content: "";
+    width: 300px;
+    height: 300px;
+    background: var(--black-color);
+    position: absolute;
+    bottom: -100px;
+    right: -150px;
+    border-radius: 100%;
 }
+
+.error_page_wrapper h1 {
+    font-size: clamp(100px, 10.417vw, 200px);
+    margin: 0;
+    line-height: 1;
+}
+
+.error_image {
+    padding: 20px 0;
+}
+
 
 /* table design antd */
 .ant-table-content table {
@@ -541,4 +562,46 @@ span.ant-select-selection-placeholder {
     left: 0;
     transform: translateY(-50%);
     top: 50%;
+}
+
+.customselect .ant-select.ant-select-outlined {
+    padding: 0 !important;
+    margin: 0;
+}
+
+.customselect .ant-select.ant-select-outlined .ant-select-selector {
+    border-color: var(--tertiary-500) !important;
+    padding: 2px 12px !important;
+    border-radius: 8px !important;
+}
+
+.customselect .ant-form-item-control-input-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.nostyle {
+    padding: 0;
+    margin: 0;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+}
+
+.react-flow__node .react-flow__handle {
+    width: 8px;
+    height: 8px;
+}
+
+.react-flow__node .react-flow__handle:after {
+    content: "";
+    width: 15px;
+    height: 30px;
+    position: absolute;
+    display: inline-block;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
 }

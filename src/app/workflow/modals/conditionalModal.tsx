@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Form, Row, Col, message, Select } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
-import classes from '../workflow.module.css';
-import ConditionRow from '../components/ConditionNode/conditionBox';
-import SubConditionRow from '../components/ConditionNode/subConditionalBox';
+import classes from '@/app/assets/css/workflow.module.css';
+import ConditionRow from '@/app/components/workflow/ConditionNode/conditionBox';
+import SubConditionRow from '@/app/components/workflow/ConditionNode/subConditionalBox';
 import { fetchFolderData } from '@/app/API/api';
 import { RxDragHandleDots2 } from "react-icons/rx";
 
