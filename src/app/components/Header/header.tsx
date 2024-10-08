@@ -54,7 +54,10 @@ const Header: React.FC = () => {
       <a onClick={(e) => e.preventDefault()}>
         <Space>
           <Avatar size="large" src={<Image src={userImage} alt="User Image" priority width={40} height={40} />} />
-          {first_name && last_name ? `${first_name} ${last_name}` : email}
+          <h6>
+            <span>{first_name && last_name ? `${first_name} ${last_name}` : email}</span>
+            <span className="user-role">Admin</span>
+          </h6>
           <BiSolidChevronDown />
         </Space>
       </a>

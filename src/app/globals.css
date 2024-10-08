@@ -143,6 +143,17 @@ aside.ant-layout-sider.ant-layout-sider-collapsed .menuSider {
     font-family: var(--Poppins-family);
 }
 
+.user-role {
+    display: block;
+    font-weight: var(--font-weight-400);
+    font-size: 12px;
+}
+
+.nav_dropdown h6 {
+    font-size: var(--body-font);
+    margin: 0;
+}
+
 .nav_dropdown .ant-space {
     display: flex;
     align-items: center;

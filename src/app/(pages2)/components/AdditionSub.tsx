@@ -150,11 +150,12 @@ const AdditionSubNode = ({ id, data }: NodeProps<any>) => {
             />
 
             <CustomHandle
+                nodeId={id}
                 id="source"
                 type="source"
                 position={Position.Right}
                 connectioncount={1}
-                className={styles.customHandle} nodeId={''} />
+            />
 
             <SaveGlobalVariableModal
                 visible={isModalVisible}

@@ -32,25 +32,16 @@ body.dark {
   --white-color: #fff;
   --black-color: #000;
 
-  --primary-100: #341539;
-  --primary-200: #8e48e7;
+  --primary-100: #00A76F;
+  --primary-200: #00A76F14;
+
 
   --secondary-100: #111111;
-  --secondary-200: #494949;
-  --secondary-300: #1C1C1C;
 
-  --blue-color: #334756;
-
-  --text-color: var(--black-color);
+  --text-color: #1C1C1C;
   --sidebar-color: var(--white-color);
 
-  --ternary-color: #043133;
-  --tertiary-100: #5C5E64;
-  --tertiary-200: #F6F6F6;
-  --tertiary-300: #D9D9D9;
-  --tertiary-400: #E7E7E7;
-  --tertiary-500: #D0D5DD;
-  --tertiary-600: #A9ACB4;
+  --ternary-100: #F7F9FC;
 
   --error-color: #ff4d4f;
 
